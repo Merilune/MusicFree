@@ -1,7 +1,9 @@
 {
-  "version": "0.7.55",
+  "version": "0.7.60",
   "changeLog": [
     "【交流】欢迎加入 Q 群：1064805856",
+    "【修复】修复播放一段时间或应用长时间处于后台后，再次打开时可能卡死、闪退的问题",
+    "--------以上为v0.7.60新特性--------",
     "【修复】修复首次启动时存储权限对话框主按钮文案错误（误显示「不再提示」，应为「去授予权限」）",
     "--------以上为v0.7.55新特性--------",
     "【修复】修复自定义背景色等取色面板无法点击、拖动或输入颜色代码的问题",
@@ -179,7 +181,7 @@
     "【优化】优化了软件启动速度 (需要在【侧边栏-基本设置-插件】中打开【启用插件懒加载】开关)"
   ],
   "download": [
-    "https://github.com/Toskysun/MusicFree/releases/download/v0.7.55/MusicFree-v0.7.55-arm64-v8a-release.apk",
-    "https://github.com/Toskysun/MusicFree/releases/download/v0.7.55/MusicFree-v0.7.55-universal-release.apk"
+    "https://github.com/Toskysun/MusicFree/releases/download/v0.7.60/MusicFree-v0.7.60-arm64-v8a-release.apk",
+    "https://github.com/Toskysun/MusicFree/releases/download/v0.7.60/MusicFree-v0.7.60-universal-release.apk"
   ]
 }
