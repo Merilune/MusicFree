@@ -4,46 +4,39 @@ import { compare } from "compare-versions";
 import PluginManager from "./pluginManager";
 import MusicSheet from "@/core/musicSheet";
 import { ResumeMode } from "@/constants/commonConst.ts";
+import {
+    createBackupFileName,
+    createBackupPayload,
+    parseBackupPayload,
+    type IBackupPlugin,
+} from "./backupFormat.ts";
 
-/**
- * 结果：一份大的json文件
- * {
- *     musicSheets: [],
- *     plugins: [],
- * }
- */
-
-interface IBackJson {
-    musicSheets: IMusic.IMusicSheetItem[];
-    plugins: Array<{ srcUrl: string; version: string }>;
-}
+/** Build the shared BakaMusic/MusicFree v3 backup envelope. */
 
 function backup() {
     const musicSheets = MusicSheet.backupSheets();
     const plugins = PluginManager.getEnabledPlugins();
-    const normalizedPlugins = plugins.map(_ => ({
-        srcUrl: _.instance.srcUrl,
-        version: _.instance.version,
-    }));
-
-    return JSON.stringify({
-        musicSheets: musicSheets,
-        plugins: normalizedPlugins,
+    const normalizedPlugins = plugins.flatMap(plugin => {
+        const { srcUrl } = plugin.instance;
+        if (typeof srcUrl !== "string" || !srcUrl.length) {
+            return [];
+        }
+        return [
+            {
+                srcUrl,
+                version: plugin.instance.version ?? "0.0.0",
+            } satisfies IBackupPlugin,
+        ];
     });
+
+    return createBackupPayload(musicSheets, normalizedPlugins);
 }
 
 async function resume(
-    raw: string | Object,
+    raw: string | Record<string, unknown>,
     resumeMode: ResumeMode = ResumeMode.Append,
 ) {
-    let obj: IBackJson;
-    if (typeof raw === "string") {
-        obj = JSON.parse(raw);
-    } else {
-        obj = raw as IBackJson;
-    }
-
-    const { plugins, musicSheets } = obj ?? {};
+    const { plugins, musicSheets } = parseBackupPayload(raw);
     /** 恢复插件 */
     const validPlugins = PluginManager.getEnabledPlugins();
     const resumePlugins = plugins?.map(_ => {
@@ -73,5 +66,6 @@ async function resume(
 const Backup = {
     backup,
     resume,
+    createBackupFileName,
 };
 export default Backup;
