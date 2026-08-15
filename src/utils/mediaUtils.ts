@@ -298,3 +298,77 @@ export function getLocalPath(mediaItem: ICommon.IMediaBase) {
 
     return localPathInMediaExtra ?? null;
 }
+
+/** 生成导入歌单的确定性兜底 id（同一插件 + 同一链接结果稳定） */
+function createImportedSheetId(platform: string, input: string) {
+    let hash = 2166136261;
+    const identity = `${platform}\0${input}`;
+    for (let index = 0; index < identity.length; index++) {
+        // eslint-disable-next-line no-bitwise
+        hash = Math.imul(hash ^ identity.charCodeAt(index), 16777619);
+    }
+    // eslint-disable-next-line no-bitwise
+    return `import-${(hash >>> 0).toString(36)}`;
+}
+
+function pickImportedSheetArtwork(
+    ...candidates: Array<string | undefined>
+): string | undefined {
+    for (const candidate of candidates) {
+        if (typeof candidate === "string" && candidate.trim()) {
+            return candidate.trim();
+        }
+    }
+    return undefined;
+}
+
+/**
+ * 将插件 importMusicSheet 的返回值规整为可直接展示的歌单项。
+ * 新插件返回完整歌单对象；旧插件返回歌曲数组。
+ */
+export function normalizeImportedMusicSheet(
+    result: IPlugin.IImportMusicSheetResult | null,
+    platform: string,
+    input: string,
+    fallbackTitle: string,
+): IMusic.IMusicSheetItem | null {
+    if (!result) {
+        return null;
+    }
+
+    const sourceSheet = Array.isArray(result) ? null : result;
+    const musicList = Array.isArray(result)
+        ? result
+        : Array.isArray(result.musicList)
+            ? result.musicList
+            : [];
+    if (!musicList.length) {
+        return null;
+    }
+
+    const title =
+        typeof sourceSheet?.title === "string" ? sourceSheet.title.trim() : "";
+    const id =
+        sourceSheet?.id === undefined || sourceSheet?.id === null
+            ? createImportedSheetId(platform, input)
+            : String(sourceSheet.id);
+    const musicWithArtwork = musicList.find(
+        item => item.artwork || item.coverImg,
+    );
+
+    return {
+        ...(sourceSheet ?? {}),
+        id,
+        platform,
+        title: title || fallbackTitle,
+        artwork: pickImportedSheetArtwork(
+            sourceSheet?.artwork,
+            sourceSheet?.coverImg,
+            musicWithArtwork?.artwork,
+            musicWithArtwork?.coverImg,
+        ),
+        worksNum: sourceSheet?.worksNum ?? musicList.length,
+        musicList,
+        isImported: true,
+    };
+}

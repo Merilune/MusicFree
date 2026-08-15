@@ -7,6 +7,8 @@ import Toast from "@/utils/toast";
 import Clipboard from "@react-native-clipboard/clipboard";
 import { showDialog } from "@/components/dialogs/useDialog";
 import { showPanel } from "@/components/panels/usePanel";
+import { ROUTE_PATH, useNavigate } from "@/core/router";
+import { normalizeImportedMusicSheet } from "@/utils/mediaUtils";
 import rpx from "@/utils/rpx";
 import { StyleSheet, View } from "react-native";
 import ThemeText from "@/components/base/themeText";
@@ -28,11 +30,12 @@ interface IOption {
     show?: boolean;
 }
 
-function _PluginItem(props: IPluginItemProps) {
+function PluginItemBase(props: IPluginItemProps) {
     const { plugin } = props;
     const colors = useColors();
     const enabled = usePluginEnabled(plugin);
     const { t } = useI18N();
+    const navigate = useNavigate();
     const rerender = useRerender();
 
     const alternativePluginName = pluginManager.getAlternativePluginName(plugin);
@@ -159,17 +162,17 @@ function _PluginItem(props: IPluginItemProps) {
                         const result = await plugin.methods.importMusicSheet(
                             text,
                         );
-                        if (result && result.length > 0) {
-                            showDialog("SimpleDialog", {
-                                title: t("pluginSetting.pluginItem.options.importDialogTitle"),
-                                content: t("pluginSetting.pluginItem.options.importSheetDialogContent", {
-                                    count: result.length,
-                                }),
-                                onOk() {
-                                    showPanel("AddToMusicSheet", {
-                                        musicItem: result,
-                                    });
-                                },
+                        const sheet = normalizeImportedMusicSheet(
+                            result,
+                            plugin.name,
+                            text,
+                            t("panel.importMusicSheet.fallbackTitle", {
+                                plugin: plugin.name,
+                            }),
+                        );
+                        if (sheet) {
+                            navigate(ROUTE_PATH.PLUGIN_SHEET_DETAIL, {
+                                sheetInfo: sheet,
                             });
                         } else {
                             Toast.warn(t("toast.failToImportSheet"));
@@ -311,7 +314,7 @@ function _PluginItem(props: IPluginItemProps) {
     );
 }
 
-const PluginItem = memo(_PluginItem, (prev, curr) => {
+const PluginItem = memo(PluginItemBase, (prev, curr) => {
     return prev.plugin === curr.plugin;
 });
 export default PluginItem;

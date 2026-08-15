@@ -206,7 +206,6 @@ export interface ILanguageData {
     "pluginSetting.pluginItem.options.importMusicToSheetName": string; // 导入音乐到歌单
     "pluginSetting.pluginItem.options.importSheet": string; // 导入歌单
     "pluginSetting.pluginItem.options.importSheetPlaceHolder": string; // 导入歌单链接
-    "pluginSetting.pluginItem.options.importSheetDialogContent": string; // 导入歌单对话框内容
     "pluginSetting.pluginItem.options.userVariables": string; // 用户变量
     "pluginSetting.pluginItem.versionHint": string; // 版本提示
     "pluginSetting.pluginItem.author": string; // 作者
@@ -520,8 +519,7 @@ export interface ILanguageData {
     "panel.importMusicSheet.title": string; // 导入歌单
     "panel.importMusicSheet.placeholder": string; // 输入目标歌单
     "panel.importMusicSheet.importing": string; // 正在导入中
-    "panel.importMusicSheet.prepareImport": string; // 准备导入
-    "panel.importMusicSheet.foundSongs": string; // 发现歌曲
+    "panel.importMusicSheet.fallbackTitle": string; // 导入歌单兜底标题
     "panel.importMusicSheet.invalidLink": string; // 链接有误或目标歌单为空
 
     // 面板相关 - 音乐项歌词选项

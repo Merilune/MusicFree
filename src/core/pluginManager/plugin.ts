@@ -1028,12 +1028,33 @@ class PluginMethodsWrapper implements IPlugin.IPluginInstanceMethods {
     }
 
     /** 导入歌单 */
-    async importMusicSheet(urlLike: string): Promise<IMusic.IMusicItem[]> {
+    async importMusicSheet(
+        urlLike: string,
+    ): Promise<IPlugin.IImportMusicSheetResult | null> {
         await this.ensurePluginIsMounted();
         try {
-            const result =
-                (await this.plugin.instance?.importMusicSheet?.(urlLike)) ?? [];
-            return result.map(item => {
+            const result = await this.plugin.instance?.importMusicSheet?.(
+                urlLike,
+            );
+            if (!result) {
+                return null;
+            }
+            // 旧插件返回歌曲数组
+            if (Array.isArray(result)) {
+                return result.map(item => {
+                    const normalized = normalizePluginMusicItem(item);
+                    return resetMediaItem(
+                        { ...item, ...normalized },
+                        this.plugin.name,
+                        true,
+                    );
+                });
+            }
+            if (typeof result !== "object") {
+                return null;
+            }
+            // 新插件返回完整歌单
+            result.musicList = (result.musicList ?? []).map(item => {
                 const normalized = normalizePluginMusicItem(item);
                 return resetMediaItem(
                     { ...item, ...normalized },
@@ -1041,11 +1062,12 @@ class PluginMethodsWrapper implements IPlugin.IPluginInstanceMethods {
                     true,
                 );
             });
+            return result;
         } catch (e: any) {
             devLog("warn", "导入歌单异常", e);
             devLog("error", "导入歌单失败", e, e?.message);
 
-            return [];
+            return null;
         }
     }
 

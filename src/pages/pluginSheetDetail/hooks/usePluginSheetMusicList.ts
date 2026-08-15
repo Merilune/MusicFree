@@ -6,8 +6,14 @@ export default function usePluginSheetMusicList(
     originalSheetItem: IMusic.IMusicSheetItem | null,
 ) {
     const currentPageRef = useRef(1);
+    // 导入的歌单自带完整快照，无需再请求插件
+    const isImportedSheet = !!originalSheetItem?.isImported;
 
-    const [requestState, setRequestState] = useState<RequestStateCode>(RequestStateCode.IDLE);
+    const [requestState, setRequestState] = useState<RequestStateCode>(
+        isImportedSheet
+            ? RequestStateCode.FINISHED
+            : RequestStateCode.IDLE,
+    );
     const [sheetItem, setSheetItem] = useState<IMusic.IMusicSheetItem | null>(
         originalSheetItem,
     );
@@ -18,7 +24,8 @@ export default function usePluginSheetMusicList(
     const getSheetDetail = useCallback(
         async function () {
             // 加载中：直接退出
-            if (originalSheetItem === null ||
+            if (isImportedSheet ||
+                originalSheetItem === null ||
                 requestState === RequestStateCode.FINISHED ||
                 requestState === RequestStateCode.PENDING_FIRST_PAGE ||
                 requestState === RequestStateCode.PENDING_REST_PAGE) {
@@ -65,7 +72,7 @@ export default function usePluginSheetMusicList(
                 setRequestState(RequestStateCode.ERROR);
             }
         },
-        [requestState, originalSheetItem],
+        [requestState, originalSheetItem, isImportedSheet],
     );
 
     useEffect(() => {

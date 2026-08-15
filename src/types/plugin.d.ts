@@ -61,6 +61,11 @@ declare namespace IPlugin {
         data?: IMusic.IMusicSheetGroupItem[];
     }
 
+    /**
+     * 导入歌单结果。新插件返回完整歌单对象；歌曲数组仅用于兼容旧插件。
+     */
+    type IImportMusicSheetResult = IMusic.IMusicSheetItem | IMusic.IMusicItem[];
+
     interface IPluginDefine {
         /** 来源名 */
         platform: string;
@@ -124,10 +129,9 @@ declare namespace IPlugin {
         /** 获取作品，有分页 */
         getArtistWorks?: IGetArtistWorksFunc;
         /** 导入歌单 */
-        // todo: 数据结构应该是IMusicSheetItem
         importMusicSheet?: (
             urlLike: string,
-        ) => Promise<IMusic.IMusicItem[] | null>;
+        ) => Promise<IImportMusicSheetResult | null>;
         /** 导入单曲 */
         importMusicItem?: (
             urlLike: string,

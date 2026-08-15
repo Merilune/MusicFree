@@ -19,6 +19,8 @@ declare namespace IMusic {
     /** 歌单项 */
     export interface IMusicSheetItem extends IMusicSheetItemBase {
         musicList: Array<IMusic.IMusicItem>;
+        /** 是否为导入接口返回的完整歌单快照 */
+        isImported?: boolean;
     }
 
     export type IMusicSheet = Array<IMusicSheetItem>;
