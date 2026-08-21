@@ -153,6 +153,7 @@ export default function (props: IPanelFullScreenProps) {
             transparent
             animationType="none"
             statusBarTranslucent
+            navigationBarTranslucent
             presentationStyle="overFullScreen"
             onRequestClose={closePanel}>
             <View style={style.rootHost} collapsable={false}>

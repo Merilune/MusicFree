@@ -84,6 +84,7 @@ class PluginManager implements IPluginManager, IInjectable {
                 primaryKey: plugin.instance.primaryKey,
                 supportedSearchType: plugin.instance.supportedSearchType,
                 supportedQualities: plugin.instance.supportedQualities,
+                supportedVideoQualities: plugin.instance.supportedVideoQualities,
                 cacheControl: plugin.instance.cacheControl,
                 description: plugin.instance.description,
                 hints: plugin.instance.hints,

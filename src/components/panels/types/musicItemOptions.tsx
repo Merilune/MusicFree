@@ -38,6 +38,8 @@ import lyricManager from "@/core/lyricManager";
 import { useI18N } from "@/core/i18n";
 import pluginManager from "@/core/pluginManager";
 import { musicItemHasQualitySizes } from "@/utils/qualities";
+import { canPlayMusicVideo } from "@/utils/musicVideo";
+import * as ScreenOrientation from "expo-screen-orientation";
 
 interface IMusicItemOptionsProps {
     /** 歌曲信息 */
@@ -132,6 +134,55 @@ export default function MusicItemOptions(props: IMusicItemOptionsProps) {
     const displayArtwork = resolveArtwork(musicItem);
 
     const options: IOption[] = [
+        {
+            icon: "play-circle-outline",
+            title: t("panel.musicItemOptions.playMv"),
+            show: canPlayMusicVideo(musicItem),
+            onPress: async () => {
+                const plugin = pluginManager.getByMedia(musicItem);
+                try {
+                    const initialQuality = musicItem.videoQuality;
+                    const initialSource = await plugin?.methods?.getMvSource(
+                        musicItem,
+                        initialQuality,
+                    );
+                    if (!initialSource?.url) {
+                        throw new Error(t("panel.mvPlayer.sourceUnavailable"));
+                    }
+                    const declaredQuality = (
+                        plugin?.instance?.supportedVideoQualities ?? []
+                    )
+                        .map(option =>
+                            typeof option === "string"
+                                ? { key: option }
+                                : option,
+                        )
+                        .find(
+                            option =>
+                                option.key ===
+                                (initialSource.videoQuality || initialQuality),
+                        );
+                    const videoWidth = initialSource.width ?? declaredQuality?.width;
+                    const videoHeight = initialSource.height ?? declaredQuality?.height;
+                    if (videoWidth && videoHeight) {
+                        const lock = videoWidth >= videoHeight
+                            ? ScreenOrientation.OrientationLock.LANDSCAPE
+                            : ScreenOrientation.OrientationLock.PORTRAIT;
+                        await ScreenOrientation.lockAsync(lock).catch(
+                            () => undefined,
+                        );
+                    }
+                    showPanel("MvPlayer", { musicItem, initialSource });
+                } catch (reason) {
+                    hidePanel();
+                    Toast.warn(
+                        reason instanceof Error
+                            ? reason.message
+                            : t("panel.mvPlayer.loadFailed"),
+                    );
+                }
+            },
+        },
         {
             icon: "identification",
             title: (() => {

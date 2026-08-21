@@ -150,6 +150,12 @@ export interface ITrackPlayer extends IInjectable, EventEmitter<{
      */
     pause(): Promise<void>;
 
+    /** 暂停音频，为 MV 播放让出音频通道。 */
+    suspendForVideo(): Promise<void>;
+
+    /** 关闭 MV 后恢复此前正在播放的音频。 */
+    restoreAfterVideo(): Promise<void>;
+
     /**
      * 切换到下一个播放模式（列表循环->随机播放->单曲循环）
      */

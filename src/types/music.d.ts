@@ -46,6 +46,20 @@ declare namespace IMusic {
         artwork: string;
         /** 默认音源 */
         url?: string;
+        /** MV/视频标识（网易云等平台通常直接返回数字 ID） */
+        mv?: string | number;
+        mvId?: string | number;
+        mvid?: string | number;
+        mvHash?: string | number;
+        mvVid?: string | number;
+        mvCopyrightId?: string | number;
+        /** 视频媒体标识 */
+        videoId?: string | number;
+        bvid?: string;
+        /** 视频媒体条目标记 */
+        is_video?: boolean;
+        /** MV 视频质量档位 */
+        videoQuality?: string;
         /** 音源 */
         source?: Partial<Record<IQualityKey, IMediaSource>>;
         /** 歌词 */

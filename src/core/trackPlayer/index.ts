@@ -86,6 +86,10 @@ class TrackPlayer extends EventEmitter<{
     private currentIndex = -1;
     // 音乐播放器服务是否启动
     private serviceInited = false;
+    private videoSuspension: {
+        musicItem: IMusic.IMusicItem | null;
+        wasPlaying: boolean;
+    } | null = null;
     // 播放队列索引map
     private playListIndexMap = createMediaIndexMap([] as IMusic.IMusicItem[]);
 
@@ -885,6 +889,45 @@ class TrackPlayer extends EventEmitter<{
 
     async pause(): Promise<void> {
         await ReactNativeTrackPlayer.pause();
+    }
+
+    async suspendForVideo(): Promise<void> {
+        if (this.videoSuspension) {
+            return;
+        }
+
+        let wasPlaying = false;
+        try {
+            wasPlaying = (await ReactNativeTrackPlayer.getPlaybackState()).state === State.Playing;
+        } catch {
+            // The audio service may not be initialized while opening an MV.
+        }
+
+        this.videoSuspension = {
+            musicItem: this.currentMusic,
+            wasPlaying,
+        };
+        if (wasPlaying) {
+            await ReactNativeTrackPlayer.pause();
+        }
+    }
+
+    async restoreAfterVideo(): Promise<void> {
+        const suspension = this.videoSuspension;
+        this.videoSuspension = null;
+        if (!suspension?.wasPlaying || !suspension.musicItem) {
+            return;
+        }
+
+        // Do not unexpectedly start a different song selected while the MV was open.
+        if (!this.isCurrentMusic(suspension.musicItem)) {
+            return;
+        }
+        try {
+            await ReactNativeTrackPlayer.play();
+        } catch {
+            // The player may have been torn down while the video modal closed.
+        }
     }
 
     toggleRepeatMode(): void {

@@ -507,6 +507,53 @@ class PluginMethodsWrapper implements IPlugin.IPluginInstanceMethods {
         }
     }
 
+    /** 获取 MV/视频源。视频源不写入音频 source 缓存，避免把分辨率误当音质。 */
+    async getMvSource(
+        musicItem: IMusic.IMusicItemBase,
+        videoQuality?: string,
+    ): Promise<IPlugin.IVideoSourceResult | null> {
+        await this.ensurePluginIsMounted();
+        const getMvSource = this.plugin.instance?.getMvSource;
+        if (typeof getMvSource !== "function") {
+            return null;
+        }
+
+        try {
+            const result = await getMvSource(
+                resetMediaItem(musicItem, undefined, true),
+                videoQuality,
+            );
+            if (!result || typeof result !== "object" || typeof result.url !== "string") {
+                return null;
+            }
+
+            const normalizedUrl = result.url.trim();
+            if (!normalizedUrl) {
+                return null;
+            }
+            const authFormatted = formatAuthUrl(normalizedUrl);
+            let headers = result.headers && typeof result.headers === "object"
+                ? { ...result.headers }
+                : undefined;
+            if (authFormatted.auth) {
+                headers ??= {};
+                headers.Authorization = authFormatted.auth;
+            }
+            const backupUrls = Array.isArray(result.backupUrls)
+                ? result.backupUrls.filter(url => typeof url === "string" && url.length > 0)
+                : undefined;
+            return {
+                ...result,
+                url: authFormatted.url,
+                headers,
+                backupUrls,
+            };
+        } catch (e: any) {
+            devLog("error", "获取 MV 源失败", e, e?.message);
+            return null;
+        }
+    }
+
     /** 获取音乐详情 */
     async getMusicInfo(
         musicItem: ICommon.IMediaBase,

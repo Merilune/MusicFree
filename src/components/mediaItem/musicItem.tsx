@@ -14,6 +14,7 @@ import Badge, { BadgeType } from "../base/badge";
 
 import { getQualityKeys } from "@/utils/qualities";
 import { resolveArtwork } from "@/utils/artwork";
+import { canPlayMusicVideo } from "@/utils/musicVideo";
 
 // master/atmos_plus/atmos/dolby/vinyl 不计入显示，只认以下五级
 const qualityBadgeDisplayMap: Record<string, { type: BadgeType; text: string }> = {
@@ -74,6 +75,7 @@ export default function MusicItem(props: IMusicItemProps) {
     const qualityBadge = useMemo(() => getQualityBadge(musicItem), [musicItem]);
     // 获取 VIP 标志
     const isVip = musicItem.fee === 1;
+    const hasMv = useMemo(() => canPlayMusicVideo(musicItem), [musicItem]);
 
     return (
         <ListItem
@@ -128,6 +130,9 @@ export default function MusicItem(props: IMusicItemProps) {
                         )}
                         {isVip && (
                             <Badge type="vip">VIP</Badge>
+                        )}
+                        {hasMv && (
+                            <Badge type="source">MV</Badge>
                         )}
                         <ThemeText
                             numberOfLines={1}
