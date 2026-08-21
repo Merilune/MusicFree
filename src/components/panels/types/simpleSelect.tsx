@@ -1,4 +1,4 @@
-import React, { Fragment } from "react";
+import React, { Fragment, useRef } from "react";
 import { ScrollView, StyleSheet } from "react-native";
 import rpx from "@/utils/rpx";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -10,6 +10,7 @@ import PanelHeader from "../base/panelHeader";
 interface ICandidateItem {
     title?: string;
     value: any;
+    invokeAfterDismiss?: boolean;
 }
 
 interface ISimpleSelectProps {
@@ -18,6 +19,8 @@ interface ISimpleSelectProps {
     candidates?: Array<ICandidateItem>;
     onPress?: (item: ICandidateItem) => void;
 }
+
+const ACTION_DELAY_MS = 350;
 
 export default function SimpleSelect(props: ISimpleSelectProps) {
     const {
@@ -28,6 +31,27 @@ export default function SimpleSelect(props: ISimpleSelectProps) {
     } = props ?? {};
 
     const safeAreaInsets = useSafeAreaInsets();
+    const actionPendingRef = useRef(false);
+
+    const handlePress = (item: ICandidateItem) => {
+        if (!item.invokeAfterDismiss) {
+            onPress?.(item);
+            hidePanel();
+            return;
+        }
+        if (actionPendingRef.current) {
+            return;
+        }
+        actionPendingRef.current = true;
+        hidePanel();
+
+        // PanelBase is hosted in a native Modal. On iOS, presenting another
+        // controller before that Modal is dismissed can leave it permanently
+        // marked as active (notably expo-document-picker).
+        setTimeout(() => {
+            onPress?.(item);
+        }, ACTION_DELAY_MS);
+    };
 
     return (
         <PanelBase
@@ -47,10 +71,7 @@ export default function SimpleSelect(props: ISimpleSelectProps) {
                                     <ListItem
                                         heightType="small"
                                         withHorizontalPadding
-                                        onPress={() => {
-                                            onPress?.(it);
-                                            hidePanel();
-                                        }}>
+                                        onPress={() => handlePress(it)}>
                                         <ListItem.Content
                                             title={it.title ?? it.value}
                                         />

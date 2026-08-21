@@ -292,6 +292,7 @@ export default function PluginList() {
                                     {
                                         value: "从本地安装插件",
                                         title: t("pluginSetting.fabOptions.installFromLocal"),
+                                        invokeAfterDismiss: true,
                                     },
                                     {
                                         value: "从网络安装插件",
