@@ -1,5 +1,6 @@
 import React, { useMemo, useRef } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import Color from "color";
 import { ScrollView as GHScrollView } from "react-native-gesture-handler";
 import rpx from "@/utils/rpx";
 import Tag from "@/components/base/tag";
@@ -26,16 +27,34 @@ function PlayListItemView(props: IPlayListProps) {
     const colors = useColors();
     const { item, isCurrentMusic } = props;
 
+    // 正在播放这一行的标识色：主题高亮色，没有就用主色
+    const highlightColor = colors.textHighlight ?? colors.primary;
+    // 整行淡色底：把标识色降到 12% 不透明度
+    let highlightRowColor = highlightColor;
+    try {
+        highlightRowColor = Color(highlightColor).alpha(0.12).toString();
+    } catch {
+        // 非法色值就直接用原色
+    }
+
     return (
         <Pressable
             onPress={() => {
                 TrackPlayer.play(item);
             }}
-            style={style.musicItem}>
+            style={[
+                style.musicItem,
+                isCurrentMusic && {
+                    backgroundColor: highlightRowColor,
+                },
+            ]}>
+            {isCurrentMusic && (
+                <View style={[style.currentPlayingBar, { backgroundColor: highlightColor }]} />
+            )}
             {isCurrentMusic && (
                 <Icon
                     name="musical-note"
-                    color={colors.textHighlight ?? colors.primary}
+                    color={highlightColor}
                     size={fontSizeConst.content}
                     style={style.currentPlaying}
                 />
@@ -44,11 +63,10 @@ function PlayListItemView(props: IPlayListProps) {
                 style={[
                     style.musicItemTitle,
                     {
-                        color: isCurrentMusic
-                            ? colors.textHighlight ?? colors.primary
-                            : colors.text,
+                        color: isCurrentMusic ? highlightColor : colors.text,
                     },
                 ]}
+                fontWeight={isCurrentMusic ? "semibold" : "regular"}
                 ellipsizeMode="tail"
                 numberOfLines={1}>
                 {item.title}
@@ -146,6 +164,15 @@ const style = StyleSheet.create({
     },
     currentPlaying: {
         marginRight: rpx(6),
+    },
+    // 正在播放行左侧的主题色竖条
+    currentPlayingBar: {
+        position: "absolute",
+        left: 0,
+        top: rpx(18),
+        bottom: rpx(18),
+        width: rpx(6),
+        borderRadius: rpx(3),
     },
     musicItem: {
         width: ITEM_WIDTH,
