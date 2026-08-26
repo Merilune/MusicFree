@@ -5,6 +5,7 @@ import { ResumeMode, SortType, localPluginPlatform } from "@/constants/commonCon
 import { IAppConfig } from "@/types/core/config";
 import { IInjectable } from "@/types/infra";
 import { isSameMediaItem } from "@/utils/mediaUtils";
+import { removeBackgroundImage } from "@/utils/backgroundImage";
 import EventEmitter from "eventemitter3";
 import { Immer } from "immer";
 import { atom, getDefaultStore, useAtomValue } from "jotai";
@@ -292,6 +293,10 @@ class MusicSheetClazz implements IInjectable {
 
         // 删除后的歌单
         const newSheets = musicSheets.filter(item => item.id !== sheetId);
+
+        // 顺手清掉歌单专属背景图，避免文件残留
+        const targetSheet = musicSheets.find(item => item.id === sheetId);
+        await removeBackgroundImage(targetSheet?.background);
 
         // 写入存储
         storage.removeMusicList(sheetId);

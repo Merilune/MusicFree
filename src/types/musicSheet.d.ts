@@ -13,6 +13,12 @@ declare namespace IMusic {
         description?: string;
         /** 作品总数 */
         worksNum?: number;
+        /** 歌单专属背景图（本地歌单） */
+        background?: string;
+        /** 歌单专属背景的模糊度 */
+        backgroundBlur?: number;
+        /** 歌单专属背景的不透明度 */
+        backgroundOpacity?: number;
         platform: string;
         [k: string]: any;
     }
