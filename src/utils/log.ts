@@ -45,29 +45,74 @@ function safeSerialize(value: any) {
     }
 }
 
-export async function markStartupSession(label = "app-launch") {
+// 启动面包屑只用于排查开屏卡死/崩溃，但启动关键路径上有十几处调用，
+// 每次 mkdir + appendFile 都是两轮跨桥文件 IO，串起来能把开屏拖慢几百毫秒。
+// 所以调用时只往内存队列里塞，真正落盘放到空闲时批量做一次。
+const breadcrumbFlushDelay = 400;
+let breadcrumbQueue: string[] = [];
+let breadcrumbChain: Promise<void> = Promise.resolve();
+let breadcrumbTimer: ReturnType<typeof setTimeout> | null = null;
+let logDirEnsured = false;
+
+/**
+ * 把排队中的面包屑写入磁盘。返回的 promise 在这批写完后 resolve。
+ * 崩溃路径（全局错误、bootstrap 致命错误）要显式调一次，
+ * 否则延迟批量写会把最后几条、也就是最关键的几条丢掉。
+ */
+export function flushStartupBreadcrumbs(): Promise<void> {
+    if (breadcrumbTimer != null) {
+        clearTimeout(breadcrumbTimer);
+        breadcrumbTimer = null;
+    }
+    if (!breadcrumbQueue.length) {
+        return breadcrumbChain;
+    }
+    const batch = breadcrumbQueue.join("");
+    breadcrumbQueue = [];
+    // 串成链，保证多批之间的写入顺序
+    breadcrumbChain = breadcrumbChain.then(async () => {
+        try {
+            if (!logDirEnsured) {
+                await RNFS.mkdir(pathConst.logPath);
+                logDirEnsured = true;
+            }
+            await RNFS.appendFile(startupBreadcrumbFile, batch, "utf8");
+        } catch {
+            // 落盘失败就丢掉，排查用的日志不值得重试
+        }
+    });
+    return breadcrumbChain;
+}
+
+export function appendStartupBreadcrumb(step: string, details?: any) {
+    const payload = {
+        ts: new Date().toISOString(),
+        sessionId: startupSessionId,
+        step,
+        details,
+    };
+    breadcrumbQueue.push(`${safeSerialize(payload)}\n`);
+    if (breadcrumbTimer == null) {
+        breadcrumbTimer = setTimeout(() => {
+            breadcrumbTimer = null;
+            void flushStartupBreadcrumbs();
+        }, breadcrumbFlushDelay);
+    }
+    // 返回 promise 只为兼容既有的 await 调用点，这里不再等待任何 IO
+    return Promise.resolve();
+}
+
+export function markStartupSession(label = "app-launch") {
     startupSessionId = `${Date.now()}`;
-    await appendStartupBreadcrumb(label, {
+    return appendStartupBreadcrumb(label, {
         sessionId: startupSessionId,
     });
 }
 
-export async function appendStartupBreadcrumb(step: string, details?: any) {
-    try {
-        await RNFS.mkdir(pathConst.logPath);
-        const payload = {
-            ts: new Date().toISOString(),
-            sessionId: startupSessionId,
-            step,
-            details,
-        };
-        await RNFS.appendFile(startupBreadcrumbFile, `${safeSerialize(payload)}\n`, "utf8");
-    } catch {
-    }
-}
-
 export async function getStartupBreadcrumbContent() {
     try {
+        // 先把队列里的落盘，否则调试面板看不到最新几条
+        await flushStartupBreadcrumbs();
         if (!(await RNFS.exists(startupBreadcrumbFile))) {
             return "";
         }

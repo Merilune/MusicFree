@@ -16,7 +16,7 @@ import Theme from "@/core/theme";
 import TrackPlayer from "@/core/trackPlayer";
 import NativeUtils from "@/native/utils";
 import { checkAndCreateDir } from "@/utils/fileUtils";
-import { appendStartupBreadcrumb, errorLog, markStartupSession, trace, devLog } from "@/utils/log";
+import { appendStartupBreadcrumb, errorLog, flushStartupBreadcrumbs, markStartupSession, trace, devLog } from "@/utils/log";
 import { IPerfLogger, perfLogger } from "@/utils/perfLogger";
 import PersistStatus from "@/utils/persistStatus";
 import Toast from "@/utils/toast";
@@ -61,6 +61,8 @@ function registerEarlyGlobalErrorHandlers() {
                 message: error?.message,
                 name: error?.name,
             });
+            // 面包屑平时是延迟批量写的，崩溃时必须立刻落盘，否则查不到现场
+            void flushStartupBreadcrumbs();
             errorLog("未捕获的错误", {
                 isFatal,
                 message: error?.message,
@@ -74,12 +76,12 @@ function registerEarlyGlobalErrorHandlers() {
 
 
 async function bootstrapImpl() {
-    await appendStartupBreadcrumb("bootstrap-start");
+    void appendStartupBreadcrumb("bootstrap-start");
     registerEarlyGlobalErrorHandlers();
-    await appendStartupBreadcrumb("global-handler-registered");
+    void appendStartupBreadcrumb("global-handler-registered");
 
     await splashScreenPreventPromise;
-    await appendStartupBreadcrumb("splashscreen-prevented");
+    void appendStartupBreadcrumb("splashscreen-prevented");
     const logger = perfLogger();
     // 1. 检查权限
     if (Platform.OS === "android") {
@@ -108,20 +110,17 @@ async function bootstrapImpl() {
             }
         }
     }
-    await appendStartupBreadcrumb("permissions-checked", { platform: Platform.OS });
+    void appendStartupBreadcrumb("permissions-checked", { platform: Platform.OS });
     logger.mark("权限检查完成");
 
     // 2. 数据初始化
-    /** 初始化路径 */
-    await setupFolder();
-    await appendStartupBreadcrumb("folders-ready");
-    trace("文件夹初始化完成");
-    logger.mark("文件夹初始化完成");
-
-
-
-    // 加载配置
+    // 目录创建走文件系统，Config / MusicSheet / musicHistory 全是 MMKV，
+    // 互不依赖，一起并行。真正需要目录就绪的是下面的 PluginManager.setup（readDir）。
     await Promise.all([
+        setupFolder().then(() => {
+            trace("文件夹初始化完成");
+            logger.mark("文件夹初始化完成");
+        }),
         Config.setup().then(() => {
             logger.mark("Config");
         }),
@@ -132,7 +131,7 @@ async function bootstrapImpl() {
             logger.mark("musicHistory");
         }),
     ]);
-    await appendStartupBreadcrumb("config-loaded");
+    void appendStartupBreadcrumb("config-loaded");
     trace("配置初始化完成");
     logger.mark("配置初始化完成");
 
@@ -147,21 +146,28 @@ async function bootstrapImpl() {
     Theme.setup();
     logger.mark("主题初始化完成");
     i18n.setup();
-    await appendStartupBreadcrumb("i18n-ready");
+    void appendStartupBreadcrumb("i18n-ready");
     logger.mark("语言模块初始化完成");
+
+    // 原生播放器和通知栏只依赖 Config，先发车，让这段原生耗时与插件加载重叠。
+    // 播放列表恢复要用 PluginManager.getByMedia，所以那部分仍留在插件之后。
+    const nativePlayerPromise = setupNativePlayer();
+    // 先挂个 catch 免得插件阶段抛 unhandled rejection；
+    // 真正的错误处理在下面 await initTrackPlayer 时进行
+    nativePlayerPromise.catch(emptyFunction);
 
     // 加载插件（默认懒加载：有缓存时不编译沙箱，启动显著更快）
     await PluginManager.setup();
-    await appendStartupBreadcrumb("plugins-ready");
+    void appendStartupBreadcrumb("plugins-ready");
     logger.mark("插件初始化完成");
     trace("插件初始化完成");
 
-    await appendStartupBreadcrumb("trackplayer-init-start");
+    void appendStartupBreadcrumb("trackplayer-init-start");
     try {
         await initTrackPlayer(logger);
-        await appendStartupBreadcrumb("trackplayer-init-finished");
+        void appendStartupBreadcrumb("trackplayer-init-finished");
     } catch (err: any) {
-        await appendStartupBreadcrumb("trackplayer-setup-error", {
+        void appendStartupBreadcrumb("trackplayer-setup-error", {
             message: err?.message,
             name: err?.name,
         });
@@ -185,9 +191,9 @@ async function bootstrapImpl() {
         });
         errorLog("post-bootstrap work failed", error);
     });
-    await appendStartupBreadcrumb("post-bootstrap-scheduled");
+    void appendStartupBreadcrumb("post-bootstrap-scheduled");
 
-    await appendStartupBreadcrumb("bootstrap-impl-finished");
+    void appendStartupBreadcrumb("bootstrap-impl-finished");
 }
 
 /**
@@ -203,9 +209,9 @@ async function schedulePostBootstrapWork(logger: IPerfLogger) {
         await LocalMusicSheet.setup();
         trace("本地音乐初始化完成");
         logger.mark("本地音乐初始化完成");
-        await appendStartupBreadcrumb("local-music-ready");
+        void appendStartupBreadcrumb("local-music-ready");
     } catch (error: any) {
-        await appendStartupBreadcrumb("local-music-error", {
+        void appendStartupBreadcrumb("local-music-error", {
             message: error?.message,
             name: error?.name,
         });
@@ -214,10 +220,10 @@ async function schedulePostBootstrapWork(logger: IPerfLogger) {
 
     try {
         await downloadNotificationManager.initialize();
-        await appendStartupBreadcrumb("download-notification-ready");
+        void appendStartupBreadcrumb("download-notification-ready");
         logger.mark("下载通知管理器初始化完成");
     } catch (error: any) {
-        await appendStartupBreadcrumb("download-notification-error", {
+        void appendStartupBreadcrumb("download-notification-error", {
             message: error?.message,
             name: error?.name,
         });
@@ -344,6 +350,39 @@ async function setupFolder() {
 }
 
 export async function initTrackPlayer(logger?: IPerfLogger) {
+    await setupNativePlayer();
+    logger?.mark("播放器初始化完成");
+    trace("播放器初始化完成");
+
+    await TrackPlayer.setupTrackPlayer();
+    trace("播放列表初始化完成");
+    logger?.mark("播放列表初始化完成");
+
+    await lyricManager.setup();
+
+    logger?.mark("歌词初始化完成");
+}
+
+let nativePlayerSetupPromise: Promise<void> | null = null;
+
+/**
+ * 原生播放器 + 通知栏配置。只依赖 Config，与插件加载无关，
+ * 所以启动时可以和 PluginManager.setup 并行跑，把这段原生耗时重叠掉。
+ * 结果缓存起来，重复调用不会真的初始化两次。
+ */
+function setupNativePlayer() {
+    if (!nativePlayerSetupPromise) {
+        nativePlayerSetupPromise = initNativePlayerImpl();
+        // 失败后清空缓存，让 BootstrapComponent 的重试还能再来一次。
+        // 原 promise 仍是 rejected，await 它的地方照样会抛。
+        nativePlayerSetupPromise.catch(() => {
+            nativePlayerSetupPromise = null;
+        });
+    }
+    return nativePlayerSetupPromise;
+}
+
+async function initNativePlayerImpl() {
     try {
         await RNTrackPlayer.setupPlayer({
             maxCacheSize:
@@ -357,7 +396,6 @@ export async function initTrackPlayer(logger?: IPerfLogger) {
             throw e;
         }
     }
-    logger?.mark("加载播放器");
 
     const capabilities = Config.getConfig("basic.showExitOnNotification")
         ? [
@@ -386,16 +424,6 @@ export async function initTrackPlayer(logger?: IPerfLogger) {
         compactCapabilities: capabilities,
         notificationCapabilities: [...capabilities, Capability.SeekTo],
     });
-    logger?.mark("播放器初始化完成");
-    trace("播放器初始化完成");
-
-    await TrackPlayer.setupTrackPlayer();
-    trace("播放列表初始化完成");
-    logger?.mark("播放列表初始化完成");
-
-    await lyricManager.setup();
-
-    logger?.mark("歌词初始化完成");
 }
 
 
@@ -510,7 +538,7 @@ function bindEvents() {
 }
 
 export default async function () {
-    await markStartupSession("bootstrap-entry");
+    void markStartupSession("bootstrap-entry");
 
     try {
         getDefaultStore().set(bootstrapAtom, {
@@ -518,16 +546,17 @@ export default async function () {
         });
         await bootstrapImpl();
         bindEvents();
-        await appendStartupBreadcrumb("bootstrap-bind-events");
+        void appendStartupBreadcrumb("bootstrap-bind-events");
         getDefaultStore().set(bootstrapAtom, {
             "state": "Done",
         });
-        await appendStartupBreadcrumb("bootstrap-done");
+        void appendStartupBreadcrumb("bootstrap-done");
     } catch (e: any) {
-        await appendStartupBreadcrumb("bootstrap-fatal", {
+        void appendStartupBreadcrumb("bootstrap-fatal", {
             message: e?.message,
             name: e?.name,
         });
+        await flushStartupBreadcrumbs();
         errorLog("初始化出错", e);
         if (getDefaultStore().get(bootstrapAtom).state === "Loading") {
             getDefaultStore().set(bootstrapAtom, {
@@ -538,6 +567,6 @@ export default async function () {
     }
     // 隐藏开屏动画
     devLog("info", "🎯[Bootstrap] 隐藏启动屏幕");
-    await appendStartupBreadcrumb("splashscreen-hide");
+    void appendStartupBreadcrumb("splashscreen-hide");
     await SplashScreen.hideAsync();
 }
