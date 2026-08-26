@@ -245,7 +245,7 @@ export default function AboutSetting() {
                                 transform: [{ scale: scaleAnim4 }],
                             },
                         ]}>
-                        <ThemeText fontSize="subTitle" style={style.cardTitle}>本作者</ThemeText>
+                        <ThemeText fontSize="subTitle" style={style.cardTitle}>上游作者</ThemeText>
                         <ThemeText style={style.cardContent}>Toskysun</ThemeText>
                     </Animated.View>
                 </TouchableOpacity>
@@ -278,9 +278,9 @@ export default function AboutSetting() {
                                 transform: [{ scale: scaleAnim5 }],
                             },
                         ]}>
-                        <ThemeText fontSize="subTitle" style={style.cardTitle}>本仓库</ThemeText>
-                        <LinkText linkTo="https://github.com/Toskysun/MusicFree">
-                            https://github.com/Toskysun/MusicFree
+                        <ThemeText fontSize="subTitle" style={style.cardTitle}>本仓库（二次开发）</ThemeText>
+                        <LinkText linkTo="https://github.com/Merilune/MusicFree">
+                            https://github.com/Merilune/MusicFree
                         </LinkText>
                     </Animated.View>
                 </TouchableOpacity>
