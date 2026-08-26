@@ -1,4 +1,3 @@
-import Divider from "@/components/base/divider";
 import { IIconName } from "@/components/base/icon.tsx";
 import ListItem from "@/components/base/listItem";
 import PageBackground from "@/components/base/pageBackground";
@@ -7,14 +6,12 @@ import { showDialog } from "@/components/dialogs/useDialog";
 import { showPanel } from "@/components/panels/usePanel";
 import { useI18N } from "@/core/i18n";
 import { ROUTE_PATH, useNavigate } from "@/core/router";
-import TrackPlayer from "@/core/trackPlayer";
 import rpx from "@/utils/rpx";
-import { forceExitApp } from "@/utils/forceExitApp";
 import { useScheduleCloseCountDown } from "@/utils/scheduleClose";
 import timeformat from "@/utils/timeformat";
 import { DrawerContentScrollView } from "@react-navigation/drawer";
 import React, { memo } from "react";
-import { BackHandler, Platform, StyleSheet, View } from "react-native";
+import { Platform, StyleSheet, View } from "react-native";
 import {
     default as DeviceInfo,
     default as deviceInfoModule,
@@ -234,45 +231,6 @@ function HomeDrawer(props: any) {
                                 "sidebar.currentVersion",
                             )}${deviceInfoModule.getVersion()}`}
                         </ListItem.ListItemText>
-                    </ListItem>
-                </View>
-
-                <View
-                    style={[
-                        style.card,
-                        {
-                            backgroundColor: colors.surface,
-                            borderColor: colors.border,
-                        },
-                    ]}>
-                    <Divider />
-                    <ListItem
-                        withHorizontalPadding
-                        onPress={() => {
-                            // 仅安卓生效
-                            BackHandler.exitApp();
-                        }}>
-                        <ListItem.ListItemIcon
-                            icon={"home-outline"}
-                            width={rpx(48)}
-                        />
-                        <ListItem.Content title={t("sidebar.backToDesktop")} />
-                    </ListItem>
-                    <ListItem
-                        withHorizontalPadding
-                        onPress={async () => {
-                            try {
-                                await TrackPlayer.reset();
-                            } catch {
-                                // ignore
-                            }
-                            forceExitApp();
-                        }}>
-                        <ListItem.ListItemIcon
-                            icon={"power-outline"}
-                            width={rpx(48)}
-                        />
-                        <ListItem.Content title={t("sidebar.exitApp")} />
                     </ListItem>
                 </View>
             </DrawerContentScrollView>
