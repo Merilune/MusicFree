@@ -99,6 +99,13 @@ interface IBackgroundInfo {
     opacity?: number;
 }
 
+/** 写入背景时用的参数，url 传 null 表示显式清除背景图 */
+interface IBackgroundInput {
+    url?: string | null;
+    blur?: number;
+    opacity?: number;
+}
+
 export const customBackgroundSurfaceColors: Partial<CustomizedColors> = {
     pageBackground: "rgba(0,0,0,0.12)",
     card: "rgba(0,0,0,0.22)",
@@ -113,6 +120,69 @@ export const customBackgroundSurfaceColors: Partial<CustomizedColors> = {
 
 const themeStore = new GlobalState(ensureNavigationFonts(darkTheme));
 const backgroundStore = new GlobalState<IBackgroundInfo | null>(null);
+
+/** 背景默认模糊度 */
+export const DEFAULT_BACKGROUND_BLUR = 20;
+/** 背景默认不透明度 */
+export const DEFAULT_BACKGROUND_OPACITY = 0.6;
+
+/**
+ * 会被「表面不透明度」影响的颜色。
+ * pageBackground 是最底层的实色，不参与，否则会直接透出黑底。
+ */
+const surfaceColorKeys: Array<keyof CustomizedColors> = [
+    "card",
+    "surface",
+    "surfaceElevated",
+    "appBar",
+    "musicBar",
+    "tabBar",
+    "backdrop",
+    "placeholder",
+    "notification",
+];
+
+/**
+ * themeStore 里存的是叠加过「表面不透明度」的颜色，这里额外留一份未叠加的原始
+ * 配色。持久化和再次计算都以它为基准，否则 alpha 会被反复乘进去越调越透。
+ */
+let baseColors = darkTheme.colors as CustomizedColors;
+
+function applySurfaceOpacity(colors: CustomizedColors): CustomizedColors {
+    const ratio = Config.getConfig("theme.surfaceOpacity") ?? 1;
+    if (!(ratio > 0) || ratio >= 1) {
+        return colors;
+    }
+
+    const nextColors = { ...colors };
+    surfaceColorKeys.forEach(key => {
+        const raw = nextColors[key] as string | undefined;
+        if (!raw) {
+            return;
+        }
+
+        try {
+            const color = Color(raw);
+            // @ts-ignore key 限定在字符串色值上
+            nextColors[key] = color.alpha(color.alpha() * ratio).toString();
+        } catch {
+            // 非法色值保持原样
+        }
+    });
+
+    return nextColors;
+}
+
+/** 写入主题：记录原始配色，同时把叠加「表面不透明度」后的颜色推给界面 */
+function commitTheme(theme: any) {
+    baseColors = theme.colors as CustomizedColors;
+    themeStore.setValue(
+        ensureNavigationFonts({
+            ...theme,
+            colors: applySurfaceOpacity(theme.colors),
+        }),
+    );
+}
 
 function sameColor(a?: string, b?: string) {
     if (!a || !b) {
@@ -255,9 +325,9 @@ function setup() {
     const bgUrl = Config.getConfig("theme.background");
 
     if (currentTheme === "p-dark") {
-        themeStore.setValue(ensureNavigationFonts(darkTheme));
+        commitTheme(darkTheme);
     } else if (currentTheme === "p-light") {
-        themeStore.setValue(ensureNavigationFonts(lightTheme));
+        commitTheme(lightTheme);
     } else {
         const savedColors = (Config.getConfig("theme.colors") as CustomizedColors) ??
             darkTheme.colors;
@@ -293,18 +363,13 @@ function setup() {
 
         // Custom themes previously omitted `fonts`, which crashes RN Navigation 7
         // native-stack (Cannot read property 'regular' of undefined).
-        themeStore.setValue(
-            ensureNavigationFonts({
-                ...darkTheme,
-                id: currentTheme,
-                dark: true,
-                // @ts-ignore
-                colors: normalizeCustomBackgroundColors(
-                    cardSynced.colors,
-                    !!bgUrl,
-                ),
-            }),
-        );
+        commitTheme({
+            ...darkTheme,
+            id: currentTheme,
+            dark: true,
+            // @ts-ignore
+            colors: normalizeCustomBackgroundColors(cardSynced.colors, !!bgUrl),
+        });
     }
 
     const bgBlur = Config.getConfig("theme.backgroundBlur");
@@ -312,8 +377,8 @@ function setup() {
 
     backgroundStore.setValue({
         url: bgUrl,
-        blur: bgBlur ?? 20,
-        opacity: bgOpacity ?? 0.6,
+        blur: bgBlur ?? DEFAULT_BACKGROUND_BLUR,
+        opacity: bgOpacity ?? DEFAULT_BACKGROUND_OPACITY,
     });
 
     // Warm the native image cache while the splash screen is still visible.
@@ -331,45 +396,43 @@ function setTheme(
     themeName: string,
     extra?: {
         colors?: Partial<CustomizedColors>;
-        background?: IBackgroundInfo;
+        background?: IBackgroundInput;
     },
 ) {
     if (themeName === "p-light") {
-        themeStore.setValue(ensureNavigationFonts(lightTheme));
+        commitTheme(lightTheme);
     } else if (themeName === "p-dark") {
-        themeStore.setValue(ensureNavigationFonts(darkTheme));
+        commitTheme(darkTheme);
     } else {
         const hasBackground = !!(
             extra?.background?.url ??
             backgroundStore.getValue()?.url ??
             Config.getConfig("theme.background")
         );
-        themeStore.setValue(
-            ensureNavigationFonts({
-                ...darkTheme,
-                id: themeName,
-                dark: true,
-                colors: normalizeCustomBackgroundColors(
-                    {
-                        ...darkTheme.colors,
-                        ...(extra?.colors ?? {}),
-                    },
-                    hasBackground,
-                ) as typeof darkTheme.colors,
-            }),
-        );
+        commitTheme({
+            ...darkTheme,
+            id: themeName,
+            dark: true,
+            colors: normalizeCustomBackgroundColors(
+                {
+                    ...darkTheme.colors,
+                    ...(extra?.colors ?? {}),
+                },
+                hasBackground,
+            ) as typeof darkTheme.colors,
+        });
     }
 
     Config.setConfig("theme.selectedTheme", themeName);
-    Config.setConfig("theme.colors", themeStore.getValue().colors);
+    // 存未叠加「表面不透明度」的原始配色，否则 alpha 会被反复乘进去
+    Config.setConfig("theme.colors", baseColors);
 
     if (extra?.background) {
         const currentBg = backgroundStore.getValue();
         let newBg: IBackgroundInfo = {
-            blur: 20,
-            opacity: 0.6,
+            blur: DEFAULT_BACKGROUND_BLUR,
+            opacity: DEFAULT_BACKGROUND_OPACITY,
             ...(currentBg ?? {}),
-            url: undefined,
         };
         if (typeof extra.background.blur === "number") {
             newBg.blur = extra.background.blur;
@@ -377,7 +440,9 @@ function setTheme(
         if (typeof extra.background.opacity === "number") {
             newBg.opacity = extra.background.opacity;
         }
-        if (extra.background.url) {
+        if (extra.background.url === null) {
+            newBg.url = undefined;
+        } else if (extra.background.url) {
             newBg.url = extra.background.url;
         }
 
@@ -404,7 +469,8 @@ function setColors(colors: Partial<CustomizedColors>) {
     const mergedColors = {
         ...darkTheme.colors,
         ...(persistedColors ?? {}),
-        ...currentTheme.colors,
+        // 用未叠加「表面不透明度」的原始配色，否则 alpha 会被反复乘进去
+        ...baseColors,
         ...colorsWithListActive,
     } as CustomizedColors;
     const newColors = syncCardSurfaceColors(mergedColors, {
@@ -419,24 +485,34 @@ function setColors(colors: Partial<CustomizedColors>) {
         const hasBackground = !!(
             backgroundStore.getValue()?.url ?? Config.getConfig("theme.background")
         );
-        const newTheme = ensureNavigationFonts({
+        const newTheme = {
             ...currentTheme,
             colors: normalizeCustomBackgroundColors(
                 newColors,
                 hasBackground,
             ) as typeof currentTheme.colors,
-        });
+        };
         Config.setConfig("theme.colors", newTheme.colors);
-        themeStore.setValue(newTheme);
+        commitTheme(newTheme);
     }
 }
 
-function setBackground(backgroundInfo: Partial<IBackgroundInfo>) {
+/** 全局「表面不透明度」：卡片、弹窗、顶栏等叠加一层统一的 alpha 系数 */
+function setSurfaceOpacity(opacity: number) {
+    Config.setConfig("theme.surfaceOpacity", opacity);
+    // 拿原始配色重算一遍推给界面，不动持久化的配色
+    commitTheme({
+        ...themeStore.getValue(),
+        colors: baseColors,
+    });
+}
+
+function setBackground(backgroundInfo: IBackgroundInput) {
     const currentBackgroundInfo = backgroundStore.getValue();
-    let newBgInfo = {
+    let newBgInfo: IBackgroundInfo = {
         ...(currentBackgroundInfo ?? {
-            opacity: 0.6,
-            blur: 20,
+            opacity: DEFAULT_BACKGROUND_OPACITY,
+            blur: DEFAULT_BACKGROUND_BLUR,
         }),
     };
     if (typeof backgroundInfo.blur === "number") {
@@ -447,7 +523,11 @@ function setBackground(backgroundInfo: Partial<IBackgroundInfo>) {
         Config.setConfig("theme.backgroundOpacity", backgroundInfo.opacity);
         newBgInfo.opacity = backgroundInfo.opacity;
     }
-    if (backgroundInfo.url !== undefined) {
+    // null 表示显式清除；undefined 表示这次不动背景图
+    if (backgroundInfo.url === null) {
+        Config.setConfig("theme.background", undefined);
+        newBgInfo.url = undefined;
+    } else if (backgroundInfo.url !== undefined) {
         Config.setConfig("theme.background", backgroundInfo.url);
         newBgInfo.url = backgroundInfo.url;
     }
@@ -474,9 +554,11 @@ const Theme = {
     setTheme,
     setBackground,
     setColors,
+    setSurfaceOpacity,
     useTheme: themeStore.useValue,
     getTheme: themeStore.getValue,
     useBackground: backgroundStore.useValue,
+    getBackground: backgroundStore.getValue,
     configableColorKey,
 };
 

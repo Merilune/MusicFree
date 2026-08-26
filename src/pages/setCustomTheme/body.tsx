@@ -1,28 +1,29 @@
 import Image from "@/components/base/image";
 import ThemeText from "@/components/base/themeText";
+import SliderRow from "@/components/base/sliderRow";
 import { showPanel } from "@/components/panels/usePanel";
 import { ImgAsset } from "@/constants/assetsConst";
 import globalStyle from "@/constants/globalStyle";
-import pathConst from "@/constants/pathConst";
 import { useI18N } from "@/core/i18n";
 import Theme, {
     customBackgroundSurfaceColors,
     darkTheme,
+    DEFAULT_BACKGROUND_BLUR,
+    DEFAULT_BACKGROUND_OPACITY,
 } from "@/core/theme";
 import { CustomizedColors } from "@/hooks/useColors";
+import {
+    pickBackgroundImage,
+    saveBackgroundImage,
+} from "@/utils/backgroundImage";
 import { grayRate } from "@/utils/colorUtil";
 import rpx from "@/utils/rpx";
 import { devLog } from "@/utils/log";
-import Slider from "@react-native-community/slider";
 import Color from "color";
 import React from "react";
 import { StyleSheet, View } from "react-native";
-import { copyFile } from "react-native-fs";
 import { ScrollView, TouchableOpacity } from "react-native-gesture-handler";
 import ImageColors from "react-native-image-colors";
-import { launchImageLibrary } from "react-native-image-picker";
-
-const BACKGROUND_MAX_DIMENSION = 2048;
 
 export default function Body() {
     const theme = Theme.useTheme();
@@ -31,23 +32,12 @@ export default function Body() {
 
     async function onImageClick() {
         try {
-            const result = await launchImageLibrary({
-                mediaType: "photo",
-                // A full-resolution camera image makes Fresco's blur
-                // postprocessor decode far more pixels than the screen needs.
-                maxWidth: BACKGROUND_MAX_DIMENSION,
-                maxHeight: BACKGROUND_MAX_DIMENSION,
-                quality: 0.85,
-            });
-            const uri = result.assets?.[0].uri;
+            const uri = await pickBackgroundImage();
             if (!uri) {
                 return;
             }
 
-            const bgPath = `${pathConst.dataPath}background${uri.substring(
-                uri.lastIndexOf("."),
-            )}`;
-            await copyFile(uri, bgPath);
+            const bgUrl = await saveBackgroundImage(uri, "background");
 
             const colorsResult = await ImageColors.getColors(uri, {
                 fallback: "#ffffff",
@@ -121,7 +111,7 @@ export default function Body() {
             Theme.setTheme("custom", {
                 colors: themeColors,
                 background: {
-                    url: `file://${bgPath}#${Date.now()}`,
+                    url: bgUrl,
                 },
             });
             // Config.set('setting.theme.colors', {
@@ -145,39 +135,32 @@ export default function Body() {
             </TouchableOpacity>
 
             <View style={styles.sliderWrapper}>
-                <ThemeText>{t("setCustomTheme.blur")}</ThemeText>
-                <Slider
-                    style={styles.slider}
-                    minimumTrackTintColor={theme.colors.primary}
-                    maximumTrackTintColor={theme.colors.text ?? "#999999"}
-                    thumbTintColor={theme.colors.primary}
+                <SliderRow
+                    title={t("setCustomTheme.blur")}
+                    value={backgroundInfo?.blur ?? DEFAULT_BACKGROUND_BLUR}
                     minimumValue={0}
+                    maximumValue={50}
                     step={1}
-                    maximumValue={30}
-                    onSlidingComplete={val => {
+                    onChange={val => {
                         Theme.setBackground({
                             blur: val,
                         });
                     }}
-                    value={backgroundInfo?.blur ?? 20}
                 />
-            </View>
-            <View style={styles.sliderWrapper}>
-                <ThemeText>{t("setCustomTheme.opacity")}</ThemeText>
-                <Slider
-                    style={styles.slider}
-                    minimumTrackTintColor={theme.colors.primary}
-                    maximumTrackTintColor={theme.colors.text ?? "#999999"}
-                    thumbTintColor={theme.colors.primary}
-                    minimumValue={0.3}
-                    step={0.01}
+                <SliderRow
+                    title={t("setCustomTheme.opacity")}
+                    value={
+                        backgroundInfo?.opacity ?? DEFAULT_BACKGROUND_OPACITY
+                    }
+                    minimumValue={0}
                     maximumValue={1}
-                    onSlidingComplete={val => {
+                    step={0.01}
+                    format={val => `${Math.round(val * 100)}%`}
+                    onChange={val => {
                         Theme.setBackground({
                             opacity: val,
                         });
                     }}
-                    value={backgroundInfo?.opacity ?? 0.7}
                 />
             </View>
             <View style={styles.colorsContainer}>
@@ -242,16 +225,8 @@ const styles = StyleSheet.create({
         alignSelf: "center",
     },
     sliderWrapper: {
-        marginTop: rpx(48),
+        marginTop: rpx(36),
         width: "100%",
-        paddingHorizontal: rpx(24),
-        flexDirection: "row",
-        justifyContent: "space-between",
-        alignItems: "center",
-    },
-    slider: {
-        flex: 1,
-        height: rpx(40),
     },
     colorsContainer: {
         width: "100%",

@@ -110,6 +110,12 @@ export interface IAppConfigProperties {
     "theme.homeLayout": "overview" | "classic";
     "theme.hideHomeHeroCard": boolean;
     "theme.hideHomeOperations": boolean;
+    /** 卡片/弹窗/顶栏等表面的不透明度系数，0.3 ~ 1，默认 1 */
+    "theme.surfaceOpacity": number;
+    /** 背景图上的暗化遮罩，0 ~ 0.8，默认 0 */
+    "theme.backgroundMask": number;
+    /** 卡片阴影强度，0 ~ 1，默认 1（即现有观感） */
+    "theme.cardShadowStrength": number;
 
     // Backup
     "backup.resumeMode": ResumeMode;

@@ -266,6 +266,20 @@ export interface ILanguageData {
     "themeSettings.useNewHomeUI": string; // 使用新版首页
     "themeSettings.hideHomeHeroCard": string; // 隐藏首页顶部音乐卡片
     "themeSettings.hideHomeOperations": string; // 隐藏首页快捷按钮
+    "themeSettings.backgroundTuning": string; // 背景调节
+    "themeSettings.pickBackground": string; // 选择背景图
+    "themeSettings.changeBackground": string; // 更换背景图
+    "themeSettings.backgroundDesc": string; // 所有主题下都会生效
+    "themeSettings.clearBackground": string; // 清除背景图
+    "themeSettings.backgroundMask": string; // 背景暗化
+    "themeSettings.resetBackgroundTuning": string; // 恢复默认
+    "themeSettings.resetBackgroundTuningDesc": string; // 模糊 20、不透明度 60%、无暗化
+    "themeSettings.toast.backgroundFailed": string; // 设置背景失败
+    "themeSettings.appearanceTuning": string; // 观感微调
+    "themeSettings.surfaceOpacity": string; // 界面不透明度
+    "themeSettings.surfaceOpacityDesc": string; // 调太低会看不清文字
+    "themeSettings.cardShadowStrength": string; // 卡片阴影强度
+    "themeSettings.resetAppearanceTuning": string; // 恢复默认观感
 
 
     // 自定义主题相关
@@ -486,6 +500,9 @@ export interface ILanguageData {
     "panel.createMusicSheet.title": string; // 新建歌单
     "panel.editMusicSheetInfo.title": string; // 编辑歌单信息
     "panel.editMusicSheetInfo.sheetName": string; // 歌单名
+    "panel.editMusicSheetInfo.background": string; // 歌单背景
+    "panel.editMusicSheetInfo.backgroundDesc": string; // 点击选择，长按清除
+    "panel.editMusicSheetInfo.useCoverAsBackground": string; // 用封面当背景
     "panel.editMusicSheetInfo.toast.updateSuccess": string; // 更新歌单信息成功    // 面板相关 - 图片查看器
     "panel.imageViewer.saveImage": string; // 保存图片
     "panel.imageViewer.saveImageSuccess": string; // 图片已保存

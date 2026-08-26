@@ -1,53 +1,22 @@
 import React, { memo } from "react";
-import { StyleSheet, View } from "react-native";
-import Image from "./image";
 import useColors from "@/hooks/useColors";
 import Theme from "@/core/theme";
+import CustomBackground from "./customBackground";
 
 function PageBackground() {
-    const theme = Theme.useTheme();
     const background = Theme.useBackground();
     const colors = useColors();
 
+    // 壁纸不再限定「自定义主题」：预设主题的 pageBackground 是不透明底色，
+    // 壁纸叠在它上面观感正确，而 useHasCustomBackground 一直按「有壁纸就算」判断，
+    // 之前限定主题会导致边框阴影已按壁纸调整、壁纸本身却不显示。
     return (
-        <>
-            <View
-                style={[
-                    style.wrapper,
-                    {
-                        backgroundColor:
-                            colors?.pageBackground ?? colors.background,
-                    },
-                ]}
-            />
-            {!theme.id.startsWith("p-") && background?.url ? (
-                <Image
-                    uri={background.url}
-                    style={[
-                        style.wrapper,
-                        {
-                            opacity: background?.opacity ?? 0.6,
-                        },
-                    ]}
-                    resizeMethod="resize"
-                    resizeMode="cover"
-                    fadeDuration={0}
-                    blurRadius={background?.blur ?? 20}
-                />
-            ) : null}
-        </>
+        <CustomBackground
+            url={background?.url}
+            blur={background?.blur}
+            opacity={background?.opacity}
+            backgroundColor={colors?.pageBackground ?? colors.background}
+        />
     );
 }
 export default memo(PageBackground, () => true);
-
-const style = StyleSheet.create({
-    wrapper: {
-        position: "absolute",
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        width: "100%",
-        height: "100%",
-    },
-});

@@ -1,6 +1,7 @@
 import { ViewStyle } from "react-native";
 import useColors from "@/hooks/useColors";
 import useHasCustomBackground from "@/hooks/useHasCustomBackground";
+import { useAppConfig } from "@/core/appConfig";
 
 interface ICardStyleOptions {
     borderWidth?: ViewStyle["borderWidth"];
@@ -23,6 +24,8 @@ export default function useCardStyle(
 ): ViewStyle {
     const colors = useColors();
     const hasCustomBackground = useHasCustomBackground();
+    // 阴影强度，1 为原有观感，0 为完全扁平
+    const shadowStrength = useAppConfig("theme.cardShadowStrength") ?? 1;
 
     if (hasCustomBackground) {
         return {
@@ -38,7 +41,7 @@ export default function useCardStyle(
         borderWidth: options.borderWidth,
         borderColor: colors.border,
         shadowColor: options.shadowColor ?? colors.shadow ?? "#000",
-        shadowOpacity: options.shadowOpacity ?? 0.08,
-        elevation: options.elevation ?? 3,
+        shadowOpacity: (options.shadowOpacity ?? 0.08) * shadowStrength,
+        elevation: Math.round((options.elevation ?? 3) * shadowStrength),
     };
 }
