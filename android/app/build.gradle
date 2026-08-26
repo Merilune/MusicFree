@@ -91,12 +91,14 @@ android {
             }
         }
     }
+    // CI 可用 -PbuildAbi=arm64-v8a 只编单个架构（同时不产 universal 包）
+    def buildAbi = project.findProperty("buildAbi")
     splits {
         abi {
             reset()
             enable true
-            universalApk true
-            include "armeabi-v7a", "arm64-v8a", "x86", "x86_64"
+            universalApk !buildAbi
+            include buildAbi ? [buildAbi] : ["armeabi-v7a", "arm64-v8a", "x86", "x86_64"]
         }
     }
 

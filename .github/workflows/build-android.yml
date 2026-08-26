@@ -244,7 +244,10 @@ jobs:
                   # Build with comprehensive error handling
                   set +e  # Don't exit immediately on error so we can capture logs
 
+                  # 只编 arm64 单架构（不产 universal 包），全架构构建约需 30 分钟，
+                  # 单架构 + Gradle 缓存命中时约 10 分钟；改回全量删掉 -PbuildAbi 参数即可
                   ./gradlew assembleRelease \
+                    -PbuildAbi=arm64-v8a \
                     --build-cache \
                     --parallel \
                     --daemon \
@@ -322,14 +325,10 @@ jobs:
                   TAG_VERSION="${{ github.ref_name }}"
                   VERSION=${TAG_VERSION#v}
 
-                  # Verify all expected APK files exist
+                  # Verify expected APK files exist (只编 arm64，其他架构不再产出)
                   MISSING_FILES=()
                   EXPECTED_FILES=(
-                    "MusicFree-v${VERSION}-universal-release.apk"
                     "MusicFree-v${VERSION}-arm64-v8a-release.apk"
-                    "MusicFree-v${VERSION}-armeabi-v7a-release.apk"
-                    "MusicFree-v${VERSION}-x86_64-release.apk"
-                    "MusicFree-v${VERSION}-x86-release.apk"
                   )
 
                   for file in "${EXPECTED_FILES[@]}"; do
