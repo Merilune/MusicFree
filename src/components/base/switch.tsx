@@ -5,6 +5,7 @@ import {
     TouchableWithoutFeedback,
     View,
 } from "react-native";
+import Color from "color";
 import useColors from "@/hooks/useColors";
 import rpx from "@/utils/rpx";
 import Animated, {
@@ -30,6 +31,16 @@ export default function ThemeSwitch(props: ISwitchProps) {
         sharedValue.value = value ? 1 : 0;
     }, [value, sharedValue]);
 
+    // 圆点颜色按轨道底色取对比色：主色偏浅（如白色）时
+    // 白色圆点会跟轨道糊成一团，改用深色圆点
+    const trackColor = value ? colors.primary : colors.textSecondary;
+    let thumbColor = "#FFFFFF";
+    try {
+        thumbColor = Color(trackColor).isDark() ? "#FFFFFF" : "#1B1B1B";
+    } catch {
+        // 非法色值保持白点
+    }
+
     const thumbStyle = useAnimatedStyle(() => {
         return {
             transform: [
@@ -54,13 +65,13 @@ export default function ThemeSwitch(props: ISwitchProps) {
                 style={[
                     styles.container,
                     {
-                        backgroundColor: value
-                            ? colors.primary
-                            : colors.textSecondary,
+                        backgroundColor: trackColor,
                     },
                     props?.style,
                 ]}>
-                <Animated.View style={[styles.thumb, thumbStyle]} />
+                <Animated.View
+                    style={[styles.thumb, thumbStyle, { backgroundColor: thumbColor }]}
+                />
             </View>
         </TouchableWithoutFeedback>
     );
@@ -77,7 +88,6 @@ const styles = StyleSheet.create({
         width: rpx(34),
         height: rpx(34),
         borderRadius: rpx(17),
-        backgroundColor: "white",
         left: rpx(3),
     },
 });
