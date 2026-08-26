@@ -547,6 +547,33 @@ function getDrawerSurfaceColor() {
 }
 
 /**
+ * 弹窗底色。和抽屉同理：设了壁纸时 surfaceElevated 会被换成
+ * rgba(0,0,0,0.30) 那层黑叠加，弹窗底直接透出壁纸，正文就糊了。
+ * 回落到主题自己的 surfaceElevated 并补足不透明度。
+ */
+function getDialogSurfaceColor() {
+    const dark = !!themeStore.getValue().dark;
+    const preset = (
+        dark ? darkTheme.colors.surfaceElevated : lightTheme.colors.surfaceElevated
+    ) as string;
+    const raw = baseColors.surfaceElevated as string | undefined;
+
+    const base =
+        !raw || sameColor(raw, customBackgroundSurfaceColors.surfaceElevated)
+            ? preset
+            : raw;
+
+    const ratio = Config.getConfig("theme.surfaceOpacity") ?? 1;
+    try {
+        const color = Color(base);
+        const alpha = Math.max(color.alpha(), MIN_SLIDING_SURFACE_ALPHA);
+        return color.alpha(alpha * (ratio > 0 ? Math.min(ratio, 1) : 1)).toString();
+    } catch {
+        return base;
+    }
+}
+
+/**
  * 不透明的页面底色。
  *
  * 全屏面板（评论、编辑歌单信息）跑在自己的 Modal 窗口里，下面没有 App 那棵树的
@@ -626,6 +653,7 @@ const Theme = {
     setColors,
     setSurfaceOpacity,
     getDrawerSurfaceColor,
+    getDialogSurfaceColor,
     getOpaquePageBackgroundColor,
     useTheme: themeStore.useValue,
     getTheme: themeStore.getValue,

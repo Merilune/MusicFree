@@ -22,13 +22,11 @@ import PersistStatus from "@/utils/persistStatus";
 import Toast from "@/utils/toast";
 import * as SplashScreen from "expo-splash-screen";
 import {  Linking, Platform } from "react-native";
-import NetInfo from "@react-native-community/netinfo";
 import { PERMISSIONS, check, request } from "react-native-permissions";
 import RNTrackPlayer, { AppKilledPlaybackBehavior, Capability } from "react-native-track-player";
 import i18n from "@/core/i18n";
 import bootstrapAtom from "./bootstrap.atom";
 import { getDefaultStore } from "jotai";
-import announcementService from "@/services/announcementService";
 
 // Request this at module load, before the first React commit. Calling it only
 // after the async bootstrap starts can let Expo auto-hide the native splash
@@ -241,96 +239,7 @@ async function schedulePostBootstrapWork(logger: IPerfLogger) {
         errorLog("extra makeup failed", error);
     });
 
-    // Announcements: do not wait up to 7s for network on the critical path.
-    void checkAnnouncementsInBackground().catch((error: any) => {
-        devLog("warn", "⚠️[Bootstrap] 公告检查失败", error);
-    });
-}
-
-function showAnnouncementSafely(
-    announcement: IAnnouncement.IAnnouncementItem,
-) {
-    const tryShow = () => {
-        const current = getCurrentDialog();
-        if (!current?.name) {
-            showDialog("AnnouncementDialog", { announcement });
-            return true;
-        }
-        return false;
-    };
-
-    if (tryShow()) {
-        return;
-    }
-    let attempts = 0;
-    const maxAttempts = 40; // ~20s
-    const timer = setInterval(() => {
-        attempts += 1;
-        if (tryShow() || attempts >= maxAttempts) {
-            clearInterval(timer);
-        }
-    }, 500);
-}
-
-async function waitForConnectivity(timeoutMs = 5000) {
-    try {
-        const first = await NetInfo.fetch();
-        if (first.isConnected && (first.isInternetReachable ?? true)) {
-            return;
-        }
-    } catch {
-        // ignore
-    }
-    await new Promise<void>(resolve => {
-        let resolved = false;
-        let unsubscribe: (() => void) | undefined;
-        const timer = setTimeout(() => {
-            if (!resolved) {
-                resolved = true;
-                unsubscribe?.();
-                resolve();
-            }
-        }, timeoutMs);
-        unsubscribe = NetInfo.addEventListener(state => {
-            if (
-                !resolved &&
-                state.isConnected &&
-                (state.isInternetReachable ?? true)
-            ) {
-                resolved = true;
-                clearTimeout(timer);
-                unsubscribe?.();
-                resolve();
-            }
-        });
-    });
-}
-
-async function checkAnnouncementsInBackground() {
-    devLog("info", "📢[Bootstrap] 后台检查在线公告", {
-        platform: Platform.OS,
-    });
-    await waitForConnectivity(5000);
-    const announcement = await announcementService.checkAnnouncements();
-    if (announcement) {
-        setTimeout(() => {
-            showAnnouncementSafely(announcement);
-        }, 1500);
-    } else {
-        setTimeout(async () => {
-            try {
-                const retryAnnouncement =
-                    await announcementService.checkAnnouncements(true);
-                if (retryAnnouncement) {
-                    showAnnouncementSafely(retryAnnouncement);
-                    devLog("info", "✅[Bootstrap] 二次公告检查命中");
-                }
-            } catch (e) {
-                devLog("warn", "⚠️[Bootstrap] 二次公告检查失败", e);
-            }
-        }, 8000);
-    }
-    devLog("info", "✅[Bootstrap] 公告检查完成");
+    // 二次开发版：不再拉取上游仓库的在线公告，原启动公告弹窗移除
 }
 
 /** 初始化 */

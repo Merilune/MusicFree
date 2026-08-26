@@ -235,6 +235,15 @@ class MusicSheetClazz implements IInjectable {
         sheets: IMusic.IMusicSheetItem[],
         resumeMode: ResumeMode,
     ) {
+        // 先把备份里的默认歌单（我喜欢）拆出来，任何模式下都合进现有默认歌单，
+        // 否则追加模式会把"我喜欢"当成普通歌单再新建一份
+        const defaultSheetIndex = sheets.findIndex(it => it.id === _defaultSheet.id);
+        let exportedDefaultSheet: IMusic.IMusicSheetItem | null = null;
+        if (defaultSheetIndex !== -1) {
+            exportedDefaultSheet = sheets.splice(defaultSheetIndex, 1)[0];
+        }
+        await this.addMusic(_defaultSheet.id, exportedDefaultSheet?.musicList || []);
+
         if (resumeMode === ResumeMode.Append) {
             // 逆序恢复，最新创建的在最上方
             for (let i = sheets.length - 1; i >= 0; --i) {
@@ -243,19 +252,8 @@ class MusicSheetClazz implements IInjectable {
             }
             return;
         }
-        // 1. 分离默认歌单和其他歌单
-        const defaultSheetIndex = sheets.findIndex(it => it.id === _defaultSheet.id);
 
-        let exportedDefaultSheet: IMusic.IMusicSheetItem | null = null;
-
-        if (defaultSheetIndex !== -1) {
-            exportedDefaultSheet = sheets.splice(defaultSheetIndex, 1)[0];
-        }
-
-        // 2. 合并默认歌单
-        await this.addMusic(_defaultSheet.id, exportedDefaultSheet?.musicList || []);
-
-        // 3. 合并其他歌单
+        // 合并其他歌单
         if (resumeMode === ResumeMode.OverwriteDefault) {
             // 逆序恢复，最新创建的在最上方
             for (let i = sheets.length - 1; i >= 0; --i) {

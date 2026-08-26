@@ -27,6 +27,8 @@ import { fontSizeConst } from "@/constants/uiConst";
 import { ScrollView } from "react-native-gesture-handler";
 import useOrientation from "@/hooks/useOrientation.ts";
 import Config from "@/core/appConfig";
+import Theme from "@/core/theme";
+import Color from "color";
 
 interface IDialogProps {
     onDismiss?: () => void;
@@ -165,7 +167,9 @@ function Dialog(props: IDialogProps) {
                     containerStyle,
                     scaleAnimationStyle,
                     {
-                        backgroundColor: colors.surfaceElevated,
+                        // 弹窗必须是不透明底：设壁纸时 surfaceElevated 会变成
+                        // rgba(0,0,0,0.30)，透出壁纸导致正文看不清
+                        backgroundColor: Theme.getDialogSurfaceColor(),
                         // Custom wallpaper: no dark outer ring (border + elevation).
                         borderWidth: hasCustomBackground
                             ? 0
@@ -308,6 +312,14 @@ function BottomButton(props: {
 
     const hasCustomBackground = useHasCustomBackground();
 
+    // 主色是浅色时白字会白底白字，按亮度取对比色
+    let primaryFontColor = "white";
+    try {
+        primaryFontColor = Color(colors.primary).isDark() ? "white" : "black";
+    } catch {
+        // 非法色值保持白字
+    }
+
     return (
         <TouchableOpacity
             activeOpacity={0.6}
@@ -332,7 +344,7 @@ function BottomButton(props: {
             ]}>
             <ThemeText
                 fontWeight="semibold"
-                color={type === "normal" ? undefined : "white"}>
+                color={type === "normal" ? undefined : primaryFontColor}>
                 {text}
             </ThemeText>
         </TouchableOpacity>

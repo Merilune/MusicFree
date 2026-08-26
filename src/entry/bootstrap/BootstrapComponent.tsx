@@ -1,6 +1,5 @@
 import { useAppConfig } from "@/core/appConfig";
 import Theme from "@/core/theme";
-import useCheckUpdate from "@/hooks/useCheckUpdate";
 import { useListenOrientationChange } from "@/hooks/useOrientation";
 import { getDefaultStore, useAtomValue } from "jotai";
 import { useEffect } from "react";
@@ -14,7 +13,7 @@ export function BootstrapComponent() {
     const bootstrapState = useAtomValue(bootstrapAtom);
 
     useListenOrientationChange();
-    useCheckUpdate();
+    // 二次开发版：不再对比上游仓库版本，启动自动更新弹窗移除
 
     const followSystem = useAppConfig("theme.followSystem");
 
