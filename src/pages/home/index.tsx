@@ -15,6 +15,7 @@ import HomeBodyHorizontal from "./components/homeBodyHorizontal";
 import useOrientation from "@/hooks/useOrientation";
 import { ROUTE_PATH, useNavigate } from "@/core/router";
 import Config from "@/core/appConfig";
+import rpx from "@/utils/rpx";
 
 const PORTRAIT_DRAWER_MAX_WIDTH = 420;
 const LANDSCAPE_DRAWER_MAX_WIDTH = 440;
@@ -84,6 +85,8 @@ const DrawerContent = (props: any) => <HomeDrawer {...props} />;
 export default function App() {
     const orientation = useOrientation();
     const { width } = useWindowDimensions();
+    // 订阅主题，配色或「表面不透明度」变了要重算抽屉底色
+    const theme = Theme.useTheme();
     const drawerWidth = useMemo(() => {
         if (orientation === "horizontal") {
             return Math.max(
@@ -98,13 +101,31 @@ export default function App() {
         );
     }, [orientation, width]);
 
+    const drawerStyle = useMemo(
+        () => ({
+            width: drawerWidth,
+            // 原先这里只设宽度，底色由导航库取 colors.card。设了壁纸时那是
+            // rgba(0,0,0,0.22)，抽屉滑出的过程里右缘就是一条从 22% 黑突变到
+            // 全透明的硬直线，看着不像一层面板。补足够不透明的底、右缘加圆角、
+            // 再配一道向右的阴影，让边界有个软过渡。
+            backgroundColor: Theme.getDrawerSurfaceColor(),
+            borderTopRightRadius: rpx(28),
+            borderBottomRightRadius: rpx(28),
+            // Android 走 elevation，iOS 走 shadow*，两边都给
+            elevation: 16,
+            shadowColor: "#000000",
+            shadowOffset: { width: rpx(8), height: 0 },
+            shadowOpacity: 0.3,
+            shadowRadius: rpx(18),
+        }),
+        [drawerWidth, theme],
+    );
+
     return (
         <LeftDrawer.Navigator
             screenOptions={{
                 headerShown: false,
-                drawerStyle: {
-                    width: drawerWidth,
-                },
+                drawerStyle,
             }}
             initialRouteName="HOME-MAIN"
             drawerContent={DrawerContent}>

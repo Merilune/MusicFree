@@ -507,6 +507,45 @@ function setSurfaceOpacity(opacity: number) {
     });
 }
 
+/** 抽屉这类整片滑出的浮层，底色至少要有这么多不透明度才立得住形态 */
+const MIN_SLIDING_SURFACE_ALPHA = 0.94;
+
+/**
+ * 抽屉底色。不能直接用 colors.card：设了壁纸时 card 会被
+ * customBackgroundSurfaceColors.card 换成 rgba(0,0,0,0.22)，那个值适合
+ * 「轻微暗化的一片区域」，但撑不起一个滑出来的面板 —— 右缘会是一条从 22% 黑
+ * 突变到全透明的硬直线，圆角和阴影也没有东西可以附着。
+ *
+ * 这里回落到主题自身的面板色再补足不透明度，而不是把那层黑叠加的 alpha 拉高：
+ * 有壁纸时文字色并没有被一起改（normalizeCustomBackgroundColors 不碰 text），
+ * 直接加深黑底会在浅色主题下把深色文字吞掉。
+ *
+ * 用未乘「表面不透明度」的 baseColors 计算，最后再乘回该系数，
+ * 这样用户主动调低透明度的意图不会被这里覆盖。
+ */
+function getDrawerSurfaceColor() {
+    const dark = !!themeStore.getValue().dark;
+    const presetCard = (
+        dark ? darkTheme.colors.card : lightTheme.colors.card
+    ) as string;
+    const raw = baseColors.card as string | undefined;
+
+    // 被壁纸模式换成半透明黑叠加时，回到主题自己的面板色
+    const base =
+        !raw || sameColor(raw, customBackgroundSurfaceColors.card)
+            ? presetCard
+            : raw;
+
+    const ratio = Config.getConfig("theme.surfaceOpacity") ?? 1;
+    try {
+        const color = Color(base);
+        const alpha = Math.max(color.alpha(), MIN_SLIDING_SURFACE_ALPHA);
+        return color.alpha(alpha * (ratio > 0 ? Math.min(ratio, 1) : 1)).toString();
+    } catch {
+        return base;
+    }
+}
+
 function setBackground(backgroundInfo: IBackgroundInput) {
     const currentBackgroundInfo = backgroundStore.getValue();
     let newBgInfo: IBackgroundInfo = {
@@ -555,6 +594,7 @@ const Theme = {
     setBackground,
     setColors,
     setSurfaceOpacity,
+    getDrawerSurfaceColor,
     useTheme: themeStore.useValue,
     getTheme: themeStore.getValue,
     useBackground: backgroundStore.useValue,
