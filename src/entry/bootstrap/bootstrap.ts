@@ -330,8 +330,15 @@ async function initNativePlayerImpl() {
                 AppKilledPlaybackBehavior.ContinuePlayback,
         },
         capabilities: capabilities,
-        compactCapabilities: capabilities,
-        notificationCapabilities: [...capabilities, Capability.SeekTo],
+        // 通知栏按钮收窄到 上一首/播放/下一首（+可选停止），不带 SeekTo，
+        // 否则通知会多出一条拖动进度条、整体变得又高又大（对齐 QQ 音乐那种紧凑样式）
+        notificationCapabilities: capabilities,
+        compactCapabilities: [
+            Capability.Play,
+            Capability.Pause,
+            Capability.SkipToNext,
+            Capability.SkipToPrevious,
+        ],
     });
 }
 
