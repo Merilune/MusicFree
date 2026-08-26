@@ -7,7 +7,7 @@ import MusicList from "@/components/musicList";
 import Config from "@/core/appConfig";
 import globalStyle from "@/constants/globalStyle";
 import HorizontalSafeAreaView from "@/components/base/horizontalSafeAreaView.tsx";
-import TrackPlayer from "@/core/trackPlayer";
+import TrackPlayer, { useCurrentMusic } from "@/core/trackPlayer";
 import { RequestStateCode } from "@/constants/commonConst";
 
 interface IMusicListProps {
@@ -22,6 +22,8 @@ interface IMusicListProps {
 }
 export default function SheetMusicList(props: IMusicListProps) {
     const { sheetInfo, musicList, canStar, state, onRetry, onLoadMore } = props;
+    // 高亮正在播放的歌（与本地歌单页行为一致）
+    const currentMusic = useCurrentMusic();
 
     return (
         <View style={globalStyle.fwflex1}>
@@ -44,6 +46,7 @@ export default function SheetMusicList(props: IMusicListProps) {
                         onRetry={onRetry}
                         state={state}
                         musicList={musicList}
+                        highlightMusicItem={currentMusic}
                         onItemPress={(musicItem, currentMusicList) => {
                             if (
                                 Config.getConfig(
