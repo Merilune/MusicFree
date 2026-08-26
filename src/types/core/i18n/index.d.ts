@@ -275,6 +275,11 @@ export interface ILanguageData {
     "themeSettings.resetBackgroundTuning": string; // 恢复默认
     "themeSettings.resetBackgroundTuningDesc": string; // 模糊 20、不透明度 60%、无暗化
     "themeSettings.toast.backgroundFailed": string; // 设置背景失败
+    "themeSettings.splashImage": string; // 启动图
+    "themeSettings.pickSplashImage": string; // 选择启动图
+    "themeSettings.changeSplashImage": string; // 更换启动图
+    "themeSettings.clearSplashImage": string; // 清除启动图
+    "themeSettings.splashImageDesc": string; // 启动时全屏显示，直到首页就绪
     "themeSettings.appearanceTuning": string; // 观感微调
     "themeSettings.surfaceOpacity": string; // 界面不透明度
     "themeSettings.surfaceOpacityDesc": string; // 调太低会看不清文字

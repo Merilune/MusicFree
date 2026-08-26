@@ -13,6 +13,7 @@ import { PortalHost } from "@/components/base/portal";
 import globalStyle from "@/constants/globalStyle";
 import Theme from "@/core/theme";
 import { BootstrapComponent } from "./bootstrap/BootstrapComponent";
+import SplashImageOverlay from "@/components/base/splashImageOverlay";
 import { ToastBaseComponent } from "@/components/base/toast";
 import { StatusBar, StyleSheet, View } from "react-native";
 import { ReduceMotion, ReducedMotionConfig } from "react-native-reanimated";
@@ -110,6 +111,7 @@ export default function Pages() {
                             <Dialogs />
                             <ToastBaseComponent />
                             <PortalHost />
+                            <SplashImageOverlay />
                         </ErrorBoundary>
                     </NavigationContainer>
                 </SafeAreaProvider>

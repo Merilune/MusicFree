@@ -116,6 +116,8 @@ export interface IAppConfigProperties {
     "theme.backgroundMask": number;
     /** 卡片阴影强度，0 ~ 1，默认 1（即现有观感） */
     "theme.cardShadowStrength": number;
+    /** 自定义启动图的 file:// 地址，未设置为空 */
+    "theme.splashImage"?: string;
 
     // Backup
     "backup.resumeMode": ResumeMode;

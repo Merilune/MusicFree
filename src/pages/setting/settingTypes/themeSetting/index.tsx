@@ -4,6 +4,7 @@ import rpx from "@/utils/rpx";
 import Mode from "./mode";
 import Background from "./background";
 import BackgroundTuning from "./backgroundTuning";
+import SplashImage from "./splashImage";
 import AppearanceTuning from "./appearanceTuning";
 import CoverStyle from "./coverStyle";
 import HomeDisplay from "./homeDisplay";
@@ -17,6 +18,7 @@ export default function ThemeSetting() {
             <CoverStyle />
             <Background />
             <BackgroundTuning />
+            <SplashImage />
             <AppearanceTuning />
         </ScrollView>
     );
