@@ -34,7 +34,7 @@ export default function EditSheetDetailDialog(props: IEditSheetDetailProps) {
 
     const onChangeCoverPress = async () => {
         try {
-            const uri = await pickPhotoWithCrop();
+            const uri = await pickPhotoWithCrop({ aspectRatio: [1, 1] });
             if (!uri) {
                 return;
             }

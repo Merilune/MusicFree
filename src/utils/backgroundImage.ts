@@ -7,7 +7,10 @@ import {
 } from "@/utils/fileUtils";
 import { devLog } from "@/utils/log";
 import { copyFile, exists, unlink } from "react-native-fs";
-import { pickPhotoWithCrop } from "@/utils/photoPicker";
+import {
+    getScreenAspectRatio,
+    pickPhotoWithCrop,
+} from "@/utils/photoPicker";
 
 /**
  * 背景图的最大边长（压图由裁剪器的 compress 参数控制）。
@@ -24,7 +27,7 @@ function getExtension(uri: string) {
 
 /** 打开相册选择背景图（带自由比例裁剪），返回裁剪后的原始地址；用户取消时返回 null */
 export async function pickBackgroundImage(): Promise<string | null> {
-    return pickPhotoWithCrop();
+    return pickPhotoWithCrop({ aspectRatio: getScreenAspectRatio() });
 }
 
 /**

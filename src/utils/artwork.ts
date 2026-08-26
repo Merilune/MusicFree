@@ -139,7 +139,7 @@ export async function associateLocalArtwork(
         return false;
     }
     try {
-        const uri = await pickPhotoWithCrop();
+        const uri = await pickPhotoWithCrop({ aspectRatio: [1, 1] });
         if (!uri) {
             return false;
         }
