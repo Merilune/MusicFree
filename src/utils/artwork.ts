@@ -15,7 +15,7 @@ import {
 } from "@/utils/mediaExtra";
 import { devLog, errorLog } from "@/utils/log";
 import { readAsStringAsync } from "expo-file-system/legacy";
-import { launchImageLibrary } from "react-native-image-picker";
+import { pickPhotoWithCrop } from "@/utils/photoPicker";
 import { exists, unlink, writeFile } from "react-native-fs";
 import { ImgAsset } from "@/constants/assetsConst";
 
@@ -139,14 +139,7 @@ export async function associateLocalArtwork(
         return false;
     }
     try {
-        const result = await launchImageLibrary({
-            mediaType: "photo",
-            selectionLimit: 1,
-        });
-        if (result.didCancel) {
-            return false;
-        }
-        const uri = result.assets?.[0]?.uri;
+        const uri = await pickPhotoWithCrop();
         if (!uri) {
             return false;
         }

@@ -74,6 +74,7 @@
     "react-native-gesture-handler": "~2.32.0",
     "react-native-get-random-values": "~1.11.0",
     "react-native-image-colors": "^2.5.1",
+    "react-native-image-crop-picker": "^0.42.0",
     "react-native-image-picker": "^8.2.1",
     "react-native-linear-gradient": "^2.8.3",
     "react-native-logs": "^5.5.0",

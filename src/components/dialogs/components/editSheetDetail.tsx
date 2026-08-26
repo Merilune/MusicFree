@@ -4,7 +4,7 @@ import rpx from "@/utils/rpx";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
 import ThemeText from "@/components/base/themeText";
 import { ImgAsset } from "@/constants/assetsConst";
-import { launchImageLibrary } from "react-native-image-picker";
+import { pickPhotoWithCrop } from "@/utils/photoPicker";
 import pathConst from "@/constants/pathConst";
 import Image from "@/components/base/image";
 import { addFileScheme, addRandomHash } from "@/utils/fileUtils";
@@ -34,10 +34,7 @@ export default function EditSheetDetailDialog(props: IEditSheetDetailProps) {
 
     const onChangeCoverPress = async () => {
         try {
-            const result = await launchImageLibrary({
-                mediaType: "photo",
-            });
-            const uri = result.assets?.[0].uri;
+            const uri = await pickPhotoWithCrop();
             if (!uri) {
                 return;
             }

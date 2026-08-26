@@ -7,10 +7,10 @@ import {
 } from "@/utils/fileUtils";
 import { devLog } from "@/utils/log";
 import { copyFile, exists, unlink } from "react-native-fs";
-import { launchImageLibrary } from "react-native-image-picker";
+import { pickPhotoWithCrop } from "@/utils/photoPicker";
 
 /**
- * 背景图的最大边长。
+ * 背景图的最大边长（压图由裁剪器的 compress 参数控制）。
  * 相机原图会让 Fresco 的模糊后处理解码远超屏幕所需的像素量。
  */
 export const BACKGROUND_MAX_DIMENSION = 2048;
@@ -22,16 +22,9 @@ function getExtension(uri: string) {
     return /^\.[A-Za-z0-9]{1,5}$/.test(ext) ? ext : ".jpg";
 }
 
-/** 打开相册选择背景图，返回原始地址；用户取消时返回 null */
+/** 打开相册选择背景图（带自由比例裁剪），返回裁剪后的原始地址；用户取消时返回 null */
 export async function pickBackgroundImage(): Promise<string | null> {
-    const result = await launchImageLibrary({
-        mediaType: "photo",
-        maxWidth: BACKGROUND_MAX_DIMENSION,
-        maxHeight: BACKGROUND_MAX_DIMENSION,
-        quality: 0.85,
-    });
-
-    return result.assets?.[0]?.uri ?? null;
+    return pickPhotoWithCrop();
 }
 
 /**

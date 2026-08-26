@@ -31,7 +31,7 @@ import React, { useState } from "react";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 import { exists, unlink, writeFile } from "react-native-fs";
-import { launchImageLibrary } from "react-native-image-picker";
+import { pickPhotoWithCrop } from "@/utils/photoPicker";
 
 interface IEditSheetDetailProps {
   musicSheet: IMusic.IMusicSheetItem;
@@ -56,10 +56,7 @@ export default function EditMusicSheetInfo(props: IEditSheetDetailProps) {
 
     const onChangeCoverPress = async () => {
         try {
-            const result = await launchImageLibrary({
-                mediaType: "photo",
-            });
-            const uri = result.assets?.[0].uri;
+            const uri = await pickPhotoWithCrop();
             if (!uri) {
                 return;
             }
