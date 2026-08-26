@@ -62,19 +62,59 @@ export default function Body() {
                             : colorsResult.vibrant,
             };
 
-            const rawPrimary =
-                colors.vibrant ||
-                colors.primary ||
-                colors.average ||
-                darkTheme.colors.primary;
+            // 候选色全部收集，以 dominant（主导色）为基准挑：
+            // Palette 对深色图的量化可能抠出只占极小面积的暖色 vibrant
+            // （蓝黑图出橙色就是它），色相偏离主导色太多的候选强降权
+            const candidates = [colors.primary, colors.vibrant, colors.average]
+                .filter(Boolean)
+                .map(cl => Color(cl));
+            const dom = candidates[0];
+            let base: Color;
+            if (
+                dom &&
+                dom.saturation() >= 0.15 &&
+                dom.lightness() >= 0.05 &&
+                dom.lightness() <= 0.85
+            ) {
+                const domHue = dom.hue();
+                base = candidates
+                    .map(c => {
+                        let score = c.saturation();
+                        const l = c.lightness();
+                        if (l > 0.85 || l < 0.05) {
+                            score *= 0.3;
+                        }
+                        const dh = Math.min(
+                            Math.abs(c.hue() - domHue),
+                            360 - Math.abs(c.hue() - domHue),
+                        );
+                        if (dh > 40) {
+                            score *= 0.4;
+                        }
+                        return { c, score };
+                    })
+                    .sort((a, b) => b.score - a.score)[0].c;
+            } else {
+                // dominant 本身接近黑/白/灰（色相不可信），退回 vibrant 优先
+                base =
+                    candidates.find(
+                        c => c.saturation() >= 0.2 && c.lightness() > 0.15,
+                    ) ?? Color(darkTheme.colors.primary);
+            }
 
             // 归一化：饱和度太低（灰白）提饱和，亮度太亮（白）/太黑收进
             // 中间区间，保证主色在深浅底色上都看得清，不会出现纯白主色
             let normalizedPrimary: string;
             try {
-                let c = Color(rawPrimary);
+                let c = base;
                 if (c.saturation() < 0.2) {
-                    c = c.saturation(0.35);
+                    // 灰白色相不可信，直接提饱和会变成粉色（hue=0），
+                    // 借用默认主题的主色色相
+                    c = Color(darkTheme.colors.primary)
+                        .lightness(
+                            Math.min(Math.max(c.lightness(), 0.4), 0.6),
+                        )
+                        .saturation(0.45);
                 }
                 const lightness = c.lightness();
                 if (lightness > 0.72) {
