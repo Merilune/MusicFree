@@ -856,7 +856,12 @@ function LyricSetting() {
     const colors = useColors();
 
     const autoSearchLyric = createSwitch(t("basicSettings.lyric.autoSearchLyric"), "lyric.autoSearchLyric", enableAutoSearchLyric ?? false);
-    const wordByWordLyric = createSwitch("逐字歌词", "lyric.enableWordByWord", enableWordByWord ?? true);
+    const wordByWordLyric = createSwitch("逐字歌词", "lyric.enableWordByWord", enableWordByWord ?? true, (newValue) => {
+        Config.setConfig("lyric.enableWordByWord", newValue);
+        // 开关只影响歌词解析（QRC 是否保留逐字时间轴），
+        // 切换后必须重载当前歌词，否则要等下一首歌才生效
+        lyricManager.reloadCurrentLyric();
+    });
     const wordByWordFloat = createSwitch("逐字歌词浮动动画", "lyric.enableWordByWordFloat", enableWordByWordFloat ?? true);
     const highlightColor = createSwitch("纯白模式", "lyric.pureWhiteMode", pureWhiteMode ?? true);
     const breathingDots = createSwitch("空歌词行呼吸灯特效", "lyric.enableBreathingDots", enableBreathingDots ?? true);
