@@ -16,7 +16,6 @@ import useOrientation from "@/hooks/useOrientation";
 import Theme from "@/core/theme";
 import DeviceInfo from "react-native-device-info";
 import buildInfo from "@/constants/buildInfo";
-import { showDialog } from "@/components/dialogs/useDialog";
 import useHasCustomBackground from "@/hooks/useHasCustomBackground";
 
 export default function AboutSetting() {
@@ -35,12 +34,10 @@ export default function AboutSetting() {
         : null;
 
     // 动画值
-    const fadeAnim1 = useRef(new Animated.Value(0)).current;
     const fadeAnim2 = useRef(new Animated.Value(0)).current;
     const fadeAnim3 = useRef(new Animated.Value(0)).current;
     const fadeAnim4 = useRef(new Animated.Value(0)).current;
     const fadeAnim5 = useRef(new Animated.Value(0)).current;
-    const scaleAnim1 = useRef(new Animated.Value(0.8)).current;
     const scaleAnim2 = useRef(new Animated.Value(0.8)).current;
     const scaleAnim3 = useRef(new Animated.Value(0.8)).current;
     const scaleAnim4 = useRef(new Animated.Value(0.8)).current;
@@ -50,13 +47,13 @@ export default function AboutSetting() {
         // 创建动画序列
         Animated.stagger(150, [
             Animated.parallel([
-                Animated.timing(fadeAnim1, {
+                Animated.timing(fadeAnim2, {
                     toValue: 1,
                     duration: 600,
                     easing: Easing.out(Easing.cubic),
                     useNativeDriver: true,
                 }),
-                Animated.spring(scaleAnim1, {
+                Animated.spring(scaleAnim2, {
                     toValue: 1,
                     friction: 4,
                     tension: 40,
@@ -155,41 +152,6 @@ export default function AboutSetting() {
                 <TouchableOpacity
                     activeOpacity={0.8}
                     onPress={() => {
-                        Animated.sequence([
-                            Animated.spring(scaleAnim1, {
-                                toValue: 0.95,
-                                friction: 3,
-                                tension: 100,
-                                useNativeDriver: true,
-                            }),
-                            Animated.spring(scaleAnim1, {
-                                toValue: 1,
-                                friction: 3,
-                                tension: 100,
-                                useNativeDriver: true,
-                            }),
-                        ]).start();
-                        showDialog("PactDialog");
-                    }}>
-                    <Animated.View
-                        style={[
-                            style.infoCard,
-                            { backgroundColor: colors.card },
-                            cardChrome,
-                            {
-                                opacity: fadeAnim1,
-                                transform: [{ scale: scaleAnim1 }],
-                            },
-                        ]}>
-                        <ThemeText fontSize="subTitle" style={style.cardTitle}>许可协议</ThemeText>
-                        <ThemeText style={style.cardContent}>点击查看许可协议与免责声明</ThemeText>
-                    </Animated.View>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                    activeOpacity={0.8}
-                    onPress={() => {
-                        // 点击效果动画
                         Animated.sequence([
                             Animated.spring(scaleAnim2, {
                                 toValue: 0.95,

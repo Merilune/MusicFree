@@ -133,11 +133,7 @@ async function bootstrapImpl() {
     trace("配置初始化完成");
     logger.mark("配置初始化完成");
 
-    // 检查用户协议
-    if (!Config.getConfig("common.isAgreePact")) {
-        devLog("info", "📜[Bootstrap] 用户尚未同意协议，显示许可协议");
-        showDialog("PactDialog");
-    }
+    // 二次开发版：不再弹许可协议弹窗，源码仓库保留 LICENSE
     logger.mark("协议检查完成");
 
     // Theme + i18n before heavy media work so first paint tokens are ready.
