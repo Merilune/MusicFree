@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 全透明占位图标：Android 12+ 开屏必须有图标位，
+     用它顶住图标位但什么都不画，开屏即为纯色底 -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="#00000000" />
+</shape>

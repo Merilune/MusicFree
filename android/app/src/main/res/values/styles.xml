@@ -7,9 +7,11 @@
         <item name="android:windowBackground">@color/splashscreen_background</item>
     </style>
 
-    <!-- Splash screen: 纯色底，无 LOGO 无品牌条 -->
+    <!-- Splash screen: 纯色底。图标位用全透明占位图顶住，
+         否则系统会回落显示应用图标（安卓小机器人） -->
     <style name="Theme.App.SplashScreen" parent="Theme.SplashScreen">
         <item name="windowSplashScreenBackground">@color/splashscreen_background</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_icon_transparent</item>
         <item name="postSplashScreenTheme">@style/AppTheme</item>
     </style>
 
