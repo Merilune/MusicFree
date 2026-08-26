@@ -399,12 +399,15 @@ const styles = StyleSheet.create({
 
     /**** title */
     titleContainer: {
-        height: rpx(88),
+        // 用 minHeight 而不是写死高度：title 字号行高已接近 rpx(88)，
+        // 固定高度会把标题顶出容器外
+        minHeight: rpx(88),
         width: "100%",
         alignItems: "flex-start",
         justifyContent: "center",
         flexDirection: "row",
         paddingHorizontal: rpx(24),
+        paddingVertical: rpx(8),
     },
     /** content */
     contentContainer: {
