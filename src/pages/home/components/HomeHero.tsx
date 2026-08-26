@@ -15,16 +15,9 @@ import { musicIsPaused } from "@/utils/trackUtils";
 import { resolveArtwork } from "@/utils/artwork";
 import { useMediaExtraProperty } from "@/utils/mediaExtra";
 import Color from "color";
-import React, { useEffect, useMemo, useState } from "react";
+import React from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import type { DimensionValue } from "react-native";
-import ImageColors from "react-native-image-colors";
-import LinearGradient from "react-native-linear-gradient";
-
-interface IHeroPalette {
-    base: string;
-    accent: string;
-}
 
 function formatTime(value?: number) {
     const seconds = Math.max(0, Math.floor(value ?? 0));
@@ -46,36 +39,20 @@ function getProgressPercent(
     )}%` as DimensionValue;
 }
 
-function getPaletteFromImageColors(result: any, fallback: string): IHeroPalette {
-    if (result?.platform === "android") {
-        return {
-            base: result.dominant ?? fallback,
-            accent: result.vibrant ?? result.average ?? fallback,
-        };
+// 主色偏深就用白字，偏浅就用黑字，避免按钮文字看不清
+function contrastOn(background: string): string {
+    try {
+        return Color(background).isDark() ? "#FFFFFF" : "#000000";
+    } catch {
+        return "#FFFFFF";
     }
-    if (result?.platform === "ios") {
-        return {
-            base: result.primary ?? fallback,
-            accent: result.secondary ?? result.detail ?? fallback,
-        };
-    }
-    return {
-        base: result?.vibrant ?? result?.dominant ?? fallback,
-        accent: result?.muted ?? result?.darkVibrant ?? fallback,
-    };
 }
 
-function buildGradientColors(palette: IHeroPalette, fallbackSurface: string) {
+function safeAlpha(source: string, alpha: number, fallback: string) {
     try {
-        const base = Color(palette.base);
-        const accent = Color(palette.accent);
-        return [
-            base.darken(0.52).saturate(0.14).hex(),
-            accent.darken(0.34).saturate(0.22).hex(),
-            Color(fallbackSurface).mix(base, 0.22).darken(0.1).hex(),
-        ];
+        return Color(source).alpha(alpha).toString();
     } catch {
-        return [fallbackSurface, fallbackSurface, fallbackSurface];
+        return fallback;
     }
 }
 
@@ -87,59 +64,16 @@ export default function HomeHero() {
     const navigate = useNavigate();
     const { t } = useI18N();
     const primaryColor = colors.primary ?? "#D94B32";
-    const accentColor = colors.accentCool ?? colors.primary ?? "#3F899B";
-    const cardColor = colors.card ?? colors.surface ?? "#202730";
-    const [palette, setPalette] = useState<IHeroPalette>({
-        base: primaryColor,
-        accent: accentColor,
-    });
     useMediaExtraProperty(currentMusic, "associatedArtwork");
     const artwork = resolveArtwork(currentMusic);
     const progressDuration = duration || currentMusic?.duration;
     const isPlaying = currentMusic && !musicIsPaused(musicState);
 
-    useEffect(() => {
-        let canceled = false;
-
-        if (!artwork) {
-            setPalette({
-                base: primaryColor,
-                accent: accentColor,
-            });
-            return () => {
-                canceled = true;
-            };
-        }
-
-        ImageColors.getColors(artwork, {
-            fallback: primaryColor,
-            cache: true,
-        })
-            .then(result => {
-                if (!canceled) {
-                    setPalette(getPaletteFromImageColors(result, primaryColor));
-                }
-            })
-            .catch(() => {
-                if (!canceled) {
-                    setPalette({
-                        base: primaryColor,
-                        accent: accentColor,
-                    });
-                }
-            });
-
-        return () => {
-            canceled = true;
-        };
-    }, [accentColor, artwork, primaryColor]);
-
-    const gradientColors = useMemo(
-        () => buildGradientColors(palette, cardColor),
-        [cardColor, palette],
-    );
-    const foreground = "#FFFFFF";
-    const mutedForeground = Color(foreground).alpha(0.72).toString();
+    const foreground = colors.text ?? "#F5F2EB";
+    const mutedForeground = colors.textSecondary ?? safeAlpha(foreground, 0.64, foreground);
+    // 一层很淡的主色染色，让卡片带一点主题色又不抢壁纸
+    const primaryTint = safeAlpha(primaryColor, 0.1, "transparent");
+    const playIconColor = contrastOn(primaryColor);
 
     return (
         <Pressable
@@ -150,36 +84,18 @@ export default function HomeHero() {
             style={[
                 styles.card,
                 {
-                    borderColor: Color(foreground).alpha(0.12).toString(),
-                    shadowColor: colors.shadow,
+                    backgroundColor: colors.card,
+                    borderColor: safeAlpha(foreground, 0.08, "transparent"),
                 },
             ]}>
-            <LinearGradient
-                colors={gradientColors}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={StyleSheet.absoluteFill}
-            />
-            <View
-                style={[
-                    styles.flowBand,
-                    {
-                        backgroundColor: Color(palette.accent)
-                            .alpha(0.18)
-                            .toString(),
-                    },
-                ]}
-            />
+            {/* 主色染色层 */}
+            <View style={[styles.tintLayer, { backgroundColor: primaryTint }]} />
             <View style={styles.content}>
                 <View style={styles.kickerRow}>
                     <View
                         style={[
                             styles.kickerLine,
-                            {
-                                backgroundColor: Color(foreground)
-                                    .alpha(0.82)
-                                    .toString(),
-                            },
+                            { backgroundColor: primaryColor },
                         ]}
                     />
                     <ThemeText
@@ -205,12 +121,14 @@ export default function HomeHero() {
                         style={[
                             styles.platformBadge,
                             {
-                                backgroundColor: Color(foreground)
-                                    .alpha(0.14)
-                                    .toString(),
+                                backgroundColor: safeAlpha(
+                                    foreground,
+                                    0.1,
+                                    "transparent",
+                                ),
                             },
                         ]}>
-                        <ThemeText fontSize="tag" color={foreground}>
+                        <ThemeText fontSize="tag" color={mutedForeground}>
                             {currentMusic?.platform ?? "MusicFree"}
                         </ThemeText>
                     </View>
@@ -236,16 +154,18 @@ export default function HomeHero() {
                             style={[
                                 styles.progressTrack,
                                 {
-                                    backgroundColor: Color(foreground)
-                                        .alpha(0.18)
-                                        .toString(),
+                                    backgroundColor: safeAlpha(
+                                        foreground,
+                                        0.14,
+                                        "rgba(0,0,0,0.14)",
+                                    ),
                                 },
                             ]}>
                             <View
                                 style={[
                                     styles.progressFill,
                                     {
-                                        backgroundColor: foreground,
+                                        backgroundColor: primaryColor,
                                         width: getProgressPercent(
                                             currentMusic ? position : 0,
                                             progressDuration,
@@ -259,11 +179,7 @@ export default function HomeHero() {
                         <Pressable
                             style={[
                                 styles.playButton,
-                                {
-                                    backgroundColor: Color(foreground)
-                                        .alpha(0.17)
-                                        .toString(),
-                                },
+                                { backgroundColor: primaryColor },
                             ]}
                             onPress={evt => {
                                 evt.stopPropagation();
@@ -276,7 +192,7 @@ export default function HomeHero() {
                             <Icon
                                 name={isPlaying ? "pause" : "play"}
                                 size={rpx(38)}
-                                color={foreground}
+                                color={playIconColor}
                             />
                         </Pressable>
                     ) : null}
@@ -286,10 +202,11 @@ export default function HomeHero() {
                 style={[
                     styles.coverFrame,
                     {
-                        backgroundColor: Color(foreground)
-                            .alpha(0.12)
-                            .toString(),
-                        borderColor: Color(foreground).alpha(0.16).toString(),
+                        borderColor: safeAlpha(
+                            foreground,
+                            0.1,
+                            "transparent",
+                        ),
                     },
                 ]}>
                 <FastImage
@@ -313,22 +230,10 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         alignItems: "center",
         padding: rpx(24),
-        shadowOffset: {
-            width: 0,
-            height: 8,
-        },
-        shadowOpacity: 0.18,
-        shadowRadius: rpx(18),
-        elevation: 3,
     },
-    flowBand: {
-        position: "absolute",
-        right: rpx(-40),
-        top: rpx(-90),
-        width: rpx(290),
-        height: rpx(430),
-        borderRadius: rpx(140),
-        transform: [{ rotate: "18deg" }],
+    // 铺满卡片的主色淡染层
+    tintLayer: {
+        ...StyleSheet.absoluteFillObject,
     },
     content: {
         flex: 1,
