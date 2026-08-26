@@ -20,6 +20,7 @@ import Animated, {
     withTiming,
 } from "react-native-reanimated";
 import Icon from "@/components/base/icon.tsx";
+import Theme from "@/core/theme";
 
 export interface IToastConfig {
     /** 类型 */
@@ -149,7 +150,9 @@ export function ToastBaseComponent() {
                     style={[
                         styles.contentContainer,
                         {
-                            backgroundColor: colors.notification,
+                            // 用接近不透明的底：壁纸下 notification 是
+                            // rgba(0,0,0,0.32)，透出壁纸导致文字看不清
+                            backgroundColor: Theme.getDialogSurfaceColor(),
                             // No elevation/shadow: avoids dark rings under wallpaper
                             // and skips extra native shadow updates during anim.
                             shadowColor: "transparent",
