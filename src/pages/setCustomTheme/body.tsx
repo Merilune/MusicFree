@@ -16,7 +16,6 @@ import {
     pickBackgroundImage,
     saveBackgroundImage,
 } from "@/utils/backgroundImage";
-import { grayRate } from "@/utils/colorUtil";
 import rpx from "@/utils/rpx";
 import { devLog } from "@/utils/log";
 import Color from "color";
@@ -63,50 +62,41 @@ export default function Body() {
                             : colorsResult.vibrant,
             };
 
-            const primaryGrayRate = grayRate(colors.primary!);
+            const rawPrimary =
+                colors.vibrant ||
+                colors.primary ||
+                colors.average ||
+                darkTheme.colors.primary;
+
+            // 归一化：饱和度太低（灰白）提饱和，亮度太亮（白）/太黑收进
+            // 中间区间，保证主色在深浅底色上都看得清，不会出现纯白主色
+            let normalizedPrimary: string;
+            try {
+                let c = Color(rawPrimary);
+                if (c.saturation() < 0.2) {
+                    c = c.saturation(0.35);
+                }
+                const lightness = c.lightness();
+                if (lightness > 0.72) {
+                    c = c.lightness(0.62);
+                } else if (lightness < 0.32) {
+                    c = c.lightness(0.42);
+                }
+                normalizedPrimary = c.toString();
+            } catch {
+                normalizedPrimary = darkTheme.colors.primary;
+            }
+
             const neutralMusicBar = Color(darkTheme.colors.musicBar)
                 .alpha(0.92)
                 .toString();
 
-            let themeColors: Partial<CustomizedColors>;
-            if (primaryGrayRate < -0.4) {
-                const primaryColor = Color(colors.primary!);
-
-                devLog("info", "🎨[自定义主题] 主色调分析", {
-                    primaryColor: colors.primary,
-                    grayRate: primaryGrayRate,
-                    whitenedColor: primaryColor
-                        .whiten(3 * primaryGrayRate)
-                        .hex()
-                        .toString(),
-                });
-                themeColors = {
-                    ...customBackgroundSurfaceColors,
-                    primary: primaryColor
-                        .darken(primaryGrayRate * 5)
-                        .toString(),
-                    musicBar: neutralMusicBar,
-                    tabBar: primaryColor.alpha(0.2).toString(),
-                };
-            } else if (primaryGrayRate > 0.4) {
-                themeColors = {
-                    ...customBackgroundSurfaceColors,
-                    primary: Color(colors.primary)
-                        .darken(primaryGrayRate * 5)
-                        .toString(),
-                    musicBar: neutralMusicBar,
-                };
-            } else {
-                // const primaryColor = Color(colors.primary!);
-
-                themeColors = {
-                    ...customBackgroundSurfaceColors,
-                    primary: Color(colors.primary)
-                        .saturate(Math.abs(primaryGrayRate) * 2 + 2)
-                        .toString(),
-                    musicBar: neutralMusicBar,
-                };
-            }
+            const themeColors: Partial<CustomizedColors> = {
+                ...customBackgroundSurfaceColors,
+                primary: normalizedPrimary,
+                musicBar: neutralMusicBar,
+                tabBar: Color(normalizedPrimary).alpha(0.2).toString(),
+            };
 
             Theme.setTheme("custom", {
                 colors: themeColors,
