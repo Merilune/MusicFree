@@ -18,7 +18,8 @@ import Animated, {
     useSharedValue,
     withTiming,
 } from "react-native-reanimated";
-import useColors from "@/hooks/useColors";
+import Theme from "@/core/theme";
+import PageBackground from "@/components/base/pageBackground";
 import { panelInfoStore } from "../usePanel";
 import { vh } from "@/utils/rpx.ts";
 
@@ -51,7 +52,12 @@ export default function (props: IPanelFullScreenProps) {
     } = props;
     const snapPoint = useSharedValue(0);
 
-    const colors = useColors();
+    // 订阅主题：换主题 / 设清壁纸后面板底色要重算
+    const theme = Theme.useTheme();
+    const panelBackgroundColor = useMemo(
+        () => Theme.getOpaquePageBackgroundColor(),
+        [theme],
+    );
 
     const backHandlerRef = useRef<NativeEventSubscription | null>(null);
     const hideCallbackRef = useRef<Function[]>([]);
@@ -175,12 +181,22 @@ export default function (props: IPanelFullScreenProps) {
                         style.wrapper,
                         !hasMask
                             ? {
-                                backgroundColor: colors.background,
+                                // 全屏面板跑在自己的 Modal 窗口里，下面没有 App 那棵树的
+                                // PageBackground 垫底。useColors 会把 background 映射成
+                                // pageBackground，预设主题下那是实色所以没问题；但设了壁纸时
+                                // 它被换成 rgba(0,0,0,0.12)，面板就成了一层 12% 的黑浮在
+                                // 下层页面上，评论文字直接糊在别的界面像素里。
+                                // 这里强制垫一层不透明底色。
+                                backgroundColor: panelBackgroundColor,
                             }
                             : null,
                         panelAnimated,
                         containerStyle,
                     ]}>
+                    {/* 垫完实色再叠一层和页面同一套的背景（壁纸 + 遮罩），
+                        这样面板里的观感和主页一致，不会一进评论区壁纸就没了。
+                        绝对定位铺满且不吃触摸，写在 children 前面才在底下。 */}
+                    {!hasMask ? <PageBackground /> : null}
                     {children}
                 </Animated.View>
             </View>

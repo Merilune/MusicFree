@@ -19,7 +19,13 @@ export default function Comment(props: ICommentProps) {
     const colors = useColors();
 
     return (
-        <View style={styles.container}>
+        <View
+            style={[
+                styles.container,
+                // 评论一条挨一条没有分隔，长评论堆起来很难分清是谁说的，
+                // 补一条极淡的分割线（主题自带的 divider，不引入新配色）
+                { borderBottomColor: colors.divider },
+            ]}>
             <View style={styles.headerLine}>
                 <FastImage source={comment.avatar} style={styles.avatar} />
                 <ThemeText numberOfLines={1} fontSize={"subTitle"}>
@@ -68,6 +74,7 @@ const styles = StyleSheet.create({
         padding: rpx(24),
         width: "100%",
         gap: rpx(16),
+        borderBottomWidth: StyleSheet.hairlineWidth,
     },
     avatar: {
         width: rpx(48),

@@ -546,6 +546,37 @@ function getDrawerSurfaceColor() {
     }
 }
 
+/**
+ * 不透明的页面底色。
+ *
+ * 全屏面板（评论、编辑歌单信息）跑在自己的 Modal 窗口里，下面没有 App 那棵树的
+ * PageBackground 垫底。设了壁纸时 pageBackground 会被换成 rgba(0,0,0,0.12)，
+ * 面板就成了一层 12% 的黑浮在下层页面像素上，文字自然看不清。
+ *
+ * 这里保证拿到一个 alpha 为 1 的底色：用户自定义的实色照用，
+ * 半透明（含壁纸模式那层黑叠加）则回落到主题预设的页面色。
+ * pageBackground 不在 surfaceColorKeys 里，不受「表面不透明度」影响，
+ * 所以不需要像抽屉那样再乘系数。
+ */
+function getOpaquePageBackgroundColor() {
+    const dark = !!themeStore.getValue().dark;
+    const preset = (
+        dark ? darkTheme.colors.pageBackground : lightTheme.colors.pageBackground
+    ) as string;
+    const raw = baseColors.pageBackground as string | undefined;
+
+    if (!raw) {
+        return preset;
+    }
+
+    try {
+        const color = Color(raw);
+        return color.alpha() >= 1 ? color.toString() : preset;
+    } catch {
+        return preset;
+    }
+}
+
 function setBackground(backgroundInfo: IBackgroundInput) {
     const currentBackgroundInfo = backgroundStore.getValue();
     let newBgInfo: IBackgroundInfo = {
@@ -595,6 +626,7 @@ const Theme = {
     setColors,
     setSurfaceOpacity,
     getDrawerSurfaceColor,
+    getOpaquePageBackgroundColor,
     useTheme: themeStore.useValue,
     getTheme: themeStore.getValue,
     useBackground: backgroundStore.useValue,
