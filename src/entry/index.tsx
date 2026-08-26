@@ -96,7 +96,11 @@ export default function Pages() {
                                     screenOptions={{
                                         headerShown: false,
                                         animation: "slide_from_right",
-                                        animationDuration: 100,
+                                        // 不自定义 animationDuration：100ms 短于
+                                        // 首帧调度，概率性被原生动画器直接跳过，
+                                        // 表现为转场卡一下+旧界面残影
+                                        // 转场期间冻结后台屏，避免旧屏抢渲染帧
+                                        freezeOnBlur: true,
                                     }}>
                                     {routes.map(route => (
                                         <Stack.Screen
