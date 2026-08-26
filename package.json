@@ -1,10 +1,10 @@
 {
   "name": "MusicFree",
-  "version": "0.7.77",
+  "version": "0.3.00",
   "private": true,
   "license": "AGPL",
   "author": {
-    "name": "Toskysun"
+    "name": "Merilune"
   },
   "scripts": {
     "android": "react-native run-android --appId fun.xwj.musicfree.debug",
