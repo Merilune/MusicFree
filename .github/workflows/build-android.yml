@@ -165,23 +165,51 @@ jobs:
                     --quiet \
                     || echo "⚠️  Pre-build completed with warnings"
 
-            # 🔐 设置签名证书
+            # 🔐 设置签名证书：配了 secret 就用 secret，没配就当场生成自签证书
             - name: Setup keystore
+              env:
+                  KEYSTORE_FILE: ${{ secrets.KEYSTORE_FILE }}
+                  KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+                  KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+                  KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
               run: |
+                  set -e
+
                   # Create secure temporary directory
                   TEMP_DIR=$(mktemp -d)
                   KEYSTORE_PATH="$TEMP_DIR/release.keystore"
                   KEYSTORE_PROPS="$TEMP_DIR/keystore.properties"
 
-                  # Create keystore from base64 secret in secure temp directory
-                  echo "${{ secrets.KEYSTORE_FILE }}" | base64 -d > "$KEYSTORE_PATH"
+                  if [[ -n "$KEYSTORE_FILE" && -n "$KEYSTORE_PASSWORD" && -n "$KEY_ALIAS" && -n "$KEY_PASSWORD" ]]; then
+                    echo "🔐 使用仓库 secret 中的签名证书"
+                    printf '%s' "$KEYSTORE_FILE" | base64 -d > "$KEYSTORE_PATH"
+                    STORE_PASSWORD="$KEYSTORE_PASSWORD"
+                    ALIAS="$KEY_ALIAS"
+                    ALIAS_PASSWORD="$KEY_PASSWORD"
+                  else
+                    echo "⚠️  未配置签名 secret，改用当场生成的自签证书"
+                    echo "⚠️  自签证书与官方包签名不同，安装前必须先卸载旧版本"
+                    STORE_PASSWORD="musicfree"
+                    ALIAS="musicfree"
+                    ALIAS_PASSWORD="musicfree"
+                    keytool -genkeypair -v \
+                      -keystore "$KEYSTORE_PATH" \
+                      -storetype PKCS12 \
+                      -alias "$ALIAS" \
+                      -keyalg RSA \
+                      -keysize 2048 \
+                      -validity 10950 \
+                      -storepass "$STORE_PASSWORD" \
+                      -keypass "$ALIAS_PASSWORD" \
+                      -dname "CN=MusicFree, OU=Fork, O=MusicFree, L=NA, ST=NA, C=CN"
+                  fi
 
                   # Create keystore.properties file in temp directory
                   cat > "$KEYSTORE_PROPS" << EOF
                   RELEASE_STORE_FILE=release.keystore
-                  RELEASE_STORE_PASSWORD=${{ secrets.KEYSTORE_PASSWORD }}
-                  RELEASE_KEY_ALIAS=${{ secrets.KEY_ALIAS }}
-                  RELEASE_KEY_PASSWORD=${{ secrets.KEY_PASSWORD }}
+                  RELEASE_STORE_PASSWORD=$STORE_PASSWORD
+                  RELEASE_KEY_ALIAS=$ALIAS
+                  RELEASE_KEY_PASSWORD=$ALIAS_PASSWORD
                   EOF
 
                   # Move to android directory for gradle access
