@@ -600,6 +600,17 @@ export default function Lyric(props: IProps) {
         // When paused: still allow one-shot center if we have never scrolled
         // to this line (opening lyric page while paused).
         const targetIndex = currentLrcItem?.index ?? -1;
+        // 歌词数组已换成新歌/重载，currentLrcItem 还挂着旧歌的行：
+        // 旧 index 落在新数组里是靠前的位置，直接跟随会跳回很早的歌词行。
+        // 等它被 progress 事件更新后再跟随。
+        if (
+            targetIndex >= 0 &&
+            targetIndex < lyrics.length &&
+            currentLrcItem &&
+            lyrics[targetIndex] !== currentLrcItem
+        ) {
+            return;
+        }
         const pendingSeekIndex = pendingSeekIndexRef.current;
         if (pendingSeekIndex !== null) {
             if (targetIndex !== pendingSeekIndex) {
