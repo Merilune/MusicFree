@@ -12,7 +12,6 @@ import rpx, { fontRpx } from "@/utils/rpx";
 import { ImgAsset } from "@/constants/assetsConst";
 import ThemeText from "@/components/base/themeText";
 import LinkText from "@/components/base/linkText";
-import useCheckUpdate from "@/hooks/useCheckUpdate.ts";
 import useOrientation from "@/hooks/useOrientation";
 import Theme from "@/core/theme";
 import DeviceInfo from "react-native-device-info";
@@ -21,7 +20,6 @@ import { showDialog } from "@/components/dialogs/useDialog";
 import useHasCustomBackground from "@/hooks/useHasCustomBackground";
 
 export default function AboutSetting() {
-    const checkAndShowResult = useCheckUpdate();
     const orientation = useOrientation();
     const { colors } = Theme.useTheme();
     const hasCustomBackground = useHasCustomBackground();
@@ -141,16 +139,11 @@ export default function AboutSetting() {
                     style.header,
                     orientation === "horizontal" ? style.horizontalSize : null,
                 ]}>
-                <TouchableOpacity
-                    onPress={() => {
-                        checkAndShowResult(true);
-                    }}>
-                    <Image
-                        source={ImgAsset.author}
-                        style={style.image}
-                        resizeMode="contain"
-                    />
-                </TouchableOpacity>
+                <Image
+                    source={ImgAsset.author}
+                    style={style.image}
+                    resizeMode="contain"
+                />
                 <ThemeText fontSize="title" style={style.appTitle}>MusicFree</ThemeText>
                 <ThemeText style={style.versionText}>版本 {version}</ThemeText>
                 <ThemeText style={style.buildText}>构建时间: {buildTime}</ThemeText>

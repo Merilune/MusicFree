@@ -8,7 +8,6 @@ import { showPanel } from "@/components/panels/usePanel";
 import { useI18N } from "@/core/i18n";
 import { ROUTE_PATH, useNavigate } from "@/core/router";
 import TrackPlayer from "@/core/trackPlayer";
-import { checkUpdateAndShowResult } from "@/hooks/useCheckUpdate.ts";
 import rpx from "@/utils/rpx";
 import { forceExitApp } from "@/utils/forceExitApp";
 import { useScheduleCloseCountDown } from "@/utils/scheduleClose";
@@ -215,25 +214,6 @@ function HomeDrawer(props: any) {
 
                     <ListItem
                         withHorizontalPadding
-                        key={"update"}
-                        onPress={() => {
-                            checkUpdateAndShowResult(true);
-                        }}>
-                        <ListItem.ListItemIcon
-                            icon={"arrow-path"}
-                            width={rpx(48)}
-                        />
-                        <ListItem.Content title={t("sidebar.checkUpdate")} />
-                        <ListItem.ListItemText
-                            position="right"
-                            fontSize="subTitle">
-                            {`${t(
-                                "sidebar.currentVersion",
-                            )}${deviceInfoModule.getVersion()}`}
-                        </ListItem.ListItemText>
-                    </ListItem>
-                    <ListItem
-                        withHorizontalPadding
                         key={"about"}
                         onPress={() => {
                             navigateToSetting("about");
@@ -247,6 +227,13 @@ function HomeDrawer(props: any) {
                                 "common.about",
                             )} ${deviceInfoModule.getApplicationName()}`}
                         />
+                        <ListItem.ListItemText
+                            position="right"
+                            fontSize="subTitle">
+                            {`${t(
+                                "sidebar.currentVersion",
+                            )}${deviceInfoModule.getVersion()}`}
+                        </ListItem.ListItemText>
                     </ListItem>
                 </View>
 
