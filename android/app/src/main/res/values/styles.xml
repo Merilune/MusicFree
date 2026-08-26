@@ -7,12 +7,10 @@
         <item name="android:windowBackground">@color/splashscreen_background</item>
     </style>
 
-    <!-- Splash screen -->
+    <!-- Splash screen: 纯色底，无 LOGO 无品牌条 -->
     <style name="Theme.App.SplashScreen" parent="Theme.SplashScreen">
         <item name="windowSplashScreenBackground">@color/splashscreen_background</item>
-        <item name="windowSplashScreenAnimatedIcon">@drawable/splashscreen_image</item>
         <item name="postSplashScreenTheme">@style/AppTheme</item>
-        <item name="android:windowSplashScreenBrandingImage">@drawable/spashscreen_branding_image</item>
     </style>
 
 </resources>
