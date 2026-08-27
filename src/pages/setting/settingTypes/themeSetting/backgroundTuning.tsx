@@ -11,38 +11,14 @@ import Theme, {
 } from "@/core/theme";
 import { useI18N } from "@/core/i18n";
 import {
-    pickBackgroundImage,
     removeBackgroundImage,
-    saveBackgroundImage,
 } from "@/utils/backgroundImage";
-import { devLog } from "@/utils/log";
-import Toast from "@/utils/toast";
 
 export default function BackgroundTuning() {
     const { t } = useI18N();
     const backgroundInfo = Theme.useBackground();
     const backgroundMask = useAppConfig("theme.backgroundMask") ?? 0;
     const hasBackground = !!backgroundInfo?.url;
-
-    async function onPickPress() {
-        try {
-            const uri = await pickBackgroundImage();
-            if (!uri) {
-                return;
-            }
-
-            const previousUrl = Theme.getBackground()?.url;
-            const newUrl = await saveBackgroundImage(uri, "background");
-            // 换了扩展名时旧文件不会被覆盖，得单独删
-            if (previousUrl && previousUrl.split("#")[0] !== newUrl.split("#")[0]) {
-                await removeBackgroundImage(previousUrl);
-            }
-            Theme.setBackground({ url: newUrl });
-        } catch (e) {
-            devLog("warn", "🎨[背景设置] 设置背景失败", e);
-            Toast.warn(t("themeSettings.toast.backgroundFailed"));
-        }
-    }
 
     async function onClearPress() {
         const previousUrl = Theme.getBackground()?.url;
@@ -67,16 +43,6 @@ export default function BackgroundTuning() {
                 {t("themeSettings.backgroundTuning")}
             </ThemeText>
             <View style={styles.sectionWrapper}>
-                <ListItem withHorizontalPadding onPress={onPickPress}>
-                    <ListItem.Content
-                        title={
-                            hasBackground
-                                ? t("themeSettings.changeBackground")
-                                : t("themeSettings.pickBackground")
-                        }
-                        description={t("themeSettings.backgroundDesc")}
-                    />
-                </ListItem>
                 {hasBackground ? (
                     <ListItem withHorizontalPadding onPress={onClearPress}>
                         <ListItem.Content
