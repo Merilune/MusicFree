@@ -335,8 +335,22 @@ function setup() {
     } else if (currentTheme === "p-light") {
         commitTheme(lightTheme);
     } else {
-        const savedColors = (Config.getConfig("theme.colors") as CustomizedColors) ??
+        let savedColors = (Config.getConfig("theme.colors") as CustomizedColors) ??
             darkTheme.colors;
+
+        // 旧默认色（继承自深色主题的橙主色 + 蓝灰底）一次性迁移成
+        // 黑白初始色；存的是别的颜色说明用户自定义过，不动
+        if (
+            savedColors.primary === darkTheme.colors.primary &&
+            savedColors.pageBackground === darkTheme.colors.pageBackground
+        ) {
+            savedColors = {
+                ...darkTheme.colors,
+                primary: customThemeDefaultPrimary,
+                pageBackground: "#000000",
+            };
+            Config.setConfig("theme.colors", savedColors);
+        }
 
         // 修复旧版本中错误的 listActive 配置
         // 如果 listActive 存在但与 primary 不匹配，重新生成
