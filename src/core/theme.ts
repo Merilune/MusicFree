@@ -332,7 +332,8 @@ function syncCardSurfaceColors(
 }
 
 function setup() {
-    const configuredTheme = Config.getConfig("theme.selectedTheme") ?? "p-dark";
+    // 全新安装的默认主题用浅色（米白+红），不跟系统时也回落到浅色
+    const configuredTheme = Config.getConfig("theme.selectedTheme") ?? "p-light";
     const followSystem = Config.getConfig("theme.followSystem");
     const systemTheme = followSystem ? Appearance.getColorScheme() : null;
     const currentTheme =
@@ -351,12 +352,11 @@ function setup() {
         let savedColors = (Config.getConfig("theme.colors") as CustomizedColors) ??
             darkTheme.colors;
 
-        // 旧默认色（继承自深色主题的橙主色 + 蓝灰底）一次性迁移成
-        // 黑白初始色；存的是别的颜色说明用户自定义过，不动
-        if (
-            savedColors.primary === darkTheme.colors.primary &&
-            savedColors.pageBackground === darkTheme.colors.pageBackground
-        ) {
+        // 旧默认色迁移：主色还是深色主题的橙（#FF7650）就说明从没真正
+        // 自定义过配色，一次性换成黑白初始色。只看主色——pageBackground
+        // 等字段在旧版本导入背景/调节时可能已被写成别的值，一并要求相等
+        // 会让迁移永远不触发
+        if (savedColors.primary === darkTheme.colors.primary) {
             savedColors = {
                 ...darkTheme.colors,
                 ...customThemeDefaultColors,
@@ -365,11 +365,7 @@ function setup() {
             // customColors 是自定义主题入口的配色来源，一并迁移，
             // 否则旧默认橙会从那个入口复活
             const savedCustomColors = Config.getConfig("theme.customColors");
-            if (
-                savedCustomColors?.primary === darkTheme.colors.primary &&
-                savedCustomColors?.pageBackground ===
-                    darkTheme.colors.pageBackground
-            ) {
+            if (savedCustomColors?.primary === darkTheme.colors.primary) {
                 Config.setConfig("theme.customColors", {
                     ...darkTheme.colors,
                     ...customThemeDefaultColors,
