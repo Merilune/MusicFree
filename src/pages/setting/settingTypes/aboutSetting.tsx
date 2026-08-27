@@ -35,11 +35,9 @@ export default function AboutSetting() {
 
     // 动画值
     const fadeAnim2 = useRef(new Animated.Value(0)).current;
-    const fadeAnim3 = useRef(new Animated.Value(0)).current;
     const fadeAnim4 = useRef(new Animated.Value(0)).current;
     const fadeAnim5 = useRef(new Animated.Value(0)).current;
     const scaleAnim2 = useRef(new Animated.Value(0.8)).current;
-    const scaleAnim3 = useRef(new Animated.Value(0.8)).current;
     const scaleAnim4 = useRef(new Animated.Value(0.8)).current;
     const scaleAnim5 = useRef(new Animated.Value(0.8)).current;
 
@@ -68,20 +66,6 @@ export default function AboutSetting() {
                     useNativeDriver: true,
                 }),
                 Animated.spring(scaleAnim2, {
-                    toValue: 1,
-                    friction: 4,
-                    tension: 40,
-                    useNativeDriver: true,
-                }),
-            ]),
-            Animated.parallel([
-                Animated.timing(fadeAnim3, {
-                    toValue: 1,
-                    duration: 600,
-                    easing: Easing.out(Easing.cubic),
-                    useNativeDriver: true,
-                }),
-                Animated.spring(scaleAnim3, {
                     toValue: 1,
                     friction: 4,
                     tension: 40,
@@ -179,41 +163,6 @@ export default function AboutSetting() {
                         ]}>
                         <ThemeText fontSize="subTitle" style={style.cardTitle}>原作者</ThemeText>
                         <ThemeText style={style.cardContent}>猫头猫</ThemeText>
-                        <LinkText linkTo="https://github.com/maotoumao/MusicFree">
-                            https://github.com/maotoumao/MusicFree
-                        </LinkText>
-                    </Animated.View>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                    activeOpacity={0.8}
-                    onPress={() => {
-                        Animated.sequence([
-                            Animated.spring(scaleAnim3, {
-                                toValue: 0.95,
-                                friction: 3,
-                                tension: 100,
-                                useNativeDriver: true,
-                            }),
-                            Animated.spring(scaleAnim3, {
-                                toValue: 1,
-                                friction: 3,
-                                tension: 100,
-                                useNativeDriver: true,
-                            }),
-                        ]).start();
-                    }}>
-                    <Animated.View
-                        style={[
-                            style.infoCard,
-                            { backgroundColor: colors.card },
-                            cardChrome,
-                            {
-                                opacity: fadeAnim3,
-                                transform: [{ scale: scaleAnim3 }],
-                            },
-                        ]}>
-                        <ThemeText fontSize="subTitle" style={style.cardTitle}>原仓库</ThemeText>
                         <LinkText linkTo="https://github.com/maotoumao/MusicFree">
                             https://github.com/maotoumao/MusicFree
                         </LinkText>
