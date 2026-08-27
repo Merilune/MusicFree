@@ -424,6 +424,8 @@ function setTheme(
                     ...darkTheme.colors,
                     // 初始主色用中性白，避免继承橙色
                     primary: customThemeDefaultPrimary,
+                    // 底色用纯黑，别露出深色主题的蓝灰 #101419
+                    pageBackground: "#000000",
                     ...(extra?.colors ?? {}),
                 },
                 hasBackground,
