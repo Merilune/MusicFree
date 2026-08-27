@@ -16,6 +16,7 @@ export default function FontSetting() {
     const labelMap: Record<string, string> = {
         default: t("fontSetting.default"),
         NotoSerifSC: t("fontSetting.notoSerifSC"),
+        HanYiXiZhongYuanJ: t("fontSetting.hanYiXiZhongYuanJ"),
         follow: t("fontSetting.followApp"),
     };
 
@@ -53,7 +54,7 @@ export default function FontSetting() {
                                 showPicker(
                                     t("fontSetting.appFont"),
                                     "font.appFontFamily",
-                                    ["default", "NotoSerifSC"],
+                                    ["default", "NotoSerifSC", "HanYiXiZhongYuanJ"],
                                     appFont,
                                 )
                             }>
@@ -78,7 +79,7 @@ export default function FontSetting() {
                                 showPicker(
                                     t("fontSetting.lyricFont"),
                                     "font.lyricFontFamily",
-                                    ["follow", "default", "NotoSerifSC"],
+                                    ["follow", "default", "NotoSerifSC", "HanYiXiZhongYuanJ"],
                                     lyricFont,
                                 )
                             }>
@@ -90,7 +91,9 @@ export default function FontSetting() {
                             fontSize="subTitle"
                             style={[
                                 styles.valueText,
-                                lyricFont === "NotoSerifSC" && styles.activeValue,
+                                lyricFont !== "follow" &&
+                                    lyricFont !== "default" &&
+                                    styles.activeValue,
                             ]}>
                             {labelMap[lyricFont]}
                         </ThemeText>
