@@ -124,8 +124,6 @@ export const customThemeDefaultColors = {
     pageBackground: "#000000",
     appBar: "#000000",
     tabBar: "#000000",
-    accentWarm: customThemeDefaultPrimary,
-    accentCool: customThemeDefaultPrimary,
 } as Partial<CustomizedColors>;
 
 export const customBackgroundSurfaceColors: Partial<CustomizedColors> = {

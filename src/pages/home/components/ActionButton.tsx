@@ -19,7 +19,7 @@ interface IActionButtonProps {
 export default function ActionButton(props: IActionButtonProps) {
     const { iconName, iconColor, accentColor, title, action, style } = props;
     const colors = useColors();
-    const accent = accentColor ?? colors.accentWarm ?? colors.primary;
+    const accent = accentColor ?? colors.primary;
     return (
         <TouchableOpacity
             activeOpacity={0.72}
