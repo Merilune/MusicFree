@@ -123,7 +123,14 @@ export const customThemeDefaultColors = {
     primary: customThemeDefaultPrimary,
     pageBackground: "#000000",
     appBar: "#000000",
-    tabBar: "#000000",
+    tabBar: "#0A0A0A",
+    musicBar: "#141414",
+    card: "#121212",
+    backdrop: "#161616",
+    surface: "#141414",
+    surfaceElevated: "#1D1D1D",
+    notification: "#161616",
+    placeholder: "#1F1F1F",
 } as Partial<CustomizedColors>;
 
 export const customBackgroundSurfaceColors: Partial<CustomizedColors> = {
@@ -372,6 +379,32 @@ function setup() {
                     ...customThemeDefaultColors,
                 });
             }
+        }
+
+        // 表面色迁移：setColors 会把深色主题的表面色（弹窗/卡片底）
+        // 一并写进配置；深色主题改色后自定义主题会渗进它的紫灰。
+        // 表面色全部与深色主题一致 = 从没单独调过，换成中性黑灰
+        const surfaceKeys: (keyof CustomizedColors)[] = [
+            "pageBackground",
+            "appBar",
+            "tabBar",
+            "musicBar",
+            "card",
+            "backdrop",
+            "surface",
+            "surfaceElevated",
+            "notification",
+            "placeholder",
+        ];
+        const surfacesUntouched = surfaceKeys.every(
+            key => savedColors[key] === darkTheme.colors[key],
+        );
+        if (surfacesUntouched) {
+            savedColors = {
+                ...savedColors,
+                ...customThemeDefaultColors,
+            };
+            Config.setConfig("theme.colors", savedColors);
         }
 
         // 修复旧版本中错误的 listActive 配置
