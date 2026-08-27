@@ -179,6 +179,9 @@ export default function AboutSetting() {
                         ]}>
                         <ThemeText fontSize="subTitle" style={style.cardTitle}>原作者</ThemeText>
                         <ThemeText style={style.cardContent}>猫头猫</ThemeText>
+                        <LinkText linkTo="https://github.com/maotoumao/MusicFree">
+                            https://github.com/maotoumao/MusicFree
+                        </LinkText>
                     </Animated.View>
                 </TouchableOpacity>
 
@@ -247,6 +250,9 @@ export default function AboutSetting() {
                         ]}>
                         <ThemeText fontSize="subTitle" style={style.cardTitle}>上游作者</ThemeText>
                         <ThemeText style={style.cardContent}>Toskysun</ThemeText>
+                        <LinkText linkTo="https://github.com/Toskysun/MusicFree">
+                            https://github.com/Toskysun/MusicFree
+                        </LinkText>
                     </Animated.View>
                 </TouchableOpacity>
 
@@ -279,6 +285,7 @@ export default function AboutSetting() {
                             },
                         ]}>
                         <ThemeText fontSize="subTitle" style={style.cardTitle}>本仓库（二次开发）</ThemeText>
+                        <ThemeText style={style.cardContent}>Merilune</ThemeText>
                         <LinkText linkTo="https://github.com/Merilune/MusicFree">
                             https://github.com/Merilune/MusicFree
                         </LinkText>
