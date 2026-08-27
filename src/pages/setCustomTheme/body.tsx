@@ -7,6 +7,7 @@ import globalStyle from "@/constants/globalStyle";
 import { useI18N } from "@/core/i18n";
 import Theme, {
     customBackgroundSurfaceColors,
+    customThemeDefaultPrimary,
     darkTheme,
     DEFAULT_BACKGROUND_BLUR,
     DEFAULT_BACKGROUND_OPACITY,
@@ -95,11 +96,11 @@ export default function Body() {
                     })
                     .sort((a, b) => b.score - a.score)[0].c;
             } else {
-                // dominant 本身接近黑/白/灰（色相不可信），退回 vibrant 优先
+                // dominant 本身接近黑/白/灰（色相不可信），用中性白保持黑白调
                 base =
                     candidates.find(
                         c => c.saturation() >= 0.2 && c.lightness() > 0.15,
-                    ) ?? Color(darkTheme.colors.primary);
+                    ) ?? Color(customThemeDefaultPrimary);
             }
 
             // 归一化：饱和度太低（灰白）提饱和，亮度太亮（白）/太黑收进
@@ -108,13 +109,11 @@ export default function Body() {
             try {
                 let c = base;
                 if (c.saturation() < 0.2) {
-                    // 灰白色相不可信，直接提饱和会变成粉色（hue=0），
-                    // 借用默认主题的主色色相
-                    c = Color(darkTheme.colors.primary)
-                        .lightness(
-                            Math.min(Math.max(c.lightness(), 0.4), 0.6),
-                        )
-                        .saturation(0.45);
+                    // 灰白图保持黑白调，只把亮度收进可读区间，不提饱和
+                    // （提饱和会借 hue=0 变成粉色）
+                    c = Color(customThemeDefaultPrimary).lightness(
+                        Math.min(Math.max(c.lightness(), 0.4), 0.6),
+                    );
                 }
                 const lightness = c.lightness();
                 if (lightness > 0.72) {
@@ -124,7 +123,7 @@ export default function Body() {
                 }
                 normalizedPrimary = c.toString();
             } catch {
-                normalizedPrimary = darkTheme.colors.primary;
+                normalizedPrimary = customThemeDefaultPrimary;
             }
 
             const neutralMusicBar = Color(darkTheme.colors.musicBar)

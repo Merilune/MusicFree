@@ -106,6 +106,12 @@ interface IBackgroundInput {
     opacity?: number;
 }
 
+/**
+ * 自定义主题的初始主色：中性白，配深色底就是黑底白字；
+ * 不再继承深色主题的橙色
+ */
+export const customThemeDefaultPrimary = "#F2F2F2";
+
 export const customBackgroundSurfaceColors: Partial<CustomizedColors> = {
     pageBackground: "rgba(0,0,0,0.12)",
     card: "rgba(0,0,0,0.22)",
@@ -416,6 +422,8 @@ function setTheme(
             colors: normalizeCustomBackgroundColors(
                 {
                     ...darkTheme.colors,
+                    // 初始主色用中性白，避免继承橙色
+                    primary: customThemeDefaultPrimary,
                     ...(extra?.colors ?? {}),
                 },
                 hasBackground,
