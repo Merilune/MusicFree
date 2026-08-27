@@ -16,7 +16,7 @@ import { AppConfigPropertyKey } from "@/types/core/config";
 import { clearCache, getCacheSize, sizeFormatter } from "@/utils/fileUtils";
 import { clearLog, getErrorLogContent } from "@/utils/log";
 import { getQualityKeys, getQualityText } from "@/utils/qualities";
-import rpx from "@/utils/rpx";
+import rpx, { fontRpx } from "@/utils/rpx";
 import Toast from "@/utils/toast";
 import Clipboard from "@react-native-clipboard/clipboard";
 import Slider from "@react-native-community/slider";
@@ -1034,7 +1034,10 @@ function LyricSetting() {
                 {breathingDots.right}
             </ListItem>
 
-            {/* 桌面歌词设置 */}
+            {/* 桌面歌词设置（以下仅对悬浮在桌面/状态栏的歌词生效） */}
+            <ThemeText style={lyricStyles.subHeader}>
+                桌面歌词（仅对悬浮歌词生效）
+            </ThemeText>
             <ListItem withHorizontalPadding heightType="small" onPress={openStatusBarLyric.onPress}>
                 <ListItem.Content title={openStatusBarLyric.title} />
                 {openStatusBarLyric.right}
@@ -1193,6 +1196,13 @@ function LyricSetting() {
 }
 
 const lyricStyles = StyleSheet.create({
+    subHeader: {
+        marginTop: rpx(24),
+        marginBottom: rpx(8),
+        paddingHorizontal: rpx(36),
+        opacity: 0.6,
+        fontSize: fontRpx(24),
+    },
     slider: {
         flex: 1,
         marginLeft: rpx(24),
