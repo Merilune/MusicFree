@@ -173,15 +173,7 @@ export default function AppBar(props: IAppBarProps) {
                         onPress={() => {
                             setShowMenu(false);
                         }}>
-                        <View
-                            style={[
-                                styles.blocker,
-                                // 有自定义背景时菜单浮在壁纸上，加暗化遮罩防止看不清
-                                hasCustomBackground
-                                    ? { backgroundColor: colors.backdrop }
-                                    : null,
-                            ]}
-                        />
+                        <View style={styles.blocker} />
                     </TouchableWithoutFeedback>
                 ) : null}
                 <>
