@@ -1,4 +1,4 @@
-# 🎵 MusicFree (Modified Version)
+# 🎵 MusicFree (Merilune Modified)
 
 <div align="center">
 
@@ -7,148 +7,73 @@
   [English](./readme-en.md) | 简体中文
 
   [![License](https://img.shields.io/badge/license-AGPL%203.0-blue)](LICENSE)
-  [![Version](https://img.shields.io/github/v/release/Toskysun/MusicFree?color=green)](https://github.com/Toskysun/MusicFree/releases)
+  [![Version](https://img.shields.io/github/v/release/Merilune/MusicFree?color=green)](https://github.com/Merilune/MusicFree/releases)
   [![Platform](https://img.shields.io/badge/platform-Android-orange)]()
 
 </div>
 
 ---
 
-## ✨ 核心特性
+## 🌟 本仓库是什么
 
-<table>
-<tr>
-<td width="50%">
+我的自用版本，基于 [Toskysun/MusicFree](https://github.com/Toskysun/MusicFree)（其上游为 [maotoumao/MusicFree](https://github.com/maotoumao/MusicFree)，原作者猫头猫）二次开发，把我能优化的观感和想加的功能都加了进来。
 
-### 🎯 插件系统
-- 🔌 **完全插件化**：音源、搜索、播放全部基于插件
-- 🎵 **ikun音源**：支持8种音质级别
-- 📦 **灵活管理**：支持本地和网络插件安装
+上游的全部能力（插件系统、ikun 音源 12 级音质、下载增强等）都保留，主要新增/改进见下。
 
-</td>
-<td width="50%">
+## ✨ 相较上游的主要区别
 
-### 🎨 个性化
-- 🎭 **主题定制**：深色/浅色模式，自定义背景
-- 🏷️ **音质标签**：根据喜好定制音质显示
-- 🚀 **启动优化**：可设置启动时打开播放详情
+### 🎨 主题与个性化
+- **内置字体**：思源宋体、汉仪细中圆、霞鹜新致宋、志莽行书四款内置字体，全局字体与歌词字体可分别选择
+- **自定义主题重做**：黑白初始配色；背景壁纸支持模糊度/透明度/暗化遮罩调节，表面不透明度、卡片阴影强度全局可调
+- **自定义启动页**：可选自己喜欢的图片作为启动页
+- **深色主题改版**：主色橙 → 蓝，底色蓝灰 → 偏紫的灰；浅色主题保持米白 + 红不变
+- **歌单独立背景**：每个本地歌单可单独设置背景，支持"用封面当背景"（在线封面同样可用）
 
-</td>
-</tr>
-<tr>
-<td width="50%">
+### 🔔 播放与通知
+- **紧凑媒体通知**：QQ音乐式矮高度通知，收藏/上一首/播放暂停/下一首四个按钮，收藏状态实时显示（实心红心），锁屏/耳机控制不受影响
+- **桌面悬浮歌词**：逐字进度、翻译副行、拖动定位、多套配色预设、字体字号可调、锁定防误触
+- **转场动画修复**：歌单详情、推荐歌单、榜单、专辑/歌手页等插件请求页进入时左侧滑入动画不再丢失
 
-### 📥 下载增强
-- 🔔 **下载通知**：实时显示下载进度
-- 📝 **文件命名**：支持多种命名格式
-- 🏷️ **音乐标签**：下载时自动写入元数据
-
-</td>
-<td width="50%">
-
-### 🔒 隐私安全
-- 💾 **本地存储**：所有数据存储在本地
-- 🚫 **无广告**：完全免费，无任何广告
-- 🔓 **开源透明**：基于AGPL 3.0协议
-
-</td>
-</tr>
-</table>
+### 🔧 其他
+- 移除上游公告与更新弹窗
+- CI 无需私有密钥即可出包（自签证书兜底）
 
 ## 🚀 快速开始
 
-### 📲 安装应用
-1. 前往 [Releases](https://github.com/Toskysun/MusicFree/releases) 下载最新版本
-2. 安装APK文件到Android设备
-
-### 🔌 安装插件
-
-#### ikun音源插件（推荐）
-```
-https://musicfree-plugins.netlify.app
-```
-
-#### 插件安装步骤
-1. 打开应用 → 侧边栏 → 设置 → 插件设置
-2. 选择"从网络安装插件"
-3. 输入插件地址并确认
+1. 前往 [Releases](https://github.com/Merilune/MusicFree/releases) 下载最新 APK 安装
+2. 打开应用 → 侧边栏 → 设置 → 插件设置 → 从网络安装插件
+3. 插件源参考：`https://musicfree-plugins.netlify.app`
 
 ## 📖 文档
 
 - 📚 **插件开发**：[开发文档](https://musicfree.catcat.work/plugin/introduction.html)
-- ❓ **常见问题**：[Q&A文档](https://musicfree.catcat.work/qa/common.html)
+- ❓ **常见问题**：[Q&A 文档](https://musicfree.catcat.work/qa/common.html)
 - 🔧 **使用指南**：[详细教程](https://musicfree.catcat.work/usage/mobile/install-plugin.html)
 
-## 🔧 插件开发指南
+音质键值（12 级）、原版插件兼容说明与上游一致，详见上游 README。
 
-### 音质键值 (IQualityKey)
+## 🤝 致谢
 
-本版本支持以下 **12 种音质等级**：
+本项目站在前人的肩膀上：
 
-| 音质键值 | 说明 | 比特率/格式 |
-|---------|------|-----------|
-| `mgg` | 低清音质 | 96 kbps |
-| `128k` | 普通音质 | 128 kbps |
-| `192k` | 中等音质 | 192 kbps |
-| `320k` | 高清音质 | 320 kbps |
-| `flac` | 高清无损 | FLAC |
-| `flac24bit` | 高解析度无损 | FLAC 24-bit |
-| `hires` | 高解析度 | Hi-Res |
-| `vinyl` | 黑胶音质 | Vinyl |
-| `dolby` | 杜比全景声 | Dolby Atmos |
-| `atmos` | 臻品音质 | Atmos 2.0 |
-| `atmos_plus` | 臻品全景声 | Atmos+ 2.0 |
-| `master` | 臻品母带 | Master 3.0 |
-
-### 原版插件兼容
-
-本版本**完全兼容原版插件**，原版音质键值会自动转换：
-
-| 原版键值 | 转换为本版 | 说明 |
-|---------|-----------|------|
-| `low` | `128k` | 低音质 → 普通音质 |
-| `standard` | `192k` | 标准音质 → 中等音质 |
-| `high` | `320k` | 高音质 → 高清音质 |
-| `super` | `flac` | 超高音质 → 无损音质 |
-
-**开发建议**：
-- ✅ 新开发插件请使用本版音质键值
-- ✅ 原版插件无需修改，自动兼容
-- ✅ 用户界面统一显示本版音质名称
-
-## 🤝 关于项目
-
-### 致谢
-
-本项目基于 [MusicFree](https://github.com/maotoumao/MusicFree) 修改优化
-
-**原作者**：[maotoumao](https://github.com/maotoumao)
-**原项目**：[https://github.com/maotoumao/MusicFree](https://github.com/maotoumao/MusicFree)
-
-
-### 修改说明
-
-本版本基于原版 v0.6.1，主要改进包括：
-- 新增ikun音源支持（8种音质）
-- 增强下载功能（通知、命名、标签）
-- 优化个性化设置
-- 修复多个已知问题
+- **原作者**：[猫头猫 maotoumao](https://github.com/maotoumao) — [原项目](https://github.com/maotoumao/MusicFree)
+- **上游**：[Toskysun](https://github.com/Toskysun) — [Toskysun/MusicFree](https://github.com/Toskysun/MusicFree)
+- **二次开发**：[Merilune](https://github.com/Merilune) — 本仓库
 
 ## 📄 协议
 
 本项目遵循 [AGPL-3.0](LICENSE) 开源协议
 
-**重要提示**：
 - ⚠️ 禁止用于商业用途
 - ⚠️ 请合法合规使用
 - ⚠️ 插件产生的数据与本软件无关
 
 ## 💬 反馈
 
-遇到问题或有建议？欢迎 [提交Issue](../../issues)
+遇到问题或有建议？欢迎 [提交 Issue](../../issues)
 
 ---
 
 <div align="center">
-  Made with ❤️ by the community
+  Made with ❤️
 </div>
