@@ -19,6 +19,7 @@ import {
 } from "@/utils/backgroundImage";
 import rpx from "@/utils/rpx";
 import { devLog } from "@/utils/log";
+import Toast from "@/utils/toast";
 import Color from "color";
 import React from "react";
 import { StyleSheet, View } from "react-native";
@@ -31,15 +32,22 @@ export default function Body() {
     const { t } = useI18N();
 
     async function onImageClick() {
+        let bgUrl: string;
         try {
             const uri = await pickBackgroundImage();
             if (!uri) {
                 return;
             }
+            bgUrl = await saveBackgroundImage(uri, "background");
+        } catch (e) {
+            devLog("warn", "🎨[自定义主题] 背景图落盘失败", e);
+            Toast.warn(`导入背景图失败：${(e as Error)?.message ?? e}`);
+            return;
+        }
 
-            const bgUrl = await saveBackgroundImage(uri, "background");
-
-            const colorsResult = await ImageColors.getColors(uri, {
+        let themeColors: Partial<CustomizedColors> = {};
+        try {
+            const colorsResult = await ImageColors.getColors(bgUrl, {
                 fallback: "#ffffff",
             });
             const colors = {
@@ -130,26 +138,28 @@ export default function Body() {
                 .alpha(0.92)
                 .toString();
 
-            const themeColors: Partial<CustomizedColors> = {
+            themeColors = {
                 ...customBackgroundSurfaceColors,
                 primary: normalizedPrimary,
                 musicBar: neutralMusicBar,
                 tabBar: Color(normalizedPrimary).alpha(0.2).toString(),
             };
+        } catch (e) {
+            // 取色失败不挡换背景：背景照设，配色退回黑白默认
+            devLog("warn", "🎨[自定义主题] 取色失败，退回默认配色", e);
+            themeColors = { ...customBackgroundSurfaceColors };
+        }
 
+        try {
             Theme.setTheme("custom", {
                 colors: themeColors,
                 background: {
                     url: bgUrl,
                 },
             });
-            // Config.set('setting.theme.colors', {
-            //     primary: primaryColor,
-            //     textHighlight: textHighlight,
-            //     accent: textHighlight,
-            // });
         } catch (e) {
-            devLog("warn", "🎨[自定义主题] 主题生成异常", e);
+            devLog("warn", "🎨[自定义主题] 主题设置失败", e);
+            Toast.warn(`导入背景图失败：${(e as Error)?.message ?? e}`);
         }
     }
 
