@@ -67,7 +67,7 @@
 - **原作者**：[猫头猫 maotoumao](https://github.com/maotoumao) — [原项目](https://github.com/maotoumao/MusicFree)
 - **上游**：[Toskysun](https://github.com/Toskysun) — [Toskysun/MusicFree](https://github.com/Toskysun/MusicFree)
 - **二次开发**：[Merilune](https://github.com/Merilune) — 本仓库
-- **AI 结对开发**：[Claude](https://claude.com/claude-code) — 本仓库的大部分改动由 Claude Code 协作完成 🤝
+- **Claude** — [Claude Code](https://claude.com/claude-code)：陪我一路把这个播放器改到今天的小伙伴，这里的绝大部分改动都有它的一份 🤝
 
 ## 📄 协议
 
