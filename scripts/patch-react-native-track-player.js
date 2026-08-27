@@ -442,6 +442,19 @@ function writeCompactNotificationRes() {
     for (const [name, pathData] of Object.entries(icons)) {
         fs.writeFileSync(path.join(drawableDir, `${name}.xml`), icon(name, pathData));
     }
+    // 已收藏：实心红心（JS 通过 LyricUtil.setCompactNotificationFavorite 推状态）
+    const heartFilled = `<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="#FFFF5A6E"
+        android:pathData="${icons["rntp_ic_heart"]}" />
+</vector>
+`;
+    fs.writeFileSync(path.join(drawableDir, "rntp_ic_heart_filled.xml"), heartFilled);
     console.log("[patch-track-player] wrote compact notification res files");
 }
 
@@ -473,6 +486,7 @@ import androidx.core.app.NotificationManagerCompat`,
     private val compactHandler = android.os.Handler(android.os.Looper.getMainLooper())
     private var compactSmallIconRes = 0
     private var compactContentIntent: PendingIntent? = null
+    private var compactFavorite = false
 
     private fun compactResId(name: String, defType: String): Int =
         resources.getIdentifier(name, defType, packageName)
@@ -489,6 +503,8 @@ import androidx.core.app.NotificationManagerCompat`,
                 }
             }
             "mf.compact.favorite" -> emit("remote-favorite")
+            "mf.compact.favstate" ->
+                compactFavorite = intent?.getBooleanExtra("favorite", false) ?: false
             else -> return false
         }
         scheduleCompactRepost()
@@ -513,6 +529,13 @@ import androidx.core.app.NotificationManagerCompat`,
             views.setImageViewResource(
                 compactResId("rntp_play_pause", "id"),
                 compactResId(if (player.isPlaying) "rntp_ic_pause" else "rntp_ic_play", "drawable"),
+            )
+            views.setImageViewResource(
+                compactResId("rntp_favorite", "id"),
+                compactResId(
+                    if (compactFavorite) "rntp_ic_heart_filled" else "rntp_ic_heart",
+                    "drawable",
+                ),
             )
             fun actionPI(action: String, requestCode: Int): PendingIntent =
                 PendingIntent.getService(
@@ -592,9 +615,10 @@ import androidx.core.app.NotificationManagerCompat`,
                 scheduleCompactRepost()`,
         },
         {
-            // 换歌时刷新标题/歌手
+            // 换歌时刷新标题/歌手（收藏态先重置，JS 随后推真实状态）
             oldSnippet: "                        emit(MusicEvents.PLAYBACK_METADATA, this)",
             newSnippet: `                        emit(MusicEvents.PLAYBACK_METADATA, this)
+                        compactFavorite = false
                         this@MusicService.scheduleCompactRepost()`,
         },
     ];

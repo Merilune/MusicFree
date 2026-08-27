@@ -5,9 +5,22 @@ import MusicSheet from "@/core/musicSheet";
 import Toast from "@/utils/toast";
 import { musicIsPaused } from "@/utils/trackUtils";
 import PersistStatus from "@/utils/persistStatus";
-import { DeviceEventEmitter } from "react-native";
+import { DeviceEventEmitter, NativeModules } from "react-native";
 
 let resumeState: State | null;
+
+/** 把当前收藏态推给紧凑通知（实心红心/空心白心） */
+function pushCompactFavoriteState(musicItem: IMusic.IMusicItem | null) {
+    const isFavorite = musicItem
+        ? MusicSheet.getSortedMusicListBySheetId(
+              MusicSheet.defaultSheet.id,
+          ).has(musicItem)
+        : false;
+    NativeModules.LyricUtil?.setCompactNotificationFavorite?.(isFavorite)?.catch?.(
+        () => undefined,
+    );
+}
+
 module.exports = async function () {
     // 紧凑通知上的收藏按钮（原生 MusicService 补丁发出的事件）
     DeviceEventEmitter.addListener("remote-favorite", () => {
@@ -24,13 +37,20 @@ module.exports = async function () {
                 musicItem,
             ).catch(() => undefined);
             Toast.warn("已取消收藏");
+            pushCompactFavoriteState(musicItem);
         } else {
             MusicSheet.addMusic(
                 MusicSheet.defaultSheet.id,
                 musicItem,
             ).catch(() => undefined);
             Toast.success("已收藏");
+            pushCompactFavoriteState(musicItem);
         }
+    });
+
+    // 换歌后同步新歌的收藏态到通知
+    RNTrackPlayer.addEventListener(Event.PlaybackActiveTrackChanged, () => {
+        pushCompactFavoriteState(trackPlayer.currentMusic);
     });
     RNTrackPlayer.addEventListener(Event.RemotePlay, () => trackPlayer.play());
     RNTrackPlayer.addEventListener(Event.RemotePause, () =>
