@@ -2,7 +2,11 @@ import { useAppConfig } from "@/core/appConfig";
 import type { TextStyle } from "react-native";
 
 /** 内置字体注册名（react-native.config.js assets，打包进 APK） */
-export const BUILTIN_FONT_FAMILIES = ["NotoSerifSC", "HanYiXiZhongYuanJ"] as const;
+export const BUILTIN_FONT_FAMILIES = [
+    "NotoSerifSC",
+    "HanYiXiZhongYuanJ",
+    "LXGWNeoZhiSong",
+] as const;
 
 export type AppFontFamily = (typeof BUILTIN_FONT_FAMILIES)[number] | "default";
 export type LyricFontFamily = AppFontFamily | "follow";

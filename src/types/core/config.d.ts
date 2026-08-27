@@ -98,14 +98,19 @@ export interface IAppConfigProperties {
     "lyric.invertColors": boolean;
 
     // Font
-    /** 全局字体：default = 系统字体，NotoSerifSC = 思源宋体，HanYiXiZhongYuanJ = 汉仪细中圆简 */
-    "font.appFontFamily": "default" | "NotoSerifSC" | "HanYiXiZhongYuanJ";
+    /** 全局字体：default = 系统字体，NotoSerifSC = 思源宋体，HanYiXiZhongYuanJ = 汉仪细中圆简，LXGWNeoZhiSong = 霞鹜新致宋 */
+    "font.appFontFamily":
+        | "default"
+        | "NotoSerifSC"
+        | "HanYiXiZhongYuanJ"
+        | "LXGWNeoZhiSong";
     /** 歌词页字体：follow = 跟随全局 */
     "font.lyricFontFamily":
         | "follow"
         | "default"
         | "NotoSerifSC"
-        | "HanYiXiZhongYuanJ";
+        | "HanYiXiZhongYuanJ"
+        | "LXGWNeoZhiSong";
 
     // Theme
     "theme.background": string;

@@ -17,6 +17,7 @@ export default function FontSetting() {
         default: t("fontSetting.default"),
         NotoSerifSC: t("fontSetting.notoSerifSC"),
         HanYiXiZhongYuanJ: t("fontSetting.hanYiXiZhongYuanJ"),
+        LXGWNeoZhiSong: t("fontSetting.lxgwNeoZhiSong"),
         follow: t("fontSetting.followApp"),
     };
 
@@ -54,7 +55,12 @@ export default function FontSetting() {
                                 showPicker(
                                     t("fontSetting.appFont"),
                                     "font.appFontFamily",
-                                    ["default", "NotoSerifSC", "HanYiXiZhongYuanJ"],
+                                    [
+                                        "default",
+                                        "NotoSerifSC",
+                                        "HanYiXiZhongYuanJ",
+                                        "LXGWNeoZhiSong",
+                                    ],
                                     appFont,
                                 )
                             }>
@@ -79,7 +85,13 @@ export default function FontSetting() {
                                 showPicker(
                                     t("fontSetting.lyricFont"),
                                     "font.lyricFontFamily",
-                                    ["follow", "default", "NotoSerifSC", "HanYiXiZhongYuanJ"],
+                                    [
+                                        "follow",
+                                        "default",
+                                        "NotoSerifSC",
+                                        "HanYiXiZhongYuanJ",
+                                        "LXGWNeoZhiSong",
+                                    ],
                                     lyricFont,
                                 )
                             }>
