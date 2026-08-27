@@ -67,29 +67,29 @@ export const darkTheme = {
         background: "transparent",
         text: "#F5F2EB",
         textSecondary: Color("#F5F2EB").alpha(0.64).toString(),
-        primary: "#FF7650",
-        pageBackground: "#101419",
+        primary: "#6C9BFF",
+        pageBackground: "#12101A",
         shadow: "#000000",
-        appBar: "#101419",
+        appBar: "#12101A",
         appBarText: "#F5F2EB",
-        musicBar: "#1A2027",
+        musicBar: "#1F1A29",
         musicBarText: "#F8F5EE",
         divider: "rgba(245,242,235,0.11)",
         border: "rgba(245,242,235,0.12)",
         listActive: "rgba(245,242,235,0.10)", // 使用文本颜色的半透明
-        mask: "rgba(8,11,14,0.82)",
-        backdrop: "#171C22",
-        surface: "#171D24",
-        surfaceElevated: "#202730",
-        accentWarm: "#FF7650",
+        mask: "rgba(10,8,14,0.82)",
+        backdrop: "#1E1826",
+        surface: "#1E1926",
+        surfaceElevated: "#262030",
+        accentWarm: "#FF9A6C",
         accentCool: "#54A5B8",
-        tabBar: "#171C22",
-        placeholder: "#20262E",
+        tabBar: "#1E1826",
+        placeholder: "#262030",
         success: "#08A34C",
         danger: "#FC5F5F",
         info: "#0A95C8",
-        card: "#192028",
-        notification: "#171C22",
+        card: "#211B2B",
+        notification: "#1E1826",
     },
 };
 
@@ -111,6 +111,9 @@ interface IBackgroundInput {
  * 不再继承深色主题的橙色
  */
 export const customThemeDefaultPrimary = "#F2F2F2";
+
+/** 深色主题的旧默认主色（橙），用于旧配置迁移判定 */
+const LEGACY_DARK_PRIMARY = "#FF7650";
 
 /**
  * 自定义主题的黑白初始配色：主色中性白，底色纯黑，
@@ -356,7 +359,7 @@ function setup() {
         // 自定义过配色，一次性换成黑白初始色。只看主色——pageBackground
         // 等字段在旧版本导入背景/调节时可能已被写成别的值，一并要求相等
         // 会让迁移永远不触发
-        if (savedColors.primary === darkTheme.colors.primary) {
+        if (savedColors.primary === LEGACY_DARK_PRIMARY) {
             savedColors = {
                 ...darkTheme.colors,
                 ...customThemeDefaultColors,
@@ -365,7 +368,7 @@ function setup() {
             // customColors 是自定义主题入口的配色来源，一并迁移，
             // 否则旧默认橙会从那个入口复活
             const savedCustomColors = Config.getConfig("theme.customColors");
-            if (savedCustomColors?.primary === darkTheme.colors.primary) {
+            if (savedCustomColors?.primary === LEGACY_DARK_PRIMARY) {
                 Config.setConfig("theme.customColors", {
                     ...darkTheme.colors,
                     ...customThemeDefaultColors,
