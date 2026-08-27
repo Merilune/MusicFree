@@ -1,5 +1,6 @@
 import { RequestStateCode } from "@/constants/commonConst";
 import PluginManager from "@/core/pluginManager";
+import { InteractionManager } from "react-native";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 export default function usePluginSheetMusicList(
@@ -76,7 +77,12 @@ export default function usePluginSheetMusicList(
     );
 
     useEffect(() => {
-        getSheetDetail();
+        // 转场动画还在播时立刻跑插件 JS 会卡掉新页首帧，
+        // 表现为进入歌单详情没有滑入动画；等转场结束再发请求
+        const task = InteractionManager.runAfterInteractions(() => {
+            getSheetDetail();
+        });
+        return () => task.cancel();
     }, [getSheetDetail]);
 
     return [requestState, sheetItem, musicList, getSheetDetail] as const;
