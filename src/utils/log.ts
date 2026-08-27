@@ -201,6 +201,23 @@ export function errorLog(desc: string, message: any) {
     }
 }
 
+/**
+ * 崩溃现场专用：不受 debug.errorLog 开关控制，永远落盘。
+ * message 里带 stack / componentStack，方便离线排查"崩了但没看到红屏"的场合。
+ */
+export function crashLog(desc: string, message: any) {
+    try {
+        log.error({
+            desc,
+            message,
+        });
+    } catch {
+        // 日志系统本身坏了也不能反过来把 app 炸掉
+    }
+    // 面包屑是延迟批量写的，崩溃路径必须立刻落盘
+    void flushStartupBreadcrumbs();
+}
+
 export function devLog(
     method: "log" | "error" | "warn" | "info",
     ...args: any[]

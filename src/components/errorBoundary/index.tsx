@@ -7,7 +7,7 @@ import rpx, { fontRpx } from "@/utils/rpx";
 import { ImgAsset } from "@/constants/assetsConst";
 import { fontSizeConst, fontWeightConst } from "@/constants/uiConst";
 import openUrl from "@/utils/openUrl";
-import { devLog } from "@/utils/log";
+import { crashLog, devLog } from "@/utils/log";
 
 interface DeviceInfoProps {
     colors: any;
@@ -141,7 +141,13 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
             errorInfo,
         });
         
-        // 这里可以添加错误日志上报
+        // 无条件落盘（不受 debug 开关控制），组件堆栈是定位 undefined
+        // 组件这类运行时错误的关键线索
+        crashLog("错误边界捕获", {
+            message: error?.message,
+            stack: error?.stack,
+            componentStack: errorInfo?.componentStack,
+        });
         devLog("error", "🛑[错误边界] 捕获到应用错误", { error: error.message, errorInfo });
     }
 

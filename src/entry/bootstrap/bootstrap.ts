@@ -16,7 +16,7 @@ import Theme from "@/core/theme";
 import TrackPlayer from "@/core/trackPlayer";
 import NativeUtils from "@/native/utils";
 import { checkAndCreateDir } from "@/utils/fileUtils";
-import { appendStartupBreadcrumb, errorLog, flushStartupBreadcrumbs, markStartupSession, trace, devLog } from "@/utils/log";
+import { appendStartupBreadcrumb, crashLog, flushStartupBreadcrumbs, markStartupSession, trace, devLog } from "@/utils/log";
 import { IPerfLogger, perfLogger } from "@/utils/perfLogger";
 import PersistStatus from "@/utils/persistStatus";
 import Toast from "@/utils/toast";
@@ -61,7 +61,8 @@ function registerEarlyGlobalErrorHandlers() {
             });
             // 面包屑平时是延迟批量写的，崩溃时必须立刻落盘，否则查不到现场
             void flushStartupBreadcrumbs();
-            errorLog("未捕获的错误", {
+            // 崩溃日志不受 debug 开关控制，保证一定能查到
+            crashLog("未捕获的错误", {
                 isFatal,
                 message: error?.message,
                 stack: error?.stack,
