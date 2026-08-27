@@ -168,6 +168,76 @@ export default function BasicSetting() {
 
     const basicOptions = [
         {
+            title: t("basicSettings.playback"),
+            data: [
+                createSwitch(
+                    t("basicSettings.notInterrupt"),
+                    "basic.notInterrupt",
+                    notInterrupt ?? false,
+                ),
+                createSwitch(
+                    t("basicSettings.autoPlayWhenAppStart"),
+                    "basic.autoPlayWhenAppStart",
+                    autoPlayWhenAppStart ?? false,
+                ),
+                createSwitch(
+                    t("basicSettings.openPlayDetailOnLaunch"),
+                    "basic.openPlayDetailOnLaunch",
+                    openPlayDetailOnLaunch ?? false,
+                ),
+                createSwitch(
+                    t("basicSettings.tryChangeSourceWhenPlayFail"),
+                    "basic.tryChangeSourceWhenPlayFail",
+                    tryChangeSourceWhenPlayFail ?? false,
+                ),
+                createSwitch(
+                    t("basicSettings.autoStopWhenError"),
+                    "basic.autoStopWhenError",
+                    autoStopWhenError ?? false,
+                ),
+                createRadio(
+                    t("basicSettings.tempRemoteDuck"),
+                    "basic.tempRemoteDuck",
+                    ["pause", "lowerVolume"],
+                    tempRemoteDuck ?? "pause",
+                    {
+                        pause: t("basicSettings.tempRemoteDuck.pause"),
+                        "lowerVolume": t("basicSettings.tempRemoteDuck.lowerVolume"),
+                    }
+                ),
+                ...(tempRemoteDuck === "lowerVolume" ? [
+                    createRadio(
+                        t("basicSettings.tempRemoteDuck.volumeDecreaseLevel"),
+                        "basic.tempRemoteDuckVolume",
+                        [0.3, 0.5, 0.8],
+                        tempRemoteDuckVolume ?? 0.5,
+                        {
+                            0.3: "30%",
+                            0.5: "50%",
+                            0.8: "80%",
+                        }
+                    ),
+                ] : []),
+                createRadio(
+                    t("basicSettings.defaultPlayQuality"),
+                    "basic.defaultPlayQuality",
+                    getQualityKeys(),
+                    defaultPlayQuality ?? "master",
+                    qualityTextI18n,
+                ),
+                createRadio(
+                    t("basicSettings.playQualityOrder"),
+                    "basic.playQualityOrder",
+                    ["asc", "desc"],
+                    playQualityOrder ?? "desc",
+                    {
+                        asc: t("basicSettings.playQualityOrder.asc"),
+                        desc: t("basicSettings.playQualityOrder.desc"),
+                    },
+                ),
+            ],
+        },
+        {
             title: t("basicSettings.common"),
             data: [
                 createRadio(
@@ -301,76 +371,6 @@ export default function BasicSetting() {
                     t("basicSettings.lazyLoadPlugin"),
                     "basic.lazyLoadPlugin",
                     lazyLoadPlugin ?? true,
-                ),
-            ],
-        },
-        {
-            title: t("basicSettings.playback"),
-            data: [
-                createSwitch(
-                    t("basicSettings.notInterrupt"),
-                    "basic.notInterrupt",
-                    notInterrupt ?? false,
-                ),
-                createSwitch(
-                    t("basicSettings.autoPlayWhenAppStart"),
-                    "basic.autoPlayWhenAppStart",
-                    autoPlayWhenAppStart ?? false,
-                ),
-                createSwitch(
-                    t("basicSettings.openPlayDetailOnLaunch"),
-                    "basic.openPlayDetailOnLaunch",
-                    openPlayDetailOnLaunch ?? false,
-                ),
-                createSwitch(
-                    t("basicSettings.tryChangeSourceWhenPlayFail"),
-                    "basic.tryChangeSourceWhenPlayFail",
-                    tryChangeSourceWhenPlayFail ?? false,
-                ),
-                createSwitch(
-                    t("basicSettings.autoStopWhenError"),
-                    "basic.autoStopWhenError",
-                    autoStopWhenError ?? false,
-                ),
-                createRadio(
-                    t("basicSettings.tempRemoteDuck"),
-                    "basic.tempRemoteDuck",
-                    ["pause", "lowerVolume"],
-                    tempRemoteDuck ?? "pause",
-                    {
-                        pause: t("basicSettings.tempRemoteDuck.pause"),
-                        "lowerVolume": t("basicSettings.tempRemoteDuck.lowerVolume"),
-                    }
-                ),
-                ...(tempRemoteDuck === "lowerVolume" ? [
-                    createRadio(
-                        t("basicSettings.tempRemoteDuck.volumeDecreaseLevel"),
-                        "basic.tempRemoteDuckVolume",
-                        [0.3, 0.5, 0.8],
-                        tempRemoteDuckVolume ?? 0.5,
-                        {
-                            0.3: "30%",
-                            0.5: "50%",
-                            0.8: "80%",
-                        }
-                    ),
-                ] : []),
-                createRadio(
-                    t("basicSettings.defaultPlayQuality"),
-                    "basic.defaultPlayQuality",
-                    getQualityKeys(),
-                    defaultPlayQuality ?? "master",
-                    qualityTextI18n,
-                ),
-                createRadio(
-                    t("basicSettings.playQualityOrder"),
-                    "basic.playQualityOrder",
-                    ["asc", "desc"],
-                    playQualityOrder ?? "desc",
-                    {
-                        asc: t("basicSettings.playQualityOrder.asc"),
-                        desc: t("basicSettings.playQualityOrder.desc"),
-                    },
                 ),
             ],
         },
