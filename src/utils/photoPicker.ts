@@ -21,9 +21,13 @@ export async function pickPhotoWithCrop(options?: {
             cropping: options?.cropping ?? true,
             // 锁定比例时关掉自由框；只有未指定比例才允许自由拖
             freeStyleCropEnabled: !options?.aspectRatio,
-            // Android 用 width/height 锁裁剪框比例
+            // Android 上 width/height 既定裁剪框比例又是输出目标尺寸，
+            // 直接传 1:1 会裁出 1x1 像素的图，必须换算成真实像素
             ...(options?.aspectRatio
-                ? { width: ratioW, height: ratioH }
+                ? {
+                    width: 1080,
+                    height: Math.round((1080 * ratioH) / ratioW),
+                }
                 : {}),
             compressImageMaxWidth: 2048,
             compressImageMaxHeight: 2048,
