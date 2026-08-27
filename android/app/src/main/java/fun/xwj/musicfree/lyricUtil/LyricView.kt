@@ -112,10 +112,12 @@ class LyricView(private val reactContext: ReactContext) : Activity() {
                 layoutParams?.gravity = Gravity.TOP or Gravity.START
 
                 this.leftPercent = leftPct?.toString()?.toDouble() ?: 0.5
+                // 首次使用没有保存位置时默认放在屏幕下方 72%，贴顶会被状态栏挡住难拖到
+                this.topPercent = topPct?.toString()?.toDouble() ?: 0.72
                 layoutParams?.let { params ->
                     params.x = (this.leftPercent * (windowWidth - params.width)).toInt()
                 }
-                layoutParams?.y = 0
+                layoutParams?.y = (this.topPercent * windowHeight).toInt()
                 layoutParams?.flags = baseFlags
                 layoutParams?.format = PixelFormat.TRANSPARENT
 

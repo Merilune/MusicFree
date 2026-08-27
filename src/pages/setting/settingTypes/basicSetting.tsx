@@ -21,7 +21,7 @@ import Toast from "@/utils/toast";
 import Clipboard from "@react-native-clipboard/clipboard";
 import Slider from "@react-native-community/slider";
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { SectionList, StyleSheet, TouchableOpacity, View } from "react-native";
+import { AppState, SectionList, StyleSheet, TouchableOpacity, View } from "react-native";
 import { readdir, unlink as unlinkFile, writeFile } from "react-native-fs";
 import { FlatList, ScrollView } from "react-native-gesture-handler";
 import lyricManager from "@/core/lyricManager";
@@ -849,7 +849,6 @@ function LyricSetting() {
     const desktopSecondaryFontRatio = useAppConfig("lyric.desktopSecondaryFontRatio");
     const desktopSecondaryAlphaRatio = useAppConfig("lyric.desktopSecondaryAlphaRatio");
     const invertColors = useAppConfig("lyric.invertColors");
-    const topPercent = useAppConfig("lyric.topPercent");
     const widthPercent = useAppConfig("lyric.widthPercent");
 
     const { t } = useI18N();
@@ -866,7 +865,7 @@ function LyricSetting() {
     const highlightColor = createSwitch("纯白模式", "lyric.pureWhiteMode", pureWhiteMode ?? true);
     const breathingDots = createSwitch("空歌词行呼吸灯特效", "lyric.enableBreathingDots", enableBreathingDots ?? true);
     const hideWhenPaused = createSwitch(t("basicSettings.lyric.hideDesktopLyricWhenPaused"), "lyric.hideDesktopLyricWhenPaused", hideDesktopLyricWhenPaused ?? true);
-    const desktopTranslation = createSwitch("桌面歌词显示翻译", "lyric.desktopShowTranslation", desktopShowTranslation ?? false);
+    const desktopTranslation = createSwitch("桌面歌词显示翻译", "lyric.desktopShowTranslation", desktopShowTranslation ?? true);
     const desktopRomanization = createSwitch("桌面歌词显示罗马音", "lyric.desktopShowRomanization", desktopShowRomanization ?? false);
     const invertColorsSwitch = createSwitch("颜色反转（已唱白色/未唱彩色）", "lyric.invertColors", invertColors ?? false, (newValue) => {
         Config.setConfig("lyric.invertColors", newValue);
@@ -906,6 +905,50 @@ function LyricSetting() {
         return custom ? custom.sungColor : LYRIC_COLOR_PRESETS[idx]?.sungColor ?? "#FFFFFF";
     };
 
+    // 打开桌面歌词：有权限直接开；没权限跳系统设置，回到应用时自动检测并打开
+    const enableDesktopLyric = async () => {
+        try {
+            const hasPermission = await LyricUtil.checkSystemAlertPermission();
+            if (!hasPermission) {
+                Toast.warn(t("toast.noFloatWindowPermission"));
+                LyricUtil.requestSystemAlertPermission().finally(() => {
+                    const subscription = AppState.addEventListener(
+                        "change",
+                        async state => {
+                            if (state !== "active") {
+                                return;
+                            }
+                            subscription.remove();
+                            if (await LyricUtil.checkSystemAlertPermission()) {
+                                enableDesktopLyric();
+                            }
+                        },
+                    );
+                });
+                return;
+            }
+            const opened = await LyricUtil.showStatusBarLyric("MusicFree", {
+                topPercent: Config.getConfig("lyric.topPercent"),
+                leftPercent: Config.getConfig("lyric.leftPercent"),
+                align: Config.getConfig("lyric.align"),
+                color: Config.getConfig("lyric.color"),
+                sungColor: Config.getConfig("lyric.sungColor"),
+                backgroundColor: Config.getConfig("lyric.backgroundColor"),
+                widthPercent: Config.getConfig("lyric.widthPercent"),
+                fontSize: Config.getConfig("lyric.fontSize"),
+                presetIndex: Config.getConfig("lyric.presetIndex") ?? 0,
+                presets: resolveLyricPresets(),
+                secondaryFontRatio: Config.getConfig("lyric.desktopSecondaryFontRatio") ?? 0.85,
+                secondaryAlphaRatio: Config.getConfig("lyric.desktopSecondaryAlphaRatio") ?? 0.90,
+            });
+            if (opened) {
+                Config.setConfig("lyric.showStatusBarLyric", true);
+                // 立刻同步当前歌词行和播放进度，避免刚打开时空白/滞后
+                lyricManager.resyncDesktopLyric();
+            }
+        } catch { }
+    };
+
     const openStatusBarLyric = createSwitch(
         t("basicSettings.lyric.showStatusBarLyric"),
         "lyric.showStatusBarLyric",
@@ -913,28 +956,7 @@ function LyricSetting() {
         async newValue => {
             try {
                 if (newValue) {
-                    const hasPermission = await LyricUtil.checkSystemAlertPermission();
-                    if (hasPermission) {
-                        LyricUtil.showStatusBarLyric("MusicFree", {
-                            topPercent: Config.getConfig("lyric.topPercent"),
-                            leftPercent: Config.getConfig("lyric.leftPercent"),
-                            align: Config.getConfig("lyric.align"),
-                            color: Config.getConfig("lyric.color"),
-                            sungColor: Config.getConfig("lyric.sungColor"),
-                            backgroundColor: Config.getConfig("lyric.backgroundColor"),
-                            widthPercent: Config.getConfig("lyric.widthPercent"),
-                            fontSize: Config.getConfig("lyric.fontSize"),
-                            presetIndex: Config.getConfig("lyric.presetIndex") ?? 0,
-                            presets: resolveLyricPresets(),
-                            secondaryFontRatio: Config.getConfig("lyric.desktopSecondaryFontRatio") ?? 0.85,
-                            secondaryAlphaRatio: Config.getConfig("lyric.desktopSecondaryAlphaRatio") ?? 0.90,
-                        });
-                        Config.setConfig("lyric.showStatusBarLyric", true);
-                    } else {
-                        LyricUtil.requestSystemAlertPermission().finally(() => {
-                            Toast.warn(t("toast.noFloatWindowPermission"));
-                        });
-                    }
+                    await enableDesktopLyric();
                 } else {
                     LyricUtil.hideStatusBarLyric();
                     Config.setConfig("lyric.showStatusBarLyric", false);
@@ -1106,29 +1128,6 @@ function LyricSetting() {
             </ListItem>
 
             {/* 位置控制 */}
-            <ListItem withHorizontalPadding heightType="small">
-                <ListItem.Content title={`上下位置  ${Math.round((topPercent ?? 0.5) * 100)}%`} />
-            </ListItem>
-            <View style={lyricStyles.sliderContainer}>
-                <Slider
-                    style={lyricStyles.slider}
-                    minimumValue={0}
-                    maximumValue={1}
-                    step={0.01}
-                    value={topPercent ?? 0.5}
-                    onValueChange={(val: number) => {
-                        if (showStatusBarLyric) {
-                            LyricUtil.setStatusBarLyricTop(val);
-                        }
-                    }}
-                    onSlidingComplete={(val: number) => {
-                        Config.setConfig("lyric.topPercent", val);
-                    }}
-                    minimumTrackTintColor={colors.textHighlight}
-                    maximumTrackTintColor={colors.textSecondary + "40"}
-                    thumbTintColor={colors.textHighlight}
-                />
-            </View>
             <ListItem withHorizontalPadding heightType="small">
                 <ListItem.Content title={`歌词宽度  ${Math.round((widthPercent ?? 0.8) * 100)}%`} />
             </ListItem>
