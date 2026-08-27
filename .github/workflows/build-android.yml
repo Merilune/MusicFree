@@ -86,8 +86,11 @@ jobs:
                   npm ci --legacy-peer-deps --prefer-offline --no-audit --progress=false
 
             # 🔤 把 assets/fonts 拷进 android（gradle 不会自动做，缺了这步字体进不了 APK）
+            # 直接 cp：npx react-native asset 子命令在当前 CLI 不存在，react-native-asset 又不在依赖里
             - name: Link font assets
-              run: npx react-native asset
+              run: |
+                  mkdir -p android/app/src/main/assets/fonts
+                  cp assets/fonts/*.ttf android/app/src/main/assets/fonts/
 
             # 🔄 从tag同步版本号到package.json和version.json
             - name: Update version from tag
