@@ -1,12 +1,9 @@
-import React, { useEffect, useRef } from "react";
+import React from "react";
 import {
     Image,
     ScrollView,
     StyleSheet,
-    TouchableOpacity,
     View,
-    Animated,
-    Easing,
 } from "react-native";
 import rpx, { fontRpx } from "@/utils/rpx";
 import { ImgAsset } from "@/constants/assetsConst";
@@ -33,76 +30,6 @@ export default function AboutSetting() {
         }
         : null;
 
-    // 动画值
-    const fadeAnim2 = useRef(new Animated.Value(0)).current;
-    const fadeAnim4 = useRef(new Animated.Value(0)).current;
-    const fadeAnim5 = useRef(new Animated.Value(0)).current;
-    const scaleAnim2 = useRef(new Animated.Value(0.8)).current;
-    const scaleAnim4 = useRef(new Animated.Value(0.8)).current;
-    const scaleAnim5 = useRef(new Animated.Value(0.8)).current;
-
-    useEffect(() => {
-        // 创建动画序列
-        Animated.stagger(150, [
-            Animated.parallel([
-                Animated.timing(fadeAnim2, {
-                    toValue: 1,
-                    duration: 600,
-                    easing: Easing.out(Easing.cubic),
-                    useNativeDriver: true,
-                }),
-                Animated.spring(scaleAnim2, {
-                    toValue: 1,
-                    friction: 4,
-                    tension: 40,
-                    useNativeDriver: true,
-                }),
-            ]),
-            Animated.parallel([
-                Animated.timing(fadeAnim2, {
-                    toValue: 1,
-                    duration: 600,
-                    easing: Easing.out(Easing.cubic),
-                    useNativeDriver: true,
-                }),
-                Animated.spring(scaleAnim2, {
-                    toValue: 1,
-                    friction: 4,
-                    tension: 40,
-                    useNativeDriver: true,
-                }),
-            ]),
-            Animated.parallel([
-                Animated.timing(fadeAnim4, {
-                    toValue: 1,
-                    duration: 600,
-                    easing: Easing.out(Easing.cubic),
-                    useNativeDriver: true,
-                }),
-                Animated.spring(scaleAnim4, {
-                    toValue: 1,
-                    friction: 4,
-                    tension: 40,
-                    useNativeDriver: true,
-                }),
-            ]),
-            Animated.parallel([
-                Animated.timing(fadeAnim5, {
-                    toValue: 1,
-                    duration: 600,
-                    easing: Easing.out(Easing.cubic),
-                    useNativeDriver: true,
-                }),
-                Animated.spring(scaleAnim5, {
-                    toValue: 1,
-                    friction: 4,
-                    tension: 40,
-                    useNativeDriver: true,
-                }),
-            ]),
-        ]).start();
-    }, []);
-
     return (
         <View
             style={[
@@ -110,7 +37,6 @@ export default function AboutSetting() {
                 orientation === "horizontal"
                     // eslint-disable-next-line react-native/no-inline-styles -- Dynamic orientation layout
                     ? {
-                         
                         flexDirection: "row",
                     }
                     : null,
@@ -133,113 +59,44 @@ export default function AboutSetting() {
                 contentContainerStyle={style.scrollViewContainer}
                 style={style.scrollView}>
 
-                <TouchableOpacity
-                    activeOpacity={0.8}
-                    onPress={() => {
-                        Animated.sequence([
-                            Animated.spring(scaleAnim2, {
-                                toValue: 0.95,
-                                friction: 3,
-                                tension: 100,
-                                useNativeDriver: true,
-                            }),
-                            Animated.spring(scaleAnim2, {
-                                toValue: 1,
-                                friction: 3,
-                                tension: 100,
-                                useNativeDriver: true,
-                            }),
-                        ]).start();
-                    }}>
-                    <Animated.View
-                        style={[
-                            style.infoCard,
-                            { backgroundColor: colors.card },
-                            cardChrome,
-                            {
-                                opacity: fadeAnim2,
-                                transform: [{ scale: scaleAnim2 }],
-                            },
-                        ]}>
-                        <ThemeText fontSize="subTitle" style={style.cardTitle}>原作者</ThemeText>
-                        <ThemeText style={style.cardContent}>猫头猫</ThemeText>
-                        <LinkText linkTo="https://github.com/maotoumao/MusicFree">
-                            https://github.com/maotoumao/MusicFree
-                        </LinkText>
-                    </Animated.View>
-                </TouchableOpacity>
+                <View
+                    style={[
+                        style.infoCard,
+                        { backgroundColor: colors.card },
+                        cardChrome,
+                    ]}>
+                    <ThemeText fontSize="subTitle" style={style.cardTitle}>原作者</ThemeText>
+                    <ThemeText style={style.cardContent}>猫头猫</ThemeText>
+                    <LinkText linkTo="https://github.com/maotoumao/MusicFree">
+                        https://github.com/maotoumao/MusicFree
+                    </LinkText>
+                </View>
 
-                <TouchableOpacity
-                    activeOpacity={0.8}
-                    onPress={() => {
-                        Animated.sequence([
-                            Animated.spring(scaleAnim4, {
-                                toValue: 0.95,
-                                friction: 3,
-                                tension: 100,
-                                useNativeDriver: true,
-                            }),
-                            Animated.spring(scaleAnim4, {
-                                toValue: 1,
-                                friction: 3,
-                                tension: 100,
-                                useNativeDriver: true,
-                            }),
-                        ]).start();
-                    }}>
-                    <Animated.View
-                        style={[
-                            style.infoCard,
-                            { backgroundColor: colors.card },
-                            cardChrome,
-                            {
-                                opacity: fadeAnim4,
-                                transform: [{ scale: scaleAnim4 }],
-                            },
-                        ]}>
-                        <ThemeText fontSize="subTitle" style={style.cardTitle}>上游作者</ThemeText>
-                        <ThemeText style={style.cardContent}>Toskysun</ThemeText>
-                        <LinkText linkTo="https://github.com/Toskysun/MusicFree">
-                            https://github.com/Toskysun/MusicFree
-                        </LinkText>
-                    </Animated.View>
-                </TouchableOpacity>
+                <View
+                    style={[
+                        style.infoCard,
+                        { backgroundColor: colors.card },
+                        cardChrome,
+                    ]}>
+                    <ThemeText fontSize="subTitle" style={style.cardTitle}>上游作者</ThemeText>
+                    <ThemeText style={style.cardContent}>Toskysun</ThemeText>
+                    <LinkText linkTo="https://github.com/Toskysun/MusicFree">
+                        https://github.com/Toskysun/MusicFree
+                    </LinkText>
+                </View>
 
-                <TouchableOpacity
-                    activeOpacity={0.8}
-                    onPress={() => {
-                        Animated.sequence([
-                            Animated.spring(scaleAnim5, {
-                                toValue: 0.95,
-                                friction: 3,
-                                tension: 100,
-                                useNativeDriver: true,
-                            }),
-                            Animated.spring(scaleAnim5, {
-                                toValue: 1,
-                                friction: 3,
-                                tension: 100,
-                                useNativeDriver: true,
-                            }),
-                        ]).start();
-                    }}>
-                    <Animated.View
-                        style={[
-                            style.infoCard,
-                            { backgroundColor: colors.card },
-                            cardChrome,
-                            {
-                                opacity: fadeAnim5,
-                                transform: [{ scale: scaleAnim5 }],
-                            },
-                        ]}>
-                        <ThemeText fontSize="subTitle" style={style.cardTitle}>本仓库（二次开发）</ThemeText>
-                        <ThemeText style={style.cardContent}>Merilune</ThemeText>
-                        <LinkText linkTo="https://github.com/Merilune/MusicFree">
-                            https://github.com/Merilune/MusicFree
-                        </LinkText>
-                    </Animated.View>
-                </TouchableOpacity>
+                <View
+                    style={[
+                        style.infoCard,
+                        { backgroundColor: colors.card },
+                        cardChrome,
+                    ]}>
+                    <ThemeText fontSize="subTitle" style={style.cardTitle}>本仓库（二次开发）</ThemeText>
+                    <ThemeText style={style.cardContent}>Merilune</ThemeText>
+                    <LinkText linkTo="https://github.com/Merilune/MusicFree">
+                        https://github.com/Merilune/MusicFree
+                    </LinkText>
+                </View>
             </ScrollView>
         </View>
     );
