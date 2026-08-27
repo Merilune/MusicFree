@@ -116,6 +116,21 @@ export const customThemeDefaultPrimary = "#F2F2F2";
 const LEGACY_DARK_PRIMARY = "#FF7650";
 
 /**
+ * 弹窗/抽屉/全屏面板在壁纸模式下的回落底色。
+ * 自定义主题必须回落到中性黑灰，不能用深色主题预设——
+ * 否则深色主题改什么色，自定义主题的弹窗就跟着变什么色
+ */
+function getOpaqueSurfaceFallback(
+    key: "card" | "surfaceElevated" | "pageBackground",
+): string {
+    const theme = themeStore.getValue();
+    if (theme.id !== "p-light" && theme.id !== "p-dark") {
+        return (customThemeDefaultColors[key] ?? "#1D1D1D") as string;
+    }
+    return (theme.dark ? darkTheme.colors : lightTheme.colors)[key] as string;
+}
+
+/**
  * 自定义主题的黑白初始配色：主色中性白，底色纯黑，
  * 顶栏/标签栏/强调色一并脱离深色主题的橙与蓝灰
  */
@@ -381,9 +396,10 @@ function setup() {
             }
         }
 
-        // 表面色迁移：setColors 会把深色主题的表面色（弹窗/卡片底）
+        // 表面色迁移：setColors 历史版本会把深色主题的表面色（弹窗/卡片底）
         // 一并写进配置；深色主题改色后自定义主题会渗进它的紫灰。
-        // 表面色全部与深色主题一致 = 从没单独调过，换成中性黑灰
+        // 逐键判定：值缺失、等于深色主题预设、或等于壁纸模式的黑叠加，
+        // 都算"从没单独调过"，换成中性黑灰（sameColor 比较容忍格式差异）
         const surfaceKeys: (keyof CustomizedColors)[] = [
             "pageBackground",
             "appBar",
@@ -396,15 +412,43 @@ function setup() {
             "notification",
             "placeholder",
         ];
-        const surfacesUntouched = surfaceKeys.every(
-            key => savedColors[key] === darkTheme.colors[key],
-        );
-        if (surfacesUntouched) {
-            savedColors = {
-                ...savedColors,
-                ...customThemeDefaultColors,
-            };
+        const surfaceUntouched = (key: keyof CustomizedColors, val: any) =>
+            !val ||
+            sameColor(val, darkTheme.colors[key]) ||
+            (customBackgroundSurfaceColors[key] !== undefined &&
+                sameColor(val, customBackgroundSurfaceColors[key]));
+
+        let surfacesMigrated = false;
+        for (const key of surfaceKeys) {
+            if (
+                surfaceUntouched(key, savedColors[key]) &&
+                customThemeDefaultColors[key] !== undefined
+            ) {
+                savedColors[key] = customThemeDefaultColors[key];
+                surfacesMigrated = true;
+            }
+        }
+        if (surfacesMigrated) {
             Config.setConfig("theme.colors", savedColors);
+        }
+
+        // customColors 是自定义主题入口的配色来源，同样逐键迁移，
+        // 否则深色主题的紫灰会在每次点"自定义"卡片时复活
+        const savedCustomColors = Config.getConfig("theme.customColors");
+        if (savedCustomColors) {
+            let customMigrated = false;
+            for (const key of surfaceKeys) {
+                if (
+                    surfaceUntouched(key, savedCustomColors[key]) &&
+                    customThemeDefaultColors[key] !== undefined
+                ) {
+                    savedCustomColors[key] = customThemeDefaultColors[key];
+                    customMigrated = true;
+                }
+            }
+            if (customMigrated) {
+                Config.setConfig("theme.customColors", savedCustomColors);
+            }
         }
 
         // 修复旧版本中错误的 listActive 配置
@@ -542,11 +586,14 @@ function setColors(colors: Partial<CustomizedColors>) {
         colorsWithListActive.listActive = Color(colors.primary).alpha(0.12).toString();
     }
 
+    const isCustomTheme =
+        currentTheme.id !== "p-light" && currentTheme.id !== "p-dark";
     const mergedColors = {
-        ...darkTheme.colors,
+        ...(isCustomTheme
+            ? // 自定义主题：以当前主题色为基底，别让深色主题预设渗进来
+              baseColors
+            : darkTheme.colors),
         ...(persistedColors ?? {}),
-        // 用未叠加「表面不透明度」的原始配色，否则 alpha 会被反复乘进去
-        ...baseColors,
         ...colorsWithListActive,
     } as CustomizedColors;
     const newColors = syncCardSurfaceColors(mergedColors, {
@@ -554,10 +601,12 @@ function setColors(colors: Partial<CustomizedColors>) {
         dark: currentTheme.dark,
     }).colors;
 
-    Config.setConfig("theme.customColors", newColors);
-    Config.setConfig("theme.colors", newColors);
+    if (isCustomTheme) {
+        // 只持久化归一化前的原始配色：壁纸模式会把表面色换成
+        // rgba(0,0,0,x) 黑叠加，存归一化值会让启动迁移永远匹配不上
+        Config.setConfig("theme.customColors", newColors);
+        Config.setConfig("theme.colors", newColors);
 
-    if (currentTheme.id !== "p-light" && currentTheme.id !== "p-dark") {
         const hasBackground = !!(
             backgroundStore.getValue()?.url ?? Config.getConfig("theme.background")
         );
@@ -568,7 +617,6 @@ function setColors(colors: Partial<CustomizedColors>) {
                 hasBackground,
             ) as typeof currentTheme.colors,
         };
-        Config.setConfig("theme.colors", newTheme.colors);
         commitTheme(newTheme);
     }
 }
@@ -600,10 +648,7 @@ const MIN_SLIDING_SURFACE_ALPHA = 0.94;
  * 这样用户主动调低透明度的意图不会被这里覆盖。
  */
 function getDrawerSurfaceColor() {
-    const dark = !!themeStore.getValue().dark;
-    const presetCard = (
-        dark ? darkTheme.colors.card : lightTheme.colors.card
-    ) as string;
+    const presetCard = getOpaqueSurfaceFallback("card");
     const raw = baseColors.card as string | undefined;
 
     // 被壁纸模式换成半透明黑叠加时，回到主题自己的面板色
@@ -628,10 +673,7 @@ function getDrawerSurfaceColor() {
  * 回落到主题自己的 surfaceElevated 并补足不透明度。
  */
 function getDialogSurfaceColor() {
-    const dark = !!themeStore.getValue().dark;
-    const preset = (
-        dark ? darkTheme.colors.surfaceElevated : lightTheme.colors.surfaceElevated
-    ) as string;
+    const preset = getOpaqueSurfaceFallback("surfaceElevated");
     const raw = baseColors.surfaceElevated as string | undefined;
 
     const base =
@@ -662,10 +704,7 @@ function getDialogSurfaceColor() {
  * 所以不需要像抽屉那样再乘系数。
  */
 function getOpaquePageBackgroundColor() {
-    const dark = !!themeStore.getValue().dark;
-    const preset = (
-        dark ? darkTheme.colors.pageBackground : lightTheme.colors.pageBackground
-    ) as string;
+    const preset = getOpaqueSurfaceFallback("pageBackground");
     const raw = baseColors.pageBackground as string | undefined;
 
     if (!raw) {
