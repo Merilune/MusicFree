@@ -18,6 +18,7 @@ export default function FontSetting() {
         NotoSerifSC: t("fontSetting.notoSerifSC"),
         HanYiXiZhongYuanJ: t("fontSetting.hanYiXiZhongYuanJ"),
         LXGWNeoZhiSong: t("fontSetting.lxgwNeoZhiSong"),
+        ZhiMangXing: t("fontSetting.zhiMangXing"),
         follow: t("fontSetting.followApp"),
     };
 
@@ -60,6 +61,7 @@ export default function FontSetting() {
                                         "NotoSerifSC",
                                         "HanYiXiZhongYuanJ",
                                         "LXGWNeoZhiSong",
+                                        "ZhiMangXing",
                                     ],
                                     appFont,
                                 )
@@ -91,6 +93,7 @@ export default function FontSetting() {
                                         "NotoSerifSC",
                                         "HanYiXiZhongYuanJ",
                                         "LXGWNeoZhiSong",
+                                        "ZhiMangXing",
                                     ],
                                     lyricFont,
                                 )

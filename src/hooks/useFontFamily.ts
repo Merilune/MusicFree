@@ -6,6 +6,7 @@ export const BUILTIN_FONT_FAMILIES = [
     "NotoSerifSC",
     "HanYiXiZhongYuanJ",
     "LXGWNeoZhiSong",
+    "ZhiMangXing",
 ] as const;
 
 export type AppFontFamily = (typeof BUILTIN_FONT_FAMILIES)[number] | "default";
