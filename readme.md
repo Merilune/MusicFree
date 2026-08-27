@@ -2,7 +2,7 @@
 
 <div align="center">
 
-  **基于原版优化的插件化音乐播放器**
+  **我自用版本的Musicfree，包含了我能优化的所有优化以及我想加的所有功能**
 
   [English](./readme-en.md) | 简体中文
 
@@ -124,6 +124,7 @@ https://musicfree-plugins.netlify.app
 
 **原作者**：[maotoumao](https://github.com/maotoumao)
 **原项目**：[https://github.com/maotoumao/MusicFree](https://github.com/maotoumao/MusicFree)
+
 
 ### 修改说明
 
