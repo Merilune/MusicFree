@@ -49,70 +49,60 @@ export default function FontSetting() {
                 {t("fontSetting.title")}
             </ThemeText>
             <View style={styles.sectionWrapper}>
-                <ListItem withHorizontalPadding>
-                    <ListItem.Content>
-                        <ListItem.Title
-                            onPress={() =>
-                                showPicker(
-                                    t("fontSetting.appFont"),
-                                    "font.appFontFamily",
-                                    [
-                                        "default",
-                                        "NotoSerifSC",
-                                        "HanYiXiZhongYuanJ",
-                                        "LXGWNeoZhiSong",
-                                        "ZhiMangXing",
-                                    ],
-                                    appFont,
-                                )
-                            }>
-                            <ThemeText>{t("fontSetting.appFont")}</ThemeText>
-                        </ListItem.Title>
-                    </ListItem.Content>
-                    <ListItem.Actions>
-                        <ThemeText
-                            fontSize="subTitle"
-                            style={[
-                                styles.valueText,
-                                appFont !== "default" && styles.activeValue,
-                            ]}>
-                            {labelMap[appFont]}
-                        </ThemeText>
-                    </ListItem.Actions>
+                <ListItem
+                    withHorizontalPadding
+                    onPress={() =>
+                        showPicker(
+                            t("fontSetting.appFont"),
+                            "font.appFontFamily",
+                            [
+                                "default",
+                                "NotoSerifSC",
+                                "HanYiXiZhongYuanJ",
+                                "LXGWNeoZhiSong",
+                                "ZhiMangXing",
+                            ],
+                            appFont,
+                        )
+                    }>
+                    <ListItem.Content title={t("fontSetting.appFont")} />
+                    <ThemeText
+                        fontSize="subTitle"
+                        style={[
+                            styles.valueText,
+                            appFont !== "default" && styles.activeValue,
+                        ]}>
+                        {labelMap[appFont]}
+                    </ThemeText>
                 </ListItem>
-                <ListItem withHorizontalPadding>
-                    <ListItem.Content>
-                        <ListItem.Title
-                            onPress={() =>
-                                showPicker(
-                                    t("fontSetting.lyricFont"),
-                                    "font.lyricFontFamily",
-                                    [
-                                        "follow",
-                                        "default",
-                                        "NotoSerifSC",
-                                        "HanYiXiZhongYuanJ",
-                                        "LXGWNeoZhiSong",
-                                        "ZhiMangXing",
-                                    ],
-                                    lyricFont,
-                                )
-                            }>
-                            <ThemeText>{t("fontSetting.lyricFont")}</ThemeText>
-                        </ListItem.Title>
-                    </ListItem.Content>
-                    <ListItem.Actions>
-                        <ThemeText
-                            fontSize="subTitle"
-                            style={[
-                                styles.valueText,
-                                lyricFont !== "follow" &&
-                                    lyricFont !== "default" &&
-                                    styles.activeValue,
-                            ]}>
-                            {labelMap[lyricFont]}
-                        </ThemeText>
-                    </ListItem.Actions>
+                <ListItem
+                    withHorizontalPadding
+                    onPress={() =>
+                        showPicker(
+                            t("fontSetting.lyricFont"),
+                            "font.lyricFontFamily",
+                            [
+                                "follow",
+                                "default",
+                                "NotoSerifSC",
+                                "HanYiXiZhongYuanJ",
+                                "LXGWNeoZhiSong",
+                                "ZhiMangXing",
+                            ],
+                            lyricFont,
+                        )
+                    }>
+                    <ListItem.Content title={t("fontSetting.lyricFont")} />
+                    <ThemeText
+                        fontSize="subTitle"
+                        style={[
+                            styles.valueText,
+                            lyricFont !== "follow" &&
+                                lyricFont !== "default" &&
+                                styles.activeValue,
+                        ]}>
+                        {labelMap[lyricFont]}
+                    </ThemeText>
                 </ListItem>
             </View>
         </View>
