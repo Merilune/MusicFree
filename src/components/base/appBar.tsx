@@ -173,7 +173,15 @@ export default function AppBar(props: IAppBarProps) {
                         onPress={() => {
                             setShowMenu(false);
                         }}>
-                        <View style={styles.blocker} />
+                        <View
+                            style={[
+                                styles.blocker,
+                                // 有自定义背景时菜单浮在壁纸上，加暗化遮罩防止看不清
+                                hasCustomBackground
+                                    ? { backgroundColor: colors.backdrop }
+                                    : null,
+                            ]}
+                        />
                     </TouchableWithoutFeedback>
                 ) : null}
                 <>
@@ -201,7 +209,10 @@ export default function AppBar(props: IAppBarProps) {
                         pointerEvents={showMenu ? "auto" : "none"}
                         style={[
                             {
-                                backgroundColor: colors.surfaceElevated,
+                                // 有壁纸时菜单用更实的暗底，避免透出壁纸看不清
+                                backgroundColor: hasCustomBackground
+                                    ? "rgba(0,0,0,0.82)"
+                                    : colors.surfaceElevated,
                                 borderColor: hasCustomBackground
                                     ? "transparent"
                                     : colors.border,
