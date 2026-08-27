@@ -18,11 +18,17 @@ module.exports = async function () {
         const favList = MusicSheet.getSortedMusicListBySheetId(
             MusicSheet.defaultSheet.id,
         );
-        if (favList?.has(musicItem)) {
-            MusicSheet.removeMusic(MusicSheet.defaultSheet.id, musicItem);
+        if (favList.has(musicItem)) {
+            MusicSheet.removeMusic(
+                MusicSheet.defaultSheet.id,
+                musicItem,
+            ).catch(() => undefined);
             Toast.warn("已取消收藏");
         } else {
-            MusicSheet.addMusic(MusicSheet.defaultSheet.id, musicItem);
+            MusicSheet.addMusic(
+                MusicSheet.defaultSheet.id,
+                musicItem,
+            ).catch(() => undefined);
             Toast.success("已收藏");
         }
     });
