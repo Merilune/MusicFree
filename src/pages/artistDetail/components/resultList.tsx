@@ -3,6 +3,7 @@ import ListFooter from "@/components/base/listFooter";
 import { RequestStateCode } from "@/constants/commonConst";
 import { useParams } from "@/core/router";
 import rpx from "@/utils/rpx";
+import { InteractionManager } from "react-native";
 import { FlashList } from "@shopify/flash-list";
 import { useAtom } from "jotai";
 import React, { useEffect, useRef, useState } from "react";
@@ -28,7 +29,14 @@ export default function ResultList(props: IResultListProps) {
     const queryArtist = useQueryArtist(pluginHash);
 
     useEffect(() => {
-        queryState === RequestStateCode.IDLE && queryArtist(artistItem, 1, tab);
+        // 转场动画期间跑插件 JS 会卡掉新页首帧，进入动画会丢
+        if (queryState !== RequestStateCode.IDLE) {
+            return;
+        }
+        const task = InteractionManager.runAfterInteractions(() => {
+            queryArtist(artistItem, 1, tab);
+        });
+        return () => task.cancel();
     }, [artistItem, queryArtist, queryState, tab]);
 
     useEffect(() => {

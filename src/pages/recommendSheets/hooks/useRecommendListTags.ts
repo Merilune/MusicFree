@@ -1,4 +1,5 @@
 import PluginManager from "@/core/pluginManager";
+import { InteractionManager } from "react-native";
 import { useCallback, useEffect, useState } from "react";
 
 export default function (hash: string) {
@@ -21,7 +22,11 @@ export default function (hash: string) {
     }, [hash]);
 
     useEffect(() => {
-        query();
+        // 转场动画期间跑插件 JS 会卡掉新页首帧，进入动画会丢
+        const task = InteractionManager.runAfterInteractions(() => {
+            query();
+        });
+        return () => task.cancel();
     }, [query]);
 
     return tags;

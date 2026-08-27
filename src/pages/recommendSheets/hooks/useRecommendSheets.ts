@@ -1,6 +1,7 @@
 import { RequestStateCode } from "@/constants/commonConst";
 import PluginManager from "@/core/pluginManager";
 import { resetMediaItem } from "@/utils/mediaUtils";
+import { InteractionManager } from "react-native";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 export default function (pluginHash: string, tag: ICommon.IUnique) {
@@ -61,7 +62,11 @@ export default function (pluginHash: string, tag: ICommon.IUnique) {
     }, [tag, requestState, pluginHash]);
 
     useEffect(() => {
-        query();
+        // 转场动画期间跑插件 JS 会卡掉新页首帧，进入动画会丢
+        const task = InteractionManager.runAfterInteractions(() => {
+            query();
+        });
+        return () => task.cancel();
     }, [tag, query]);
 
 

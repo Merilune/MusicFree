@@ -1,5 +1,6 @@
 import { RequestStateCode } from "@/constants/commonConst";
 import PluginManager from "@/core/pluginManager";
+import { InteractionManager } from "react-native";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 export default function useAlbumDetail(
@@ -70,7 +71,11 @@ export default function useAlbumDetail(
     );
 
     useEffect(() => {
-        getAlbumDetail();
+        // 转场动画期间跑插件 JS 会卡掉新页首帧，进入动画会丢
+        const task = InteractionManager.runAfterInteractions(() => {
+            getAlbumDetail();
+        });
+        return () => task.cancel();
     }, [getAlbumDetail]);
 
     return [requestState, albumItem, musicList, getAlbumDetail] as const;
