@@ -2,6 +2,7 @@ import React from "react";
 import { Text, TextProps } from "react-native";
 import { fontSizeConst, fontWeightConst } from "@/constants/uiConst";
 import useColors, { CustomizedColors } from "@/hooks/useColors";
+import { useAppFontFamily } from "@/hooks/useFontFamily";
 
 type IThemeTextProps = TextProps & {
     color?: string;
@@ -13,6 +14,7 @@ type IThemeTextProps = TextProps & {
 
 export default function ThemeText(props: IThemeTextProps) {
     const colors = useColors();
+    const appFontFamily = useAppFontFamily();
     const {
         style,
         color,
@@ -27,6 +29,7 @@ export default function ThemeText(props: IThemeTextProps) {
         color: color ?? colors[fontColor],
         fontSize: fontSizeConst[fontSize],
         fontWeight: fontWeightConst[fontWeight],
+        fontFamily: appFontFamily ?? undefined,
         includeFontPadding: false,
         opacity,
     };

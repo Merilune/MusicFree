@@ -285,6 +285,12 @@ export interface ILanguageData {
     "themeSettings.surfaceOpacityDesc": string; // 调太低会看不清文字
     "themeSettings.cardShadowStrength": string; // 卡片阴影强度
     "themeSettings.resetAppearanceTuning": string; // 恢复默认观感
+    "fontSetting.title": string; // 字体
+    "fontSetting.appFont": string; // 应用字体
+    "fontSetting.lyricFont": string; // 歌词字体
+    "fontSetting.default": string; // 默认
+    "fontSetting.followApp": string; // 跟随应用
+    "fontSetting.notoSerifSC": string; // 思源宋体
 
 
     // 自定义主题相关

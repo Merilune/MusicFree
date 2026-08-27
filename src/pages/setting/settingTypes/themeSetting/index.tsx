@@ -7,6 +7,7 @@ import BackgroundTuning from "./backgroundTuning";
 import SplashImage from "./splashImage";
 import AppearanceTuning from "./appearanceTuning";
 import CoverStyle from "./coverStyle";
+import FontSetting from "./fontSetting";
 import HomeDisplay from "./homeDisplay";
 import { ScrollView } from "react-native-gesture-handler";
 
@@ -16,6 +17,7 @@ export default function ThemeSetting() {
             <Mode />
             <HomeDisplay />
             <CoverStyle />
+            <FontSetting />
             <Background />
             <BackgroundTuning />
             <SplashImage />

@@ -21,6 +21,26 @@ import useColors from "@/hooks/useColors";
 import { fontSizeConst } from "@/constants/uiConst";
 import { getCurrentPositionMsShared } from "@/core/lyricManager";
 import { useAppConfig } from "@/core/appConfig";
+import { useLyricFontFamily } from "@/hooks/useFontFamily";
+
+/** 歌词字体从顶层（LyricItemView）下发，避免每个 memo 子组件各自订阅配置 */
+const LyricFontContext = React.createContext<string | null>(null);
+
+/** 歌词字体样式；卡拉OK底字与高亮遮罩必须取同一个，保证文字度量一致 */
+function useLyricFontStyle(): { fontFamily?: string } {
+    const font = React.useContext(LyricFontContext);
+    return font ? { fontFamily: font } : {};
+}
+
+/** 顶层包一层字体 Provider，所有歌词文字（含卡拉OK双层）取同一字体 */
+function LyricItemView(props: ILyricItemComponentProps) {
+    const lyricFontFamily = useLyricFontFamily();
+    return (
+        <LyricFontContext.Provider value={lyricFontFamily}>
+            <LyricItemViewInner {...props} />
+        </LyricFontContext.Provider>
+    );
+}
 
 type LyricAlign = "left" | "center" | "right";
 
@@ -609,6 +629,7 @@ const KaraokeWordSplit = memo(({
     emphasisTimings: Array<AmllEmphasisTiming | undefined>;
 }) => {
     const subWords = useMemo(() => splitWordToChars(word), [word]);
+    const fontStyle = useLyricFontStyle();
     const currentPositionMsShared = useCurrentPositionShared();
     const wordFloatStyle = useAnimatedStyle(() => {
         "worklet";
@@ -686,7 +707,7 @@ const KaraokeWordSplit = memo(({
                 />
             ))}
             {groupTrailingSpace ? (
-                <Text style={{ fontSize, color: "transparent" }}>{" "}</Text>
+                <Text style={[{ fontSize, color: "transparent" }, fontStyle]}>{" "}</Text>
             ) : null}
         </Animated.View>
     );
@@ -767,6 +788,7 @@ const AmllAnimatedGlowText = memo(({
     onLayout,
 }: AmllGlowTextProps) => {
     const currentPositionMsShared = useCurrentPositionShared();
+    const fontStyle = useLyricFontStyle();
     const emphasisGlowStyle = useAnimatedStyle(() => {
         "worklet";
         const progress = Math.max(0, Math.min(
@@ -790,6 +812,7 @@ const AmllAnimatedGlowText = memo(({
             style={[
                 styles.wordText,
                 emphasisGlowStyle,
+                fontStyle,
                 {
                     fontSize,
                     color,
@@ -803,6 +826,7 @@ const AmllAnimatedGlowText = memo(({
 });
 
 const AmllGlowText = memo((props: AmllGlowTextProps) => {
+    const fontStyle = useLyricFontStyle();
     // Animated textShadow forces Android to rerasterize glyphs every frame and
     // defeats the hardware texture used for subpixel movement. AMll's motion is
     // substantially smoother there without the costly shadow layer.
@@ -812,6 +836,7 @@ const AmllGlowText = memo((props: AmllGlowTextProps) => {
                 onLayout={props.onLayout}
                 style={[
                     styles.wordText,
+                    fontStyle,
                     { fontSize: props.fontSize, color: props.color, opacity: 0.48 },
                 ]}>
                 {props.text}
@@ -851,6 +876,7 @@ const KaraokeWord = memo(({
 }) => {
     const { text, space } = word;
     const [textWidth, setTextWidth] = useState(0);
+    const fontStyle = useLyricFontStyle();
 
     // Trailing space as text (matches non-playing line text wrapping)
     const trailingSpace = !noSpace && space ? " " : "";
@@ -880,6 +906,7 @@ const KaraokeWord = memo(({
                 <Text
                     style={[
                         styles.wordText,
+                        fontStyle,
                         { fontSize, color: primaryColor, opacity: 0.5 },
                     ]}
                 >
@@ -911,6 +938,7 @@ const KaraokeWord = memo(({
             onLayout={handleTextLayout}
             style={[
                 styles.wordText,
+                fontStyle,
                 { fontSize, color: primaryColor, opacity: 0.48 },
             ]}>
             {text}{trailingSpace}
@@ -926,6 +954,7 @@ const KaraokeWord = memo(({
                     numberOfLines={1}
                     style={[
                         styles.wordText,
+                        fontStyle,
                         {
                             width: textWidth || undefined,
                             fontSize,
@@ -966,6 +995,7 @@ const TranslationTextLine = memo(({
     inactiveOpacity?: number;
     align?: LyricAlign;
 }) => {
+    const fontStyle = useLyricFontStyle();
     return (
         <View style={[
             styles.translationLineContainer,
@@ -974,6 +1004,7 @@ const TranslationTextLine = memo(({
             <Text
                 style={[
                     styles.wordText,
+                    fontStyle,
                     {
                         fontSize,
                         textAlign: align,
@@ -1014,6 +1045,7 @@ function StaticWordByWordLine({
     align?: LyricAlign;
     containerStyle?: StyleProp<ViewStyle>;
 }) {
+    const fontStyle = useLyricFontStyle();
     const getLineFontSize = (isFirst: boolean) => isFirst ? fontSize : fontSize * SECONDARY_FONT_RATIO;
     const justifyContent = getLyricFlexAlignment(align);
 
@@ -1032,7 +1064,7 @@ function StaticWordByWordLine({
                         const trailing = !noSpace && sw.space ? " " : "";
                         return (
                             <View style={styles.wordWrapper} key={i}>
-                                <Text style={[styles.wordText, { fontSize: lineFontSize, color: "white" }]}>
+                                <Text style={[styles.wordText, fontStyle, { fontSize: lineFontSize, color: "white" }]}>
                                     {sw.text}{trailing}
                                 </Text>
                             </View>
@@ -1044,13 +1076,13 @@ function StaticWordByWordLine({
                         <View style={lyricStyles.charGroupRow} key={i}>
                             {subWords.map((sw, ci) => (
                                 <View style={styles.wordWrapper} key={ci}>
-                                    <Text style={[styles.wordText, { fontSize: lineFontSize, color: "white" }]}>
+                                    <Text style={[styles.wordText, fontStyle, { fontSize: lineFontSize, color: "white" }]}>
                                         {sw.text}
                                     </Text>
                                 </View>
                             ))}
                             {groupTrailingSpace ? (
-                                <Text style={{ fontSize: lineFontSize, color: "transparent" }}>{" "}</Text>
+                                <Text style={[{ fontSize: lineFontSize, color: "transparent" }, fontStyle]}>{" "}</Text>
                             ) : null}
                         </View>
                     );
@@ -1348,6 +1380,8 @@ function RegularLyricLine({
         transform: [{ scale: textScale.value }],
     }));
 
+    const fontStyle = useLyricFontStyle();
+
     // Transform origin based on alignment
     const transformOriginStyle = getLyricTransformOriginStyle(align);
 
@@ -1365,6 +1399,7 @@ function RegularLyricLine({
             <Animated.Text
                 style={[
                     lyricStyles.item,
+                    fontStyle,
                     { fontSize, textAlign: align },
                     transformOriginStyle,
                     animatedStyle,
@@ -1429,6 +1464,7 @@ function MultiLineRegularLyric({
 
     // Transform origin based on alignment
     const transformOriginStyle = getLyricTransformOriginStyle(align);
+    const fontStyle = useLyricFontStyle();
 
     // Font size based on order: first line uses full fontSize, others use smaller
     const getLineFontSize = (isFirst: boolean) => isFirst ? fontSize : fontSize * SECONDARY_FONT_RATIO;
@@ -1438,6 +1474,7 @@ function MultiLineRegularLyric({
     // Get style based on highlight state
     const getLineStyle = (isFirst: boolean) => [
         lyricStyles.compactItem,
+        fontStyle,
         { fontSize: getLineFontSize(isFirst), textAlign },
         !isFirst && lyricStyles.secondaryLine,
         highlight && [lyricStyles.highlightItem, { color: primaryColor }],
@@ -1472,6 +1509,7 @@ function MultiLineRegularLyric({
                             key={wordIndex}
                             style={[
                                 styles.wordText,
+                                fontStyle,
                                 {
                                     fontSize: getLineFontSize(isFirst),
                                     color: highlight ? primaryColor : "white",
@@ -1556,7 +1594,7 @@ function MultiLineRegularLyric({
     );
 }
 
-function LyricItemView(props: ILyricItemComponentProps) {
+function LyricItemViewInner(props: ILyricItemComponentProps) {
     const {
         light,
         highlight,

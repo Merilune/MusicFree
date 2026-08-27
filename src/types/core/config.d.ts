@@ -97,6 +97,12 @@ export interface IAppConfigProperties {
     } | null>;
     "lyric.invertColors": boolean;
 
+    // Font
+    /** 全局字体：default = 系统字体，NotoSerifSC = 内置思源宋体 */
+    "font.appFontFamily": "default" | "NotoSerifSC";
+    /** 歌词页字体：follow = 跟随全局 */
+    "font.lyricFontFamily": "follow" | "default" | "NotoSerifSC";
+
     // Theme
     "theme.background": string;
     "theme.backgroundOpacity": number;
