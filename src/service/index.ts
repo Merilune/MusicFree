@@ -1,11 +1,31 @@
 import Config from "@/core/appConfig";
 import RNTrackPlayer, { Event, State } from "react-native-track-player";
-import TrackPlayer from "@/core/trackPlayer";
+import trackPlayer from "@/core/trackPlayer";
+import MusicSheet from "@/core/musicSheet";
+import Toast from "@/utils/toast";
 import { musicIsPaused } from "@/utils/trackUtils";
 import PersistStatus from "@/utils/persistStatus";
+import { DeviceEventEmitter } from "react-native";
 
 let resumeState: State | null;
 module.exports = async function () {
+    // 紧凑通知上的收藏按钮（原生 MusicService 补丁发出的事件）
+    DeviceEventEmitter.addListener("remote-favorite", () => {
+        const musicItem = trackPlayer.currentMusic;
+        if (!musicItem) {
+            return;
+        }
+        const favList = MusicSheet.getSortedMusicListBySheetId(
+            MusicSheet.defaultSheet.id,
+        );
+        if (favList?.has(musicItem)) {
+            MusicSheet.removeMusic(MusicSheet.defaultSheet.id, musicItem);
+            Toast.warn("已取消收藏");
+        } else {
+            MusicSheet.addMusic(MusicSheet.defaultSheet.id, musicItem);
+            Toast.success("已收藏");
+        }
+    });
     RNTrackPlayer.addEventListener(Event.RemotePlay, () => TrackPlayer.play());
     RNTrackPlayer.addEventListener(Event.RemotePause, () =>
         TrackPlayer.pause(),
