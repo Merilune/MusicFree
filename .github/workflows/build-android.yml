@@ -85,6 +85,10 @@ jobs:
                   # 使用npm ci进行更快的安装
                   npm ci --legacy-peer-deps --prefer-offline --no-audit --progress=false
 
+            # 🔤 把 assets/fonts 拷进 android（gradle 不会自动做，缺了这步字体进不了 APK）
+            - name: Link font assets
+              run: npx react-native asset
+
             # 🔄 从tag同步版本号到package.json和version.json
             - name: Update version from tag
               if: startsWith(github.ref, 'refs/tags/')

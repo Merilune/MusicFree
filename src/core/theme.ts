@@ -112,6 +112,19 @@ interface IBackgroundInput {
  */
 export const customThemeDefaultPrimary = "#F2F2F2";
 
+/**
+ * 自定义主题的黑白初始配色：主色中性白，底色纯黑，
+ * 顶栏/标签栏/强调色一并脱离深色主题的橙与蓝灰
+ */
+export const customThemeDefaultColors = {
+    primary: customThemeDefaultPrimary,
+    pageBackground: "#000000",
+    appBar: "#000000",
+    tabBar: "#000000",
+    accentWarm: customThemeDefaultPrimary,
+    accentCool: customThemeDefaultPrimary,
+} as Partial<CustomizedColors>;
+
 export const customBackgroundSurfaceColors: Partial<CustomizedColors> = {
     pageBackground: "rgba(0,0,0,0.12)",
     card: "rgba(0,0,0,0.22)",
@@ -346,10 +359,22 @@ function setup() {
         ) {
             savedColors = {
                 ...darkTheme.colors,
-                primary: customThemeDefaultPrimary,
-                pageBackground: "#000000",
+                ...customThemeDefaultColors,
             };
             Config.setConfig("theme.colors", savedColors);
+            // customColors 是自定义主题入口的配色来源，一并迁移，
+            // 否则旧默认橙会从那个入口复活
+            const savedCustomColors = Config.getConfig("theme.customColors");
+            if (
+                savedCustomColors?.primary === darkTheme.colors.primary &&
+                savedCustomColors?.pageBackground ===
+                    darkTheme.colors.pageBackground
+            ) {
+                Config.setConfig("theme.customColors", {
+                    ...darkTheme.colors,
+                    ...customThemeDefaultColors,
+                });
+            }
         }
 
         // 修复旧版本中错误的 listActive 配置
@@ -436,10 +461,7 @@ function setTheme(
             colors: normalizeCustomBackgroundColors(
                 {
                     ...darkTheme.colors,
-                    // 初始主色用中性白，避免继承橙色
-                    primary: customThemeDefaultPrimary,
-                    // 底色用纯黑，别露出深色主题的蓝灰 #101419
-                    pageBackground: "#000000",
+                    ...customThemeDefaultColors,
                     ...(extra?.colors ?? {}),
                 },
                 hasBackground,

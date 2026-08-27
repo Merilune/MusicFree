@@ -32,15 +32,15 @@ module.exports = async function () {
             Toast.success("已收藏");
         }
     });
-    RNTrackPlayer.addEventListener(Event.RemotePlay, () => TrackPlayer.play());
+    RNTrackPlayer.addEventListener(Event.RemotePlay, () => trackPlayer.play());
     RNTrackPlayer.addEventListener(Event.RemotePause, () =>
-        TrackPlayer.pause(),
+        trackPlayer.pause(),
     );
     RNTrackPlayer.addEventListener(Event.RemotePrevious, () =>
-        TrackPlayer.skipToPrevious(),
+        trackPlayer.skipToPrevious(),
     );
     RNTrackPlayer.addEventListener(Event.RemoteNext, () =>
-        TrackPlayer.skipToNext(),
+        trackPlayer.skipToNext(),
     );
     RNTrackPlayer.addEventListener(
         Event.RemoteDuck,
@@ -49,7 +49,7 @@ module.exports = async function () {
                 return;
             }
             if (permanent) {
-                return TrackPlayer.pause();
+                return trackPlayer.pause();
             }
             const tempRemoteDuckConf = Config.getConfig(
                 "basic.tempRemoteDuck",
@@ -68,11 +68,11 @@ module.exports = async function () {
                     resumeState =
                         (await RNTrackPlayer.getPlaybackState()).state ??
                         State.Paused;
-                    return TrackPlayer.pause();
+                    return trackPlayer.pause();
                 } else {
                     if (resumeState && !musicIsPaused(resumeState)) {
                         resumeState = null;
-                        return TrackPlayer.play();
+                        return trackPlayer.play();
                     }
                     resumeState = null;
                 }
@@ -90,6 +90,6 @@ module.exports = async function () {
     });
 
     RNTrackPlayer.addEventListener(Event.RemoteSeek, async evt => {
-        TrackPlayer.seekTo(evt.position);
+        trackPlayer.seekTo(evt.position);
     });
 };
