@@ -127,10 +127,9 @@ jobs:
                       existingChangeLog = [];
                     }
 
-                    // 生成下载链接（使用新的文件名格式）
+                    // 生成下载链接（只编 arm64，别放不存在的包）
                     const downloadUrls = [
-                      'https://github.com/${{ github.repository }}/releases/download/' + tagVersion + '/MusicFree-v' + version + '-arm64-v8a-release.apk',
-                      'https://github.com/${{ github.repository }}/releases/download/' + tagVersion + '/MusicFree-v' + version + '-universal-release.apk'
+                      'https://github.com/${{ github.repository }}/releases/download/' + tagVersion + '/MusicFree-v' + version + '-arm64-v8a-release.apk'
                     ];
 
                     // 只更新 version 和 download，保留现有的 changeLog
@@ -357,50 +356,22 @@ jobs:
             # 📝 生成Release描述
             - name: Generate Release Body
               if: startsWith(github.ref, 'refs/tags/')
-              id: release-body
               run: |
-                  echo "📝 Generating release body from version.json..."
-
-                  # 从tag获取版本号
                   TAG_VERSION="${{ github.ref_name }}"
                   VERSION=${TAG_VERSION#v}
-
-                  # 读取 changeLog 并格式化
-                  CHANGELOG=$(node -e "
-                    const fs = require('fs');
-                    const versionData = JSON.parse(fs.readFileSync('release/version.json', 'utf8'));
-                    const changeLog = versionData.changeLog || [];
-
-                    // 格式化为 markdown 列表
-                    const formattedLog = changeLog.map((item, index) => \`\${index + 1}. \${item}\`).join('\n');
-
-                    console.log(formattedLog);
-                  ")
-
-                  # 创建完整的 Release 描述
                   cat > release_body.md << EOF
-                  ## 🎵 MusicFree ${{ github.ref_name }}
+                  ## MusicFree ${{ github.ref_name }}
 
-                  ### 📱 下载选项
+                  ### 下载
 
-                  **推荐下载 (适用于所有设备):**
-                  - **Universal APK**: [MusicFree-v${VERSION}-universal-release.apk](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/MusicFree-v${VERSION}-universal-release.apk)
+                  - **arm64 (Android 64 位)**: [MusicFree-v${VERSION}-arm64-v8a-release.apk](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/MusicFree-v${VERSION}-arm64-v8a-release.apk)
 
-                  **按设备架构下载 (体积更小):**
-                  - **ARM64 (推荐)**: [MusicFree-v${VERSION}-arm64-v8a-release.apk](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/MusicFree-v${VERSION}-arm64-v8a-release.apk) - 适用于大部分现代Android设备
-                  - **ARM32**: [MusicFree-v${VERSION}-armeabi-v7a-release.apk](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/MusicFree-v${VERSION}-armeabi-v7a-release.apk) - 适用于老版本Android设备
-                  - **x86_64**: [MusicFree-v${VERSION}-x86_64-release.apk](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/MusicFree-v${VERSION}-x86_64-release.apk) - 适用于x86_64模拟器
-                  - **x86**: [MusicFree-v${VERSION}-x86-release.apk](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/MusicFree-v${VERSION}-x86-release.apk) - 适用于x86模拟器
+                  目前只编译 arm64 版本，其他架构有需要请提 Issue。
 
-                  ### 🔄 更新内容
+                  ### 更新内容
 
-                  $CHANGELOG
-
-                  ### 🔧 构建信息
-                  - 构建时间: ${{ steps.build-info.outputs.build-time }}
-                  - 提交SHA: ${{ github.sha }}
+                  见 [提交历史](https://github.com/${{ github.repository }}/commits/master)。
                   EOF
-
                   echo "✅ Release body generated"
 
             # 🎉 创建Release并上传所有APK
