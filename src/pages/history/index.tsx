@@ -1,4 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
+import { View } from "react-native";
+import useEnterTransitionEnd from "@/hooks/useEnterTransitionEnd";
 import VerticalSafeAreaView from "@/components/base/verticalSafeAreaView";
 import globalStyle from "@/constants/globalStyle";
 import StatusBar from "@/components/base/statusBar";
@@ -9,7 +11,6 @@ import MusicBar from "@/components/musicBar";
 import AppBar from "@/components/base/appBar";
 import { ROUTE_PATH, useNavigate } from "@/core/router";
 import { useI18N } from "@/core/i18n";
-import { InteractionManager, View } from "react-native";
 
 export default function History() {
     const musicHistoryList = useMusicHistory();
@@ -17,14 +18,8 @@ export default function History() {
     const navigate = useNavigate();
     const { t } = useI18N();
 
-    // 历史列表可能很长，首帧全量渲染会卡掉进入动画，推迟到转场结束再挂
-    const [listReady, setListReady] = useState(false);
-    useEffect(() => {
-        const task = InteractionManager.runAfterInteractions(() => {
-            setListReady(true);
-        });
-        return () => task.cancel();
-    }, []);
+    // 历史列表可能很长，首帧全量渲染会卡掉进入动画，等转场结束再挂
+    const listReady = useEnterTransitionEnd();
 
     return (
         <VerticalSafeAreaView style={globalStyle.fwflex1}>
