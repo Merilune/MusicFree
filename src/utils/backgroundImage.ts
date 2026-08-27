@@ -6,7 +6,12 @@ import {
     trimHash,
 } from "@/utils/fileUtils";
 import { devLog } from "@/utils/log";
-import { copyFile, exists, unlink } from "react-native-fs";
+import {
+    copyFile,
+    downloadFile,
+    exists,
+    unlink,
+} from "react-native-fs";
 import {
     getScreenAspectRatio,
     pickPhotoWithCrop,
@@ -38,9 +43,20 @@ export async function pickBackgroundImage(): Promise<string | null> {
  */
 export async function saveBackgroundImage(uri: string, fileName: string) {
     // 已落盘的地址带 file:// 前缀和缓存 hash，copyFile 认不出来，先还原成纯路径
-    const source = uri.startsWith("content://")
+    let source = uri.startsWith("content://")
         ? uri
         : removeFileScheme(trimHash(uri));
+    // 网络封面（如"用封面当背景"的在线封面）copyFile 拷不了，先下载到临时目录
+    if (/^https?:\/\//.test(source)) {
+        const downloadResult = await downloadFile({
+            fromUrl: source,
+            toFile: `${pathConst.dataPath}${fileName}.download`,
+        }).promise;
+        if (downloadResult.statusCode < 200 || downloadResult.statusCode >= 300) {
+            throw new Error(`下载背景图失败: ${downloadResult.statusCode}`);
+        }
+        source = `${pathConst.dataPath}${fileName}.download`;
+    }
     const targetPath = `${pathConst.dataPath}${fileName}${getExtension(source)}`;
 
     if (source === targetPath) {
