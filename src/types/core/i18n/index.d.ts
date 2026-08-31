@@ -291,7 +291,6 @@ export interface ILanguageData {
     "fontSetting.default": string; // 默认
     "fontSetting.followApp": string; // 跟随应用
     "fontSetting.notoSerifSC": string; // 思源宋体
-    "fontSetting.hanYiXiZhongYuanJ": string; // 汉仪细中圆简
     "fontSetting.lxgwNeoZhiSong": string; // 霞鹜新致宋
     "fontSetting.zhiMangXing": string; // 志莽行书
 

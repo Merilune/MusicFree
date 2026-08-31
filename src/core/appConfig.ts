@@ -225,6 +225,18 @@ class AppConfig implements IAppConfig {
             configStore.set("$schema", "5");
         }
 
+        if (schemaVersion < 6) {
+            // HanYiXiZhongYuanJ was removed because its redistribution license
+            // could not be verified. Reset existing selections to safe fallbacks.
+            if ((this.getConfig("font.appFontFamily") as string) === "HanYiXiZhongYuanJ") {
+                this.setConfig("font.appFontFamily", "default");
+            }
+            if ((this.getConfig("font.lyricFontFamily") as string) === "HanYiXiZhongYuanJ") {
+                this.setConfig("font.lyricFontFamily", "follow");
+            }
+            configStore.set("$schema", "6");
+        }
+
     }
 
     async setup(): Promise<void> {
