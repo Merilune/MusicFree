@@ -18,7 +18,7 @@
 
 ## 本仓库是什么
 
-Audiora 是一个基于 [Toskysun/MusicFree](https://github.com/Toskysun/MusicFree) 的开源音乐播放器（其上游为 [maotoumao/MusicFree](https://github.com/maotoumao/MusicFree)，原作者猫头猫），专注于更精致的界面、丰富的个性化能力与顺手的播放体验。
+Audiora 是一个在 [Merilune/MusicFree](https://github.com/Merilune/MusicFree) 基础上继续开发的开源音乐播放器。该版本源自 [Toskysun/MusicFree](https://github.com/Toskysun/MusicFree)，最初上游为 [maotoumao/MusicFree](https://github.com/maotoumao/MusicFree)（原作者猫头猫）。Audiora 专注于更精致的界面、丰富的个性化能力与顺手的播放体验。
 
 上游的全部能力（插件系统、ikun 音源 12 级音质、下载增强等）都保留，主要新增/改进见下。
 
@@ -68,7 +68,7 @@ Audiora 是一个基于 [Toskysun/MusicFree](https://github.com/Toskysun/MusicFr
 
 - **原作者**：[猫头猫 maotoumao](https://github.com/maotoumao) — [原项目](https://github.com/maotoumao/MusicFree)
 - **上游**：[Toskysun](https://github.com/Toskysun) — [Toskysun/MusicFree](https://github.com/Toskysun/MusicFree)
-- **二次开发**：[Merilune](https://github.com/Merilune) — 本仓库
+- **直接基础版本**：[Merilune](https://github.com/Merilune) — [Merilune/MusicFree](https://github.com/Merilune/MusicFree)
 
 - **Claude** — [Claude Code](https://claude.com/claude-code)：陪我一路把这个播放器改到今天，这里的绝大部分改动都有它的一份，在此致谢 🤝
 

@@ -18,7 +18,7 @@
 
 ## About Audiora
 
-Audiora is an open-source music player based on [Toskysun/MusicFree](https://github.com/Toskysun/MusicFree), with a refined interface, deeper personalization, and an improved everyday listening experience. The original plugin ecosystem and core playback capabilities remain fully supported.
+Audiora is an open-source music player developed from [Merilune/MusicFree](https://github.com/Merilune/MusicFree). That version descends from [Toskysun/MusicFree](https://github.com/Toskysun/MusicFree), whose original upstream is [maotoumao/MusicFree](https://github.com/maotoumao/MusicFree). Audiora adds a refined interface, deeper personalization, and an improved everyday listening experience while retaining the plugin ecosystem and core playback capabilities.
 
 ## ✨ Core Features
 
@@ -128,10 +128,11 @@ This version is **fully compatible with legacy plugins**. Legacy quality keys ar
 
 ### Acknowledgments
 
-This project is modified and optimized based on [MusicFree](https://github.com/maotoumao/MusicFree)
+Audiora builds on the work of:
 
-**Original Author**: [maotoumao](https://github.com/maotoumao)
-**Original Project**: [https://github.com/maotoumao/MusicFree](https://github.com/maotoumao/MusicFree)
+- **Direct foundation**: [Merilune/MusicFree](https://github.com/Merilune/MusicFree)
+- **Upstream fork**: [Toskysun/MusicFree](https://github.com/Toskysun/MusicFree)
+- **Original author and project**: [maotoumao/MusicFree](https://github.com/maotoumao/MusicFree)
 
 ### Modifications
 
