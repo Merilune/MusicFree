@@ -1,18 +1,24 @@
-# 🎵 MusicFree (Modified Version)
+# Audiora
 
 <div align="center">
 
-  **Plugin-based Music Player Optimized from the Original**
+  <img src="./src/assets/imgs/audiora-wordmark.png" alt="Audiora" width="520" />
+
+  **An open-source music player built on MusicFree**
 
   [中文](./readme.md) | English
 
   [![License](https://img.shields.io/badge/license-AGPL%203.0-blue)](LICENSE)
-  [![Version](https://img.shields.io/github/v/release/Toskysun/MusicFree?color=green)](https://github.com/Toskysun/MusicFree/releases)
+  [![Version](https://img.shields.io/github/v/release/yingjiedev/audiora?color=green)](https://github.com/yingjiedev/audiora/releases)
   [![Platform](https://img.shields.io/badge/platform-Android-orange)]()
 
 </div>
 
 ---
+
+## About Audiora
+
+Audiora is an open-source music player developed from [Merilune/MusicFree](https://github.com/Merilune/MusicFree). That version descends from [Toskysun/MusicFree](https://github.com/Toskysun/MusicFree), whose original upstream is [maotoumao/MusicFree](https://github.com/maotoumao/MusicFree). Audiora adds a refined interface, deeper personalization, and an improved everyday listening experience while retaining the plugin ecosystem and core playback capabilities.
 
 ## ✨ Core Features
 
@@ -30,6 +36,7 @@
 
 ### 🎨 Personalization
 - 🎭 **Theme Customization**: Dark/light modes, custom backgrounds
+- 🌈 **Audiora Branding**: Unified in-app, Android, and iOS visual identity
 - 🏷️ **Quality Labels**: Customize quality display to your preference
 - 🚀 **Launch Optimization**: Open playback details on app startup
 
@@ -58,7 +65,7 @@
 ## 🚀 Quick Start
 
 ### 📲 Install App
-1. Go to [Releases](https://github.com/Toskysun/MusicFree/releases) to download the latest version
+1. Go to [Releases](https://github.com/yingjiedev/audiora/releases) to download the latest version
 2. Install the APK file on your Android device
 
 ### 🔌 Install Plugins
@@ -121,10 +128,11 @@ This version is **fully compatible with legacy plugins**. Legacy quality keys ar
 
 ### Acknowledgments
 
-This project is modified and optimized based on [MusicFree](https://github.com/maotoumao/MusicFree)
+Audiora builds on the work of:
 
-**Original Author**: [maotoumao](https://github.com/maotoumao)
-**Original Project**: [https://github.com/maotoumao/MusicFree](https://github.com/maotoumao/MusicFree)
+- **Direct foundation**: [Merilune/MusicFree](https://github.com/Merilune/MusicFree)
+- **Upstream fork**: [Toskysun/MusicFree](https://github.com/Toskysun/MusicFree)
+- **Original author and project**: [maotoumao/MusicFree](https://github.com/maotoumao/MusicFree)
 
 ### Modifications
 
