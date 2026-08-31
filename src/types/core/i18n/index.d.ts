@@ -8,6 +8,15 @@ export interface ILanguageData {
     "common.other": string; // 其他
     "common.cancel": string; // 取消
     "common.about": string; // 关于
+    "about.version": string; // 版本
+    "about.buildTime": string; // 构建时间
+    "about.positioningTitle": string; // 项目定位
+    "about.positioningContent": string; // 项目定位说明
+    "about.responsibilityTitle": string; // 责任边界
+    "about.responsibilityContent": string; // 责任边界说明
+    "about.originalAuthor": string; // 原作者
+    "about.upstreamAuthor": string; // 上游作者
+    "about.directFoundation": string; // 直接基础版本
     "common.batchEdit": string; // 批量编辑
     "common.selectAll": string; // 全选
     "common.unselectAll": string; // 全不选

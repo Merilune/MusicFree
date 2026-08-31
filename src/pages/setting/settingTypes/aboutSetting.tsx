@@ -14,10 +14,12 @@ import Theme from "@/core/theme";
 import DeviceInfo from "react-native-device-info";
 import buildInfo from "@/constants/buildInfo";
 import useHasCustomBackground from "@/hooks/useHasCustomBackground";
+import { useI18N } from "@/core/i18n";
 
 export default function AboutSetting() {
     const orientation = useOrientation();
     const { colors } = Theme.useTheme();
+    const { t } = useI18N();
     const hasCustomBackground = useHasCustomBackground();
     const version = DeviceInfo.getVersion(); // 从 package.json 获取版本号
     const buildTime = buildInfo.buildTime; // 从构建信息文件获取构建时间
@@ -51,9 +53,15 @@ export default function AboutSetting() {
                     style={style.image}
                     resizeMode="contain"
                 />
-                <ThemeText fontSize="title" style={style.appTitle}>MusicFree</ThemeText>
-                <ThemeText style={style.versionText}>版本 {version}</ThemeText>
-                <ThemeText style={style.buildText}>构建时间: {buildTime}</ThemeText>
+                <ThemeText fontSize="title" style={style.appTitle}>
+                    Audiora
+                </ThemeText>
+                <ThemeText style={style.versionText}>
+                    {t("about.version", { version })}
+                </ThemeText>
+                <ThemeText style={style.buildText}>
+                    {t("about.buildTime", { buildTime })}
+                </ThemeText>
             </View>
             <ScrollView
                 contentContainerStyle={style.scrollViewContainer}
@@ -65,7 +73,37 @@ export default function AboutSetting() {
                         { backgroundColor: colors.card },
                         cardChrome,
                     ]}>
-                    <ThemeText fontSize="subTitle" style={style.cardTitle}>原作者</ThemeText>
+                    <ThemeText fontSize="subTitle" style={style.cardTitle}>
+                        {t("about.positioningTitle")}
+                    </ThemeText>
+                    <ThemeText style={style.cardContent}>
+                        {t("about.positioningContent")}
+                    </ThemeText>
+                </View>
+
+                <View
+                    style={[
+                        style.infoCard,
+                        { backgroundColor: colors.card },
+                        cardChrome,
+                    ]}>
+                    <ThemeText fontSize="subTitle" style={style.cardTitle}>
+                        {t("about.responsibilityTitle")}
+                    </ThemeText>
+                    <ThemeText style={style.cardContent}>
+                        {t("about.responsibilityContent")}
+                    </ThemeText>
+                </View>
+
+                <View
+                    style={[
+                        style.infoCard,
+                        { backgroundColor: colors.card },
+                        cardChrome,
+                    ]}>
+                    <ThemeText fontSize="subTitle" style={style.cardTitle}>
+                        {t("about.originalAuthor")}
+                    </ThemeText>
                     <ThemeText style={style.cardContent}>猫头猫</ThemeText>
                     <LinkText linkTo="https://github.com/maotoumao/MusicFree">
                         https://github.com/maotoumao/MusicFree
@@ -78,7 +116,9 @@ export default function AboutSetting() {
                         { backgroundColor: colors.card },
                         cardChrome,
                     ]}>
-                    <ThemeText fontSize="subTitle" style={style.cardTitle}>上游作者</ThemeText>
+                    <ThemeText fontSize="subTitle" style={style.cardTitle}>
+                        {t("about.upstreamAuthor")}
+                    </ThemeText>
                     <ThemeText style={style.cardContent}>Toskysun</ThemeText>
                     <LinkText linkTo="https://github.com/Toskysun/MusicFree">
                         https://github.com/Toskysun/MusicFree
@@ -91,7 +131,9 @@ export default function AboutSetting() {
                         { backgroundColor: colors.card },
                         cardChrome,
                     ]}>
-                    <ThemeText fontSize="subTitle" style={style.cardTitle}>本仓库（二次开发）</ThemeText>
+                    <ThemeText fontSize="subTitle" style={style.cardTitle}>
+                        {t("about.directFoundation")}
+                    </ThemeText>
                     <ThemeText style={style.cardContent}>Merilune</ThemeText>
                     <LinkText linkTo="https://github.com/Merilune/MusicFree">
                         https://github.com/Merilune/MusicFree
