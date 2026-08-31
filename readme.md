@@ -1,13 +1,15 @@
-# MusicFree (Merilune Modified)
+# Audiora
 
 <div align="center">
 
-  **我自用版本的Musicfree，包含了我能优化的所有优化以及我想加的所有功能**
+  <img src="./src/assets/imgs/audiora-wordmark.png" alt="Audiora" width="520" />
+
+  **基于 MusicFree 打造的开源音乐播放器**
 
   [English](./readme-en.md) | 简体中文
 
   [![License](https://img.shields.io/badge/license-AGPL%203.0-blue)](LICENSE)
-  [![Version](https://img.shields.io/github/v/release/Merilune/MusicFree?color=green)](https://github.com/Merilune/MusicFree/releases)
+  [![Version](https://img.shields.io/github/v/release/yingjiedev/audiora?color=green)](https://github.com/yingjiedev/audiora/releases)
   [![Platform](https://img.shields.io/badge/platform-Android-orange)]()
 
 </div>
@@ -16,7 +18,7 @@
 
 ## 本仓库是什么
 
-我的自用版本，基于 [Toskysun/MusicFree](https://github.com/Toskysun/MusicFree)（其上游为 [maotoumao/MusicFree](https://github.com/maotoumao/MusicFree)，原作者猫头猫）二次开发，把我能优化的观感和想加的功能都加了进来。
+Audiora 是一个基于 [Toskysun/MusicFree](https://github.com/Toskysun/MusicFree) 的开源音乐播放器（其上游为 [maotoumao/MusicFree](https://github.com/maotoumao/MusicFree)，原作者猫头猫），专注于更精致的界面、丰富的个性化能力与顺手的播放体验。
 
 上游的全部能力（插件系统、ikun 音源 12 级音质、下载增强等）都保留，主要新增/改进见下。
 
@@ -29,7 +31,7 @@
 ### 主题与个性化
 - **自定义主题重做**：黑白初始配色；背景壁纸支持模糊度/透明度/暗化遮罩调节，表面不透明度、卡片阴影强度全局可调
 - **歌单独立背景**：每个本地歌单可单独设置背景，支持"用封面当背景"（在线封面同样可用）
-- **全新 LOGO**：替换整套APP图标与删除开屏logo
+- **全新 Audiora 品牌**：应用内 Logo、Android/iOS 图标与启动资源统一更新
 - **选图裁剪**：所有选图入口支持自由比例裁剪，并按最终显示比例锁定裁剪框
 
 ### 播放与通知
@@ -46,7 +48,7 @@
 
 ## 快速开始
 
-1. 前往 [Releases](https://github.com/Merilune/MusicFree/releases) 下载最新 APK 安装
+1. 前往 [Releases](https://github.com/yingjiedev/audiora/releases) 下载最新 APK 安装
 2. 打开应用 → 侧边栏 → 设置 → 插件设置 → 从网络安装插件
 3. 插件源参考：`https://musicfree-plugins.netlify.app`
 

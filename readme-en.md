@@ -1,18 +1,24 @@
-# 🎵 MusicFree (Modified Version)
+# Audiora
 
 <div align="center">
 
-  **Plugin-based Music Player Optimized from the Original**
+  <img src="./src/assets/imgs/audiora-wordmark.png" alt="Audiora" width="520" />
+
+  **An open-source music player built on MusicFree**
 
   [中文](./readme.md) | English
 
   [![License](https://img.shields.io/badge/license-AGPL%203.0-blue)](LICENSE)
-  [![Version](https://img.shields.io/github/v/release/Toskysun/MusicFree?color=green)](https://github.com/Toskysun/MusicFree/releases)
+  [![Version](https://img.shields.io/github/v/release/yingjiedev/audiora?color=green)](https://github.com/yingjiedev/audiora/releases)
   [![Platform](https://img.shields.io/badge/platform-Android-orange)]()
 
 </div>
 
 ---
+
+## About Audiora
+
+Audiora is an open-source music player based on [Toskysun/MusicFree](https://github.com/Toskysun/MusicFree), with a refined interface, deeper personalization, and an improved everyday listening experience. The original plugin ecosystem and core playback capabilities remain fully supported.
 
 ## ✨ Core Features
 
@@ -30,6 +36,7 @@
 
 ### 🎨 Personalization
 - 🎭 **Theme Customization**: Dark/light modes, custom backgrounds
+- 🌈 **Audiora Branding**: Unified in-app, Android, and iOS visual identity
 - 🏷️ **Quality Labels**: Customize quality display to your preference
 - 🚀 **Launch Optimization**: Open playback details on app startup
 
@@ -58,7 +65,7 @@
 ## 🚀 Quick Start
 
 ### 📲 Install App
-1. Go to [Releases](https://github.com/Toskysun/MusicFree/releases) to download the latest version
+1. Go to [Releases](https://github.com/yingjiedev/audiora/releases) to download the latest version
 2. Install the APK file on your Android device
 
 ### 🔌 Install Plugins
