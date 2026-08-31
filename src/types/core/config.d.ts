@@ -98,11 +98,10 @@ export interface IAppConfigProperties {
     "lyric.invertColors": boolean;
 
     // Font
-    /** 全局字体：default = 系统字体；其余为内置字体（思源宋体/汉仪细中圆简/霞鹜新致宋/志莽行书） */
+    /** 全局字体：default = 系统字体；其余为内置字体（思源宋体/霞鹜新致宋/志莽行书） */
     "font.appFontFamily":
         | "default"
         | "NotoSerifSC"
-        | "HanYiXiZhongYuanJ"
         | "LXGWNeoZhiSong"
         | "ZhiMangXing";
     /** 歌词页字体：follow = 跟随全局 */
@@ -110,7 +109,6 @@ export interface IAppConfigProperties {
         | "follow"
         | "default"
         | "NotoSerifSC"
-        | "HanYiXiZhongYuanJ"
         | "LXGWNeoZhiSong"
         | "ZhiMangXing";
 

@@ -4,7 +4,6 @@ import type { TextStyle } from "react-native";
 /** 内置字体注册名（react-native.config.js assets，打包进 APK） */
 export const BUILTIN_FONT_FAMILIES = [
     "NotoSerifSC",
-    "HanYiXiZhongYuanJ",
     "LXGWNeoZhiSong",
     "ZhiMangXing",
 ] as const;
