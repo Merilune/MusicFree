@@ -10,7 +10,6 @@ import getUrlExt from "@/utils/getUrlExt";
 import { appendStartupBreadcrumb, errorLog, trace, devLog } from "@/utils/log";
 import { createMediaIndexMap } from "@/utils/mediaIndexMap";
 import {
-    getLocalPath,
     isSameMediaItem,
 } from "@/utils/mediaUtils";
 import Toast from "@/utils/toast";
@@ -44,6 +43,7 @@ import { IPluginManager } from "@/types/core/pluginManager";
 import { ImgAsset } from "@/constants/assetsConst";
 import { resolveImportedAssetOrPath } from "@/utils/fileUtils";
 import { resolveArtwork } from "@/utils/artwork";
+import { getLocalPlaybackSource } from "./localPlayback";
 
 
 
@@ -534,12 +534,14 @@ class TrackPlayer extends EventEmitter<{
                 throw new Error(PlayFailReason.PLAY_LIST_IS_EMPTY);
             }
             // 1. 移动网络禁止播放
-            const localPath = getLocalPath(musicItem);
+            const localMusicItem = LocalMusicSheet.isLocalMusic(musicItem);
+            const localSource = localMusicItem
+                ? getLocalPlaybackSource(musicItem, localMusicItem)
+                : null;
             if (
                 Network.isCellular &&
                 !this.configService.getConfig("basic.useCelluarNetworkPlay") &&
-                !LocalMusicSheet.isLocalMusic(musicItem) &&
-                !localPath
+                !localSource
             ) {
                 await ReactNativeTrackPlayer.reset();
                 throw new Error(PlayFailReason.FORBID_CELLUAR_NETWORK_PLAY);
@@ -631,8 +633,10 @@ class TrackPlayer extends EventEmitter<{
             const preferredQuality = this.configService.getConfig("basic.defaultPlayQuality") ?? "master";
             let selectedQuality: IMusic.IQualityKey;
             
-            // 如果音乐项包含音质信息，使用智能选择
-            if (musicItem.qualities || musicItem.source) {
+            // 本地文件不需要请求在线音质；320k 仅作为播放器状态的兼容值。
+            if (localSource) {
+                selectedQuality = "320k";
+            } else if (musicItem.qualities || musicItem.source) {
                 selectedQuality = getSmartQuality(
                     preferredQuality,
                     (musicItem.qualities || musicItem.source) as IMusic.IQuality | undefined,
@@ -650,10 +654,16 @@ class TrackPlayer extends EventEmitter<{
             );
             
             // 5.4 插件返回音源
-            let source: IPlugin.IMediaSourceResult | null = null;
+            let source: IPlugin.IMediaSourceResult | null = localSource;
             
             // 首先尝试智能选择的音质
-            if (this.isCurrentMusic(musicItem)) {
+            if (source) {
+                void appendStartupBreadcrumb("trackplayer-local-source-selected", {
+                    title: musicItem.title,
+                    url: source.url,
+                });
+                this.setQuality(selectedQuality);
+            } else if (this.isCurrentMusic(musicItem)) {
                 source = (await plugin?.methods?.getMediaSource(
                     musicItem,
                     selectedQuality,
