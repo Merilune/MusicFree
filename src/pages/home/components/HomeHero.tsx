@@ -105,7 +105,7 @@ export default function HomeHero() {
                         style={styles.kickerText}>
                         {currentMusic
                             ? t("home.continueListening")
-                            : "MUSICFREE / LIBRARY"}
+                            : "AUDIORA / LIBRARY"}
                     </ThemeText>
                 </View>
                 <View style={styles.titleRow}>
@@ -129,7 +129,7 @@ export default function HomeHero() {
                             },
                         ]}>
                         <ThemeText fontSize="tag" color={mutedForeground}>
-                            {currentMusic?.platform ?? "MusicFree"}
+                            {currentMusic?.platform ?? "Audiora"}
                         </ThemeText>
                     </View>
                 </View>

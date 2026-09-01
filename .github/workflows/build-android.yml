@@ -129,7 +129,7 @@ jobs:
 
                     // 生成下载链接（只编 arm64，别放不存在的包）
                     const downloadUrls = [
-                      'https://github.com/${{ github.repository }}/releases/download/' + tagVersion + '/MusicFree-v' + version + '-arm64-v8a-release.apk'
+                      'https://github.com/${{ github.repository }}/releases/download/' + tagVersion + '/Audiora-v' + version + '-arm64-v8a-release.apk'
                     ];
 
                     // 只更新 version 和 download，保留现有的 changeLog
@@ -207,7 +207,7 @@ jobs:
                       -validity 10950 \
                       -storepass "$STORE_PASSWORD" \
                       -keypass "$ALIAS_PASSWORD" \
-                      -dname "CN=MusicFree, OU=Fork, O=MusicFree, L=NA, ST=NA, C=CN"
+                      -dname "CN=Audiora, OU=Fork, O=Audiora, L=NA, ST=NA, C=CN"
                   fi
 
                   # Create keystore.properties file in temp directory
@@ -314,7 +314,7 @@ jobs:
             - name: Upload All APKs as artifacts
               uses: actions/upload-artifact@v4
               with:
-                  name: musicfree-${{ github.event.inputs.version || github.ref_name }}-all-apks
+                  name: audiora-${{ github.event.inputs.version || github.ref_name }}-all-apks
                   path: android/app/build/outputs/apk/release/*.apk
                   retention-days: 30
                   compression-level: 9
@@ -334,7 +334,7 @@ jobs:
                   # Verify expected APK files exist (只编 arm64，其他架构不再产出)
                   MISSING_FILES=()
                   EXPECTED_FILES=(
-                    "MusicFree-v${VERSION}-arm64-v8a-release.apk"
+                    "Audiora-v${VERSION}-arm64-v8a-release.apk"
                   )
 
                   for file in "${EXPECTED_FILES[@]}"; do
@@ -360,11 +360,11 @@ jobs:
                   TAG_VERSION="${{ github.ref_name }}"
                   VERSION=${TAG_VERSION#v}
                   cat > release_body.md << EOF
-                  ## MusicFree ${{ github.ref_name }}
+                  ## Audiora ${{ github.ref_name }}
 
                   ### 下载
 
-                  - **arm64 (Android 64 位)**: [MusicFree-v${VERSION}-arm64-v8a-release.apk](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/MusicFree-v${VERSION}-arm64-v8a-release.apk)
+                  - **arm64 (Android 64 位)**: [Audiora-v${VERSION}-arm64-v8a-release.apk](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/Audiora-v${VERSION}-arm64-v8a-release.apk)
 
                   目前只编译 arm64 版本，其他架构有需要请提 Issue。
 
@@ -383,12 +383,12 @@ jobs:
                   TZ: Asia/Shanghai
               with:
                   tag_name: ${{ github.ref_name }}
-                  name: MusicFree ${{ github.ref_name }}
+                  name: Audiora ${{ github.ref_name }}
                   body_path: release_body.md
                   draft: false
                   prerelease: false
                   files: |
-                      android/app/build/outputs/apk/release/MusicFree-*.apk
+                      android/app/build/outputs/apk/release/Audiora-*.apk
 
             # 📤 提交更新的版本文件回到仓库
             - name: Commit updated version files

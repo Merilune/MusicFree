@@ -523,7 +523,7 @@ import androidx.core.app.NotificationManagerCompat`,
             val layoutId = compactResId("rntp_compact_notification", "layout")
             if (layoutId == 0) return
             val views = RemoteViews(packageName, layoutId)
-            views.setTextViewText(compactResId("rntp_title", "id"), item.title ?: "MusicFree")
+                views.setTextViewText(compactResId("rntp_title", "id"), item.title ?: "Audiora")
             views.setTextViewText(compactResId("rntp_artist", "id"), item.artist ?: "")
             views.setImageViewResource(compactResId("rntp_cover", "id"), applicationInfo.icon)
             views.setImageViewResource(

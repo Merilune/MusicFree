@@ -151,7 +151,7 @@ android {
         variant.outputs.all { output ->
             def abi = output.getFilter(OutputFile.ABI)
             def versionName = variant.versionName
-            def outputFileName = "MusicFree-v${versionName}"
+            def outputFileName = "Audiora-v${versionName}"
 
             if (abi != null) {
                 outputFileName += "-${abi}"

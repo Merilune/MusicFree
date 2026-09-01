@@ -5,7 +5,7 @@ data class DownloadTask(
     val url: String,
     val destinationPath: String,
     val headers: Map<String, String> = emptyMap(),
-    val title: String = "MusicFree",
+    val title: String = "Audiora",
     val description: String = "正在下载音乐文件...",
     val coverUrl: String? = null,
     val extraJson: String? = null,

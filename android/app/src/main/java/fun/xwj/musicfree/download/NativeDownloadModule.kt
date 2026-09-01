@@ -56,7 +56,7 @@ class NativeDownloadModule(
             }
 
             val headers = readableMapToStringMap(params.getMap("headers"))
-            val title = params.getString("title") ?: "MusicFree"
+            val title = params.getString("title") ?: "Audiora"
             val description = params.getString("description") ?: "正在下载音乐文件..."
             val coverUrl = params.getString("coverUrl")
             val extraJson = params.getString("extraJson")

@@ -416,7 +416,7 @@
     "noPlugin.titleWithType": "No plugins supporting「{type}」function installed yet",
     "noPlugin.description": "Go to「Sidebar - Plugin Management」to install plugins~",
     "dialog.checkStorage.title": "Storage Permission",
-    "dialog.checkStorage.content.0": "MusicFree needs file read/write permission for playlist backup and song downloads.",
+    "dialog.checkStorage.content.0": "Audiora needs file read/write permission for playlist backup and song downloads.",
     "dialog.checkStorage.content.1": "Click「Grant Permission」to go to settings and grant file management permission.",
     "dialog.checkStorage.content.2": "If you don't need to backup playlists or download songs, you can skip this permission for now.",
     "dialog.checkStorage.content.3": "You can grant or revoke this permission anytime in Sidebar「Permission Management」->「File Read/Write Permission」.",

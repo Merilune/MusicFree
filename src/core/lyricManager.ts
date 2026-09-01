@@ -389,7 +389,7 @@ class LyricManager implements IInjectable {
                     secondaryAlphaRatio: this.appConfig.getConfig("lyric.desktopSecondaryAlphaRatio") ?? 0.90,
                 };
                 LyricUtil.showStatusBarLyric(
-                    currentMusic ? `${currentMusic.title} - ${currentMusic.artist}` : "MusicFree",
+                    currentMusic ? `${currentMusic.title} - ${currentMusic.artist}` : "Audiora",
                     statusBarLyricConfig ?? {}
                 );
 
@@ -764,7 +764,7 @@ class LyricManager implements IInjectable {
         getDefaultStore().set(currentLyricItemAtom, null);
         if (this.appConfig.getConfig("lyric.showStatusBarLyric")) {
             const musicItem = this.trackPlayer.currentMusic;
-            LyricUtil.setStatusBarLyricText(musicItem ? `${musicItem.title} - ${musicItem.artist}` : "MusicFree");
+            LyricUtil.setStatusBarLyricText(musicItem ? `${musicItem.title} - ${musicItem.artist}` : "Audiora");
         }
     }
 
@@ -902,7 +902,7 @@ class LyricManager implements IInjectable {
                     this.updateDesktopLyricDisplay(currentLyric);
                 } else {
                     const musicItem = this.trackPlayer.currentMusic;
-                    LyricUtil.setStatusBarLyricText(musicItem ? `${musicItem.title} - ${musicItem.artist}` : "MusicFree");
+                    LyricUtil.setStatusBarLyricText(musicItem ? `${musicItem.title} - ${musicItem.artist}` : "Audiora");
                 }
             }
         } catch (err) {

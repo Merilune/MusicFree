@@ -1,8 +1,8 @@
 {
   "expo": {
-    "name": "MusicFree",
-    "slug": "musicfree",
-    "version": "0.7.12",
+    "name": "Audiora",
+    "slug": "audiora",
+    "version": "0.1.0",
     "android": {
       "package": "fun.xwj.musicfree"
     },
