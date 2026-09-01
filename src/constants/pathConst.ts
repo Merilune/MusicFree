@@ -8,7 +8,7 @@ export const basePath =
 
 const defaultDownloadMusicPath =
     Platform.OS === "android"
-        ? "/storage/emulated/0/Music/MusicFree"
+        ? "/storage/emulated/0/Music/Audiora"
         : `${basePath}/download`;
 
 export default {

@@ -168,9 +168,9 @@ describe("backup format", () => {
         expect(parsed.plugins).toEqual([]);
     });
 
-    it("uses timestamped MusicFree filenames and rejects unsupported versions", () => {
+    it("uses timestamped Audiora filenames and rejects unsupported versions", () => {
         expect(createBackupFileName(Date.UTC(2026, 7, 9, 14, 21, 6))).toBe(
-            "MusicFreeBackup-2026-08-09T14-21-06Z.json",
+            "AudioraBackup-2026-08-09T14-21-06Z.json",
         );
         expect(() =>
             parseBackupPayload(

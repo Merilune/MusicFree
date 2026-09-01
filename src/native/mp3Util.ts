@@ -195,7 +195,7 @@ class Mp3UtilManager implements IMp3Util {
       url: params.url,
       destinationPath: params.destinationPath,
       headers: params.headers ?? {},
-      title: params.title ?? "MusicFree",
+      title: params.title ?? "Audiora",
       description: params.description ?? "正在下载音乐文件...",
       coverUrl: params.coverUrl ?? null,
       extraJson: params.extraJson ?? null,

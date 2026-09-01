@@ -28,7 +28,7 @@ class DownloadNotificationManager(
     }
 
     fun onTaskStatusChanged(task: DownloadTask) {
-        val title = if (task.title.isBlank()) "MusicFree" else task.title
+        val title = if (task.title.isBlank()) "Audiora" else task.title
         taskTitles[task.taskId] = title
         when (task.status) {
             DownloadTaskStatus.PENDING,
@@ -66,7 +66,7 @@ class DownloadNotificationManager(
             if (task.status != DownloadTaskStatus.DOWNLOADING && task.status != DownloadTaskStatus.PREPARING) {
                 continue
             }
-            val title = if (task.title.isBlank()) "MusicFree" else task.title
+            val title = if (task.title.isBlank()) "Audiora" else task.title
             taskTitles[item.taskId] = title
             activeDownloadingIds.add(item.taskId)
             progressSnapshots[item.taskId] = item
@@ -91,7 +91,7 @@ class DownloadNotificationManager(
 
     private fun postProgress(task: DownloadTask, snapshot: ProgressSnapshot) {
         if (!canPostNotifications()) return
-        val title = taskTitles[task.taskId] ?: task.title.ifBlank { "MusicFree" }
+        val title = taskTitles[task.taskId] ?: task.title.ifBlank { "Audiora" }
         val builder = baseBuilder(
             icon = R.drawable.ic_download,
             title = "正在下载: $title",
@@ -117,7 +117,7 @@ class DownloadNotificationManager(
 
     private fun postCompleted(task: DownloadTask) {
         if (!canPostNotifications()) return
-        val title = taskTitles[task.taskId] ?: task.title.ifBlank { "MusicFree" }
+        val title = taskTitles[task.taskId] ?: task.title.ifBlank { "Audiora" }
         val builder = baseBuilder(
             icon = R.drawable.ic_download_done,
             title = "下载完成",
@@ -134,7 +134,7 @@ class DownloadNotificationManager(
 
     private fun postError(task: DownloadTask) {
         if (!canPostNotifications()) return
-        val title = taskTitles[task.taskId] ?: task.title.ifBlank { "MusicFree" }
+        val title = taskTitles[task.taskId] ?: task.title.ifBlank { "Audiora" }
         val reason = task.errorMessage?.takeIf { it.isNotBlank() } ?: "未知错误"
         val builder = baseBuilder(
             icon = R.drawable.ic_error,
@@ -222,13 +222,15 @@ class DownloadNotificationManager(
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
         val manager = appContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         val existing = manager.getNotificationChannel(CHANNEL_ID)
-        if (existing != null) return
+        if (existing != null) {
+            return
+        }
         val channel = NotificationChannel(
             CHANNEL_ID,
-            "下载通知",
+            appContext.getString(R.string.download_notification_channel_name),
             NotificationManager.IMPORTANCE_LOW,
         ).apply {
-            description = "MusicFree 下载进度与结果通知"
+            description = appContext.getString(R.string.download_notification_channel_description)
             setShowBadge(false)
         }
         manager.createNotificationChannel(channel)
@@ -291,8 +293,8 @@ class DownloadNotificationManager(
     }
 
     companion object {
-        private const val CHANNEL_ID = "musicfree_download_channel"
-        private const val NOTIFICATION_GROUP = "musicfree_download_group"
+        private const val CHANNEL_ID = "audiora_download_channel"
+        private const val NOTIFICATION_GROUP = "audiora_download_group"
         private const val TASK_NOTIFICATION_BASE = 310_000
         private const val SUMMARY_NOTIFICATION_ID = 2_000_000_001
     }

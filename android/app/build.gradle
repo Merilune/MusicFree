@@ -55,10 +55,11 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
+    // Keep the legacy namespace for native source compatibility; the new application identity is the applicationId below.
     namespace "fun.xwj.musicfree"
 
     defaultConfig {
-        applicationId "fun.xwj.musicfree"
+        applicationId "io.github.yingjiedev.audiora"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode appVersionCode
@@ -151,7 +152,7 @@ android {
         variant.outputs.all { output ->
             def abi = output.getFilter(OutputFile.ABI)
             def versionName = variant.versionName
-            def outputFileName = "MusicFree-v${versionName}"
+            def outputFileName = "Audiora-v${versionName}"
 
             if (abi != null) {
                 outputFileName += "-${abi}"

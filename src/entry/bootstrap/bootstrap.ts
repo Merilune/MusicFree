@@ -368,9 +368,9 @@ async function extraMakeup() {
     async function handleLinkingUrl(url: string) {
         // 插件
         try {
-            if (url.startsWith("musicfree://install/")) {
+            if (url.startsWith("audiora://install/")) {
                 const plugins = url
-                    .slice(20)
+                    .slice("audiora://install/".length)
                     .split(",")
                     .map(decodeURIComponent);
                 await Promise.all(

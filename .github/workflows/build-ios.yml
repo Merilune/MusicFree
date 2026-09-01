@@ -116,13 +116,13 @@ jobs:
               run: |
                   cd ios/build/Build/Products/Release-iphoneos
                   mkdir -p Payload
-                  cp -r MusicFree.app Payload/
-                  zip -r MusicFree-${{ steps.build-version.outputs.raw }}.ipa Payload
+                  cp -r Audiora.app Payload/
+                  zip -r Audiora-${{ steps.build-version.outputs.raw }}.ipa Payload
 
             - name: Upload IPA artifact
               uses: actions/upload-artifact@v4
               with:
-                  name: musicfree-ios-${{ steps.build-version.outputs.raw }}
+                  name: audiora-ios-${{ steps.build-version.outputs.raw }}
                   path: ios/build/Build/Products/Release-iphoneos/*.ipa
                   retention-days: 30
 

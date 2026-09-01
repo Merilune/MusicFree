@@ -416,7 +416,7 @@
     "noPlugin.titleWithType": "還沒有安裝支援「{type}」功能的外掛哦",
     "noPlugin.description": "先去「側邊欄-外掛管理」裡安裝外掛吧~",
     "dialog.checkStorage.title": "儲存權限",
-    "dialog.checkStorage.content.0": "MusicFree 需要文件讀寫權限來進行歌單備份到本地、歌曲下載等操作。",
+    "dialog.checkStorage.content.0": "Audiora 需要文件讀寫權限來進行歌單備份到本地、歌曲下載等操作。",
     "dialog.checkStorage.content.1": "點擊「去授予權限」跳轉至設定介面授予文件管理權限。",
     "dialog.checkStorage.content.2": "如果您不需要備份歌單或者下載歌曲，您也可以暫時不授予此權限。",
     "dialog.checkStorage.content.3": "您可以隨時在側邊欄「權限管理」->「文件讀寫權限」授予或取消授予權限。",

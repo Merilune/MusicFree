@@ -42,7 +42,7 @@
 		00E356EE1AD99517003FC87E /* MusicFreeTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MusicFreeTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		00E356F11AD99517003FC87E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		00E356F21AD99517003FC87E /* MusicFreeTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MusicFreeTests.m; sourceTree = "<group>"; };
-		13B07F961A680F5B00A75B9A /* MusicFree.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MusicFree.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		13B07F961A680F5B00A75B9A /* Audiora.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Audiora.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D0E1F2A31B68108700A75B9A /* AppDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = MusicFree/AppDelegate.swift; sourceTree = "<group>"; };
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = MusicFree/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = MusicFree/Info.plist; sourceTree = "<group>"; };
@@ -168,7 +168,7 @@
 		83CBBA001A601CBA00E9B192 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				13B07F961A680F5B00A75B9A /* MusicFree.app */,
+				13B07F961A680F5B00A75B9A /* Audiora.app */,
 				00E356EE1AD99517003FC87E /* MusicFreeTests.xctest */,
 			);
 			name = Products;
@@ -236,7 +236,7 @@
 			);
 			name = MusicFree;
 			productName = MusicFree;
-			productReference = 13B07F961A680F5B00A75B9A /* MusicFree.app */;
+			productReference = 13B07F961A680F5B00A75B9A /* Audiora.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -486,9 +486,9 @@
 					"-lc++",
 					"$(inherited)",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "fun.xwj.musicfree.tests";
+				PRODUCT_BUNDLE_IDENTIFIER = "io.github.yingjiedev.audiora.tests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/MusicFree.app/MusicFree";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Audiora.app/Audiora";
 				SWIFT_VERSION = 5.0;
 			};
 			name = Debug;
@@ -511,9 +511,9 @@
 					"-lc++",
 					"$(inherited)",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "fun.xwj.musicfree.tests";
+				PRODUCT_BUNDLE_IDENTIFIER = "io.github.yingjiedev.audiora.tests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/MusicFree.app/MusicFree";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Audiora.app/Audiora";
 				SWIFT_VERSION = 5.0;
 			};
 			name = Release;
@@ -539,8 +539,8 @@
 					"-ObjC",
 					"-lc++",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "fun.xwj.musicfree";
-				PRODUCT_NAME = MusicFree;
+				PRODUCT_BUNDLE_IDENTIFIER = "io.github.yingjiedev.audiora";
+				PRODUCT_NAME = Audiora;
 				SWIFT_OBJC_BRIDGING_HEADER = "MusicFree/MusicFree-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
@@ -568,8 +568,8 @@
 					"-ObjC",
 					"-lc++",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "fun.xwj.musicfree";
-				PRODUCT_NAME = MusicFree;
+				PRODUCT_BUNDLE_IDENTIFIER = "io.github.yingjiedev.audiora";
+				PRODUCT_NAME = Audiora;
 				SWIFT_OBJC_BRIDGING_HEADER = "MusicFree/MusicFree-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = "apple-generic";

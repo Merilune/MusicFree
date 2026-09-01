@@ -303,10 +303,10 @@ function ErrorFallback({ error, errorInfo }: ErrorFallbackProps) {
                                 ]}
                                 onPress={() => {
                                     openUrl(
-                                        "https://github.com/Toskysun/MusicFree/issues",
+                                        "https://github.com/yingjiedev/audiora/issues",
                                     );
                                 }}>
-                                https://github.com/Toskysun/MusicFree/issues
+                                https://github.com/yingjiedev/audiora/issues
                             </Text>
                             <Text
                                 style={[

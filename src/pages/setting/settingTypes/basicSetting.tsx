@@ -872,7 +872,7 @@ function LyricSetting() {
         if (showStatusBarLyric) {
             // 刷新桌面歌词以应用反转
             LyricUtil.hideStatusBarLyric().then(() => {
-                LyricUtil.showStatusBarLyric("MusicFree", {
+                LyricUtil.showStatusBarLyric("Audiora", {
                     topPercent: Config.getConfig("lyric.topPercent"),
                     leftPercent: Config.getConfig("lyric.leftPercent"),
                     align: Config.getConfig("lyric.align"),
@@ -927,7 +927,7 @@ function LyricSetting() {
                 });
                 return;
             }
-            const opened = await LyricUtil.showStatusBarLyric("MusicFree", {
+            const opened = await LyricUtil.showStatusBarLyric("Audiora", {
                 topPercent: Config.getConfig("lyric.topPercent"),
                 leftPercent: Config.getConfig("lyric.leftPercent"),
                 align: Config.getConfig("lyric.align"),
@@ -1011,7 +1011,7 @@ function LyricSetting() {
                         // 如果当前正在使用这个预设，立即刷新
                         if (showStatusBarLyric && (presetIndex ?? 0) === idx) {
                             LyricUtil.hideStatusBarLyric().then(() => {
-                                LyricUtil.showStatusBarLyric("MusicFree", {
+                                LyricUtil.showStatusBarLyric("Audiora", {
                                     topPercent: Config.getConfig("lyric.topPercent"),
                                     leftPercent: Config.getConfig("lyric.leftPercent"),
                                     align: Config.getConfig("lyric.align"),

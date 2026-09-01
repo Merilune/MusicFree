@@ -239,7 +239,7 @@ export function createBackupFileName(createdAt = Date.now()) {
         .toISOString()
         .replace(/\.\d{3}Z$/, "Z")
         .replace(/:/g, "-");
-    return `MusicFreeBackup-${timestamp}.json`;
+    return `AudioraBackup-${timestamp}.json`;
 }
 
 export function createBackupPayload(

@@ -122,7 +122,7 @@ class DownloadDatabase(context: Context) :
             url = cursor.getString(cursor.getColumnIndexOrThrow("url")),
             destinationPath = cursor.getString(cursor.getColumnIndexOrThrow("destination_path")),
             headers = headers,
-            title = cursor.getString(cursor.getColumnIndexOrThrow("title")) ?: "MusicFree",
+            title = cursor.getString(cursor.getColumnIndexOrThrow("title")) ?: "Audiora",
             description = cursor.getString(cursor.getColumnIndexOrThrow("description")) ?: "正在下载音乐文件...",
             coverUrl = cursor.getString(cursor.getColumnIndexOrThrow("cover_url")),
             extraJson = cursor.getString(cursor.getColumnIndexOrThrow("extra_json")),

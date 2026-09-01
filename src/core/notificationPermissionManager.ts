@@ -170,7 +170,7 @@ class NotificationPermissionManager {
         return new Promise((resolve) => {
             Alert.alert(
                 "通知权限",
-                "MusicFree需要通知权限来显示下载进度和完成状态，这将帮助您更好地了解下载情况。",
+                "Audiora需要通知权限来显示下载进度和完成状态，这将帮助您更好地了解下载情况。",
                 [
                     {
                         text: "暂不开启",

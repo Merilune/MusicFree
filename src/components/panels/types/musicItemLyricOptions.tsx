@@ -195,7 +195,7 @@ export default function MusicItemLyricOptions(
                             presets: resolveLyricPresets(),
                         };
                         LyricUtil.showStatusBarLyric(
-                            "MusicFree",
+                            "Audiora",
                             statusBarLyricConfig ?? {}
                         );
                         Config.setConfig("lyric.showStatusBarLyric", true);

@@ -1,9 +1,11 @@
 <resources>
-    <string name="app_name">MusicFree</string>
+    <string name="app_name">Audiora</string>
     <string name="expo_splash_screen_status_bar_translucent">true</string>
     <!-- rtnp channel id -->
-    <string name="rntp_temporary_channel_id">musicfree_temporary_channel</string>
+    <string name="rntp_temporary_channel_id">audiora_temporary_channel</string>
     <!-- rtnp channel name -->
-    <string name="rntp_temporary_channel_name">musicfree_temporary_channel</string>
-    <string name="playback_channel_name">MusicFree</string>
+    <string name="rntp_temporary_channel_name">Audiora</string>
+    <string name="playback_channel_name">Audiora</string>
+    <string name="download_notification_channel_name">下载通知</string>
+    <string name="download_notification_channel_description">Audiora 下载进度与结果通知</string>
 </resources>
