@@ -59,7 +59,7 @@ android {
     namespace "fun.xwj.musicfree"
 
     defaultConfig {
-        applicationId "fun.xwj.audiora"
+        applicationId "io.github.yingjiedev.audiora"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode appVersionCode

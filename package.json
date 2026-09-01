@@ -7,7 +7,7 @@
     "name": "Merilune"
   },
   "scripts": {
-    "android": "react-native run-android --appId fun.xwj.audiora.debug",
+    "android": "react-native run-android --appId io.github.yingjiedev.audiora.debug",
     "ios": "react-native run-ios",
     "lint": "eslint src --fix",
     "start": "react-native start",

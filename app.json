@@ -4,10 +4,10 @@
     "slug": "audiora",
     "version": "0.1.0",
     "android": {
-      "package": "fun.xwj.audiora"
+      "package": "io.github.yingjiedev.audiora"
     },
     "ios": {
-      "bundleIdentifier": "fun.xwj.audiora"
+      "bundleIdentifier": "io.github.yingjiedev.audiora"
     }
   }
 }

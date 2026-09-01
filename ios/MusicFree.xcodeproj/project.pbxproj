@@ -486,7 +486,7 @@
 					"-lc++",
 					"$(inherited)",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "fun.xwj.audiora.tests";
+				PRODUCT_BUNDLE_IDENTIFIER = "io.github.yingjiedev.audiora.tests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Audiora.app/Audiora";
 				SWIFT_VERSION = 5.0;
@@ -511,7 +511,7 @@
 					"-lc++",
 					"$(inherited)",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "fun.xwj.audiora.tests";
+				PRODUCT_BUNDLE_IDENTIFIER = "io.github.yingjiedev.audiora.tests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Audiora.app/Audiora";
 				SWIFT_VERSION = 5.0;
@@ -539,7 +539,7 @@
 					"-ObjC",
 					"-lc++",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "fun.xwj.audiora";
+				PRODUCT_BUNDLE_IDENTIFIER = "io.github.yingjiedev.audiora";
 				PRODUCT_NAME = Audiora;
 				SWIFT_OBJC_BRIDGING_HEADER = "MusicFree/MusicFree-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
@@ -568,7 +568,7 @@
 					"-ObjC",
 					"-lc++",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "fun.xwj.audiora";
+				PRODUCT_BUNDLE_IDENTIFIER = "io.github.yingjiedev.audiora";
 				PRODUCT_NAME = Audiora;
 				SWIFT_OBJC_BRIDGING_HEADER = "MusicFree/MusicFree-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
