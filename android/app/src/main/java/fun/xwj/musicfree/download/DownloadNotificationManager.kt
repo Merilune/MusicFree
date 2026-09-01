@@ -223,12 +223,6 @@ class DownloadNotificationManager(
         val manager = appContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         val existing = manager.getNotificationChannel(CHANNEL_ID)
         if (existing != null) {
-            // Keep the stable channel ID for upgrade compatibility while migrating
-            // the old description on existing installations.
-            if (existing.description == "MusicFree 下载进度与结果通知") {
-                existing.description = appContext.getString(R.string.download_notification_channel_description)
-                manager.createNotificationChannel(existing)
-            }
             return
         }
         val channel = NotificationChannel(
@@ -299,9 +293,8 @@ class DownloadNotificationManager(
     }
 
     companion object {
-        // Keep the ID stable so existing notification preferences survive upgrades.
-        private const val CHANNEL_ID = "musicfree_download_channel"
-        private const val NOTIFICATION_GROUP = "musicfree_download_group"
+        private const val CHANNEL_ID = "audiora_download_channel"
+        private const val NOTIFICATION_GROUP = "audiora_download_group"
         private const val TASK_NOTIFICATION_BASE = 310_000
         private const val SUMMARY_NOTIFICATION_ID = 2_000_000_001
     }

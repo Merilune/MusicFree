@@ -7,7 +7,7 @@
     "name": "Merilune"
   },
   "scripts": {
-    "android": "react-native run-android --appId fun.xwj.musicfree.debug",
+    "android": "react-native run-android --appId fun.xwj.audiora.debug",
     "ios": "react-native run-ios",
     "lint": "eslint src --fix",
     "start": "react-native start",
@@ -148,7 +148,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Toskysun/MusicFree.git"
+    "url": "git+https://github.com/yingjiedev/audiora.git"
   },
   "main": "index.js",
   "expo": {

@@ -555,7 +555,7 @@ static NSData *MFFlacMetadataBlock(uint8_t type, NSData *payload, BOOL isLast) {
 
 static NSData *MFFlacVorbisCommentBlock(NSDictionary<NSString *, NSString *> *comments) {
   NSMutableData *payload = [NSMutableData data];
-  NSData *vendor = [@"MusicFree iOS" dataUsingEncoding:NSUTF8StringEncoding];
+  NSData *vendor = [@"Audiora iOS" dataUsingEncoding:NSUTF8StringEncoding];
   MFAppendUInt32LE(payload, (uint32_t)vendor.length);
   [payload appendData:vendor];
   MFAppendUInt32LE(payload, (uint32_t)comments.count);
@@ -1277,7 +1277,7 @@ RCT_EXPORT_METHOD(getMediaCoverImg:(NSString *)filePath
   NSString *normalizedPath = MFNormalizePath(filePath);
   NSArray<NSString *> *cachePaths = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES);
   NSString *cacheRoot = cachePaths.firstObject ?: NSTemporaryDirectory();
-  NSString *coverDir = [cacheRoot stringByAppendingPathComponent:@"MusicFreeCoverCache"];
+  NSString *coverDir = [cacheRoot stringByAppendingPathComponent:@"AudioraCoverCache"];
   NSString *coverPath = [coverDir stringByAppendingPathComponent:
                          [NSString stringWithFormat:@"%lu.jpg", (unsigned long)normalizedPath.hash]];
   NSURL *coverURL = [NSURL fileURLWithPath:coverPath];

@@ -19,8 +19,9 @@ import { getDocumentAsync } from "expo-document-picker";
 import { readAsStringAsync } from "expo-file-system/legacy";
 import { AuthType, createClient } from "webdav";
 
-const MUSICFREE_WEBDAV_BACKUP_DIR = "/MusicFree";
-const MUSICFREE_WEBDAV_BACKUP_FILE = `${MUSICFREE_WEBDAV_BACKUP_DIR}/MusicFreeBackup.json`;
+const AUDIORA_WEBDAV_BACKUP_DIR = "/Audiora";
+const AUDIORA_WEBDAV_BACKUP_FILE = `${AUDIORA_WEBDAV_BACKUP_DIR}/AudioraBackup.json`;
+const LEGACY_MUSICFREE_WEBDAV_BACKUP_FILE = "/MusicFree/MusicFreeBackup.json";
 const BAKAMUSIC_WEBDAV_BACKUP_FILE = "/BakaMusic/BakaMusicBackup.json";
 
 export default function BackupSetting() {
@@ -150,8 +151,10 @@ export default function BackupSetting() {
             password: password,
         });
 
-        const restoreSource = await client.exists(MUSICFREE_WEBDAV_BACKUP_FILE)
-            ? MUSICFREE_WEBDAV_BACKUP_FILE
+        const restoreSource = await client.exists(AUDIORA_WEBDAV_BACKUP_FILE)
+            ? AUDIORA_WEBDAV_BACKUP_FILE
+            : await client.exists(LEGACY_MUSICFREE_WEBDAV_BACKUP_FILE)
+                ? LEGACY_MUSICFREE_WEBDAV_BACKUP_FILE
             : await client.exists(BAKAMUSIC_WEBDAV_BACKUP_FILE)
                 ? BAKAMUSIC_WEBDAV_BACKUP_FILE
                 : null;
@@ -196,12 +199,12 @@ export default function BackupSetting() {
             });
 
             const raw = Backup.backup();
-            if (!(await client.exists(MUSICFREE_WEBDAV_BACKUP_DIR))) {
-                await client.createDirectory(MUSICFREE_WEBDAV_BACKUP_DIR);
+            if (!(await client.exists(AUDIORA_WEBDAV_BACKUP_DIR))) {
+                await client.createDirectory(AUDIORA_WEBDAV_BACKUP_DIR);
             }
             // 临时文件
             await client.putFileContents(
-                MUSICFREE_WEBDAV_BACKUP_FILE,
+                AUDIORA_WEBDAV_BACKUP_FILE,
                 raw,
                 {
                     overwrite: true,

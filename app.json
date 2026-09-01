@@ -4,10 +4,10 @@
     "slug": "audiora",
     "version": "0.1.0",
     "android": {
-      "package": "fun.xwj.musicfree"
+      "package": "fun.xwj.audiora"
     },
     "ios": {
-      "bundleIdentifier": "fun.xwj.musicfree"
+      "bundleIdentifier": "fun.xwj.audiora"
     }
   }
 }

@@ -15,7 +15,7 @@ import { errorLog } from "./log";
 import path from "path-browserify";
 import resolveAssetSource from "react-native/Libraries/Image/resolveAssetSource";
 
-const galleryBasePath = `${PicturesDirectoryPath}/MusicFree/`;
+const galleryBasePath = `${PicturesDirectoryPath}/Audiora/`;
 
 /**
  * 将图片保存到相册

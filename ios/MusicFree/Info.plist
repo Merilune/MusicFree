@@ -7,7 +7,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>MusicFree</string>
+	<string>Audiora</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -27,7 +27,7 @@
 		<dict>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>musicfree</string>
+				<string>audiora</string>
 			</array>
 		</dict>
 	</array>
@@ -44,13 +44,13 @@
 	</dict>
 	<!-- Privacy usage descriptions required by iOS for photo picker / local media -->
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>MusicFree 需要访问相册，用于选择歌单封面与主题背景图片</string>
+	<string>Audiora 需要访问相册，用于选择歌单封面与主题背景图片</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
-	<string>MusicFree 需要将图片保存到相册（如导出封面）</string>
+	<string>Audiora 需要将图片保存到相册（如导出封面）</string>
 	<key>NSLocalNetworkUsageDescription</key>
-	<string>MusicFree 需要使用本地回环网络进行加密音频流解密播放</string>
+	<string>Audiora 需要使用本地回环网络进行加密音频流解密播放</string>
 	<key>NSAppleMusicUsageDescription</key>
-	<string>MusicFree 需要访问媒体库以管理本地音乐文件</string>
+	<string>Audiora 需要访问媒体库以管理本地音乐文件</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>audio</string>
