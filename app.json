@@ -3,8 +3,13 @@
     "name": "Audiora",
     "slug": "audiora",
     "version": "0.1.0",
+    "icon": "./assets/app-icon.png",
     "android": {
-      "package": "io.github.yingjiedev.audiora"
+      "package": "io.github.yingjiedev.audiora",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/app-icon.png",
+        "backgroundColor": "#FFFFFF"
+      }
     },
     "ios": {
       "bundleIdentifier": "io.github.yingjiedev.audiora"
