@@ -1,16 +1,12 @@
 package `fun`.xwj.musicfree.utils; // replace your-apps-package-name with your app's package name
-import android.Manifest
 import android.content.Context
-import android.content.Intent
-import android.content.pm.PackageManager
-import android.net.Uri
+import android.content.ContentValues
 import android.os.Build
 import android.os.Environment
-import android.provider.Settings
+import android.provider.MediaStore
 import android.util.DisplayMetrics
 import android.view.WindowInsets
 import android.view.WindowManager
-import androidx.core.content.ContextCompat
 import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
@@ -37,28 +33,66 @@ class UtilsModule(context: ReactApplicationContext) : ReactContextBaseJavaModule
     }
 
     @ReactMethod
-    fun checkStoragePermission(promise: Promise) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            promise.resolve(Environment.isExternalStorageManager())
-        } else {
-            val readPermission = ContextCompat.checkSelfPermission(reactContext, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
-            val writePermission = ContextCompat.checkSelfPermission(reactContext, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
-            promise.resolve(readPermission && writePermission)
-        }
-    }
+    fun saveImageToGallery(sourcePath: String, displayName: String, promise: Promise) {
+        try {
+            val sourceFilePath = if (sourcePath.startsWith("file://")) {
+                android.net.Uri.parse(sourcePath).path ?: sourcePath
+            } else {
+                sourcePath
+            }
+            val sourceFile = java.io.File(sourceFilePath)
+            require(sourceFile.isFile) { "Image source does not exist" }
 
-    @ReactMethod
-    fun requestStoragePermission() {
-        val intent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION).apply {
-                data = Uri.parse("package:${reactContext.packageName}")
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                val values = ContentValues().apply {
+                    put(MediaStore.Images.Media.DISPLAY_NAME, displayName)
+                    put(MediaStore.Images.Media.MIME_TYPE, "image/png")
+                    put(
+                        MediaStore.Images.Media.RELATIVE_PATH,
+                        "${Environment.DIRECTORY_PICTURES}/Audiora",
+                    )
+                    put(MediaStore.Images.Media.IS_PENDING, 1)
+                }
+                val resolver = reactContext.contentResolver
+                val imageUri = resolver.insert(
+                    MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                    values,
+                ) ?: error("Unable to create gallery item")
+
+                try {
+                    resolver.openOutputStream(imageUri)?.use { output ->
+                        sourceFile.inputStream().use { input -> input.copyTo(output) }
+                    } ?: error("Unable to open gallery item")
+                    resolver.update(
+                        imageUri,
+                        ContentValues().apply {
+                            put(MediaStore.Images.Media.IS_PENDING, 0)
+                        },
+                        null,
+                        null,
+                    )
+                } catch (error: Exception) {
+                    resolver.delete(imageUri, null, null)
+                    throw error
+                }
+                promise.resolve(imageUri.toString())
+            } else {
+                // Android versions before scoped storage cannot write MediaStore
+                // without broad external-storage access. Keep the export app-scoped.
+                val galleryDir = java.io.File(
+                    reactContext.getExternalFilesDir(Environment.DIRECTORY_PICTURES),
+                    "Audiora",
+                )
+                require(galleryDir.exists() || galleryDir.mkdirs()) {
+                    "Unable to create image directory"
+                }
+                val target = java.io.File(galleryDir, displayName)
+                sourceFile.copyTo(target, overwrite = true)
+                promise.resolve(target.toURI().toString())
             }
-        } else {
-            Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
-                data = Uri.parse("package:${reactContext.packageName}")
-            }
+        } catch (error: Exception) {
+            promise.reject("SaveImageFailed", error.message, error)
         }
-        reactContext.currentActivity?.startActivity(intent)
     }
 
     @ReactMethod(isBlockingSynchronousMethod = true)

@@ -4,17 +4,21 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-    <!-- crop-picker 声明 maxSdkVersion=29、expo 声明 32，互相冲突；
-         用 remove 把库带来的 maxSdkVersion 全部剥掉，保留无限定声明 -->
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
-        tools:remove="android:maxSdkVersion" />
-    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-    <!-- Android 13+ 细分媒体权限：裁剪选图器读取相册需要 -->
+    <!-- The photo cropper still needs scoped photo access on Android 13+. -->
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <!-- expo-file-system and image-picker declare legacy storage permissions transitively.
+         File access is provided by the system picker and app-scoped storage instead. -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
+        tools:node="remove" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        tools:node="remove" />
+    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE"
+        tools:node="remove" />
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"
+        tools:node="remove" />
 
     <application
       android:name="fun.xwj.musicfree.MainApplication"
@@ -24,8 +28,7 @@
       android:allowBackup="false"
       android:theme="@style/AppTheme"
       android:supportsRtl="true"
-      android:requestLegacyExternalStorage="true"
-      android:usesCleartextTraffic="true"
+      android:networkSecurityConfig="@xml/network_security_config"
       android:extractNativeLibs="true"
       >
       <provider

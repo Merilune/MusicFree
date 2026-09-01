@@ -1,4 +1,5 @@
 import pathConst from "@/constants/pathConst";
+import NativeUtils from "@/native/utils";
 import { devLog } from "@/utils/log";
 import FastImage from "react-native-fast-image";
 import RNFS, {
@@ -11,6 +12,7 @@ import RNFS, {
     unlink,
     writeFile,
 } from "react-native-fs";
+import { Platform } from "react-native";
 import { errorLog } from "./log";
 import path from "path-browserify";
 import resolveAssetSource from "react-native/Libraries/Image/resolveAssetSource";
@@ -23,30 +25,68 @@ const galleryBasePath = `${PicturesDirectoryPath}/Audiora/`;
  * @returns 保存后的文件路径
  */
 export async function saveToGallery(src: string) {
-    const fileName = `${galleryBasePath}${Date.now()}.png`;
+    const fileName = `${Date.now()}.png`;
+    let sourcePath: string | null = null;
+    let temporaryPath: string | null = null;
+
+    if (Platform.OS === "android") {
+        try {
+            if (src.startsWith("http://") || src.startsWith("https://")) {
+                temporaryPath = `${pathConst.cachePath}gallery_${fileName}`;
+                const downloadResult = await downloadFile({
+                    fromUrl: src,
+                    toFile: temporaryPath,
+                    background: false,
+                }).promise;
+                if (downloadResult.statusCode < 200 || downloadResult.statusCode >= 300) {
+                    throw new Error(`下载图片失败: ${downloadResult.statusCode}`);
+                }
+                sourcePath = temporaryPath;
+            } else if (src.startsWith("data:")) {
+                temporaryPath = `${pathConst.cachePath}gallery_${fileName}`;
+                const [, data = ""] = src.split(",", 2);
+                await writeFile(temporaryPath, data, "base64");
+                sourcePath = temporaryPath;
+            } else {
+                sourcePath = removeFileScheme(src);
+            }
+
+            if (!sourcePath || !(await exists(sourcePath))) {
+                throw new Error("图片文件不存在");
+            }
+            return await NativeUtils.saveImageToGallery(sourcePath, fileName);
+        } finally {
+            if (temporaryPath) {
+                await unlink(temporaryPath).catch(() => { });
+            }
+        }
+    }
+
+    const galleryFilePath = `${galleryBasePath}${fileName}`;
     if (!(await exists(galleryBasePath))) {
         await mkdir(galleryBasePath);
     }
-    if (await exists(src)) {
+    if (await exists(removeFileScheme(src))) {
         try {
-            await copyFile(src, fileName);
+            await copyFile(removeFileScheme(src), galleryFilePath);
         } catch (e) {
-            devLog("warn", "📁[文件工具] 文件复制失败", { src, fileName, error: e });
+            devLog("warn", "📁[文件工具] 文件复制失败", { src, galleryFilePath, error: e });
         }
     }
     if (src.startsWith("http")) {
         const { promise } = downloadFile({
             fromUrl: src,
-            toFile: fileName,
+            toFile: galleryFilePath,
             background: true,
         });
         await promise;
     }
     if (src.startsWith("data")) {
-        await writeFile(fileName, src);
+        const [, data = ""] = src.split(",", 2);
+        await writeFile(galleryFilePath, data, "base64");
     }
 
-    return fileName;
+    return galleryFilePath;
 }
 
 export function sizeFormatter(bytes: number | string) {

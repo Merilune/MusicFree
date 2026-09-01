@@ -1,5 +1,5 @@
 import { internalSerializeKey, supportLocalMediaType } from "@/constants/commonConst";
-import pathConst from "@/constants/pathConst";
+import { getDownloadMusicPath } from "@/constants/pathConst";
 import { IAppConfig } from "@/types/core/config";
 import { IInjectable } from "@/types/infra";
 import { escapeCharacter, mkdirR, removeFileScheme } from "@/utils/fileUtils";
@@ -411,7 +411,7 @@ class Downloader extends EventEmitter<IEvents> implements IInjectable {
 
     private getDownloadPath(fileName: string) {
         const dlPath = removeFileScheme(
-            this.configService.getConfig("basic.downloadPath") ?? pathConst.downloadMusicPath,
+            getDownloadMusicPath(this.configService.getConfig("basic.downloadPath")),
         );
         if (!dlPath.endsWith("/")) {
             return `${dlPath}/${fileName ?? ""}`;

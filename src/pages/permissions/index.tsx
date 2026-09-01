@@ -6,23 +6,18 @@ import ThemeText from "@/components/base/themeText";
 import VerticalSafeAreaView from "@/components/base/verticalSafeAreaView";
 import globalStyle from "@/constants/globalStyle";
 import { useI18N } from "@/core/i18n";
-import LyricUtil from "@/native/lyricUtil";
-import NativeUtils from "@/native/utils";
 import downloadNotificationManager from "@/core/downloadNotificationManager";
 import rpx from "@/utils/rpx";
-import { devLog } from "@/utils/log";
 import React, { useEffect, useRef, useState } from "react";
 import { AppState, StyleSheet } from "react-native";
 
-type IPermissionTypes = "floatingWindow" | "fileStorage" | "notification";
+type IPermissionTypes = "notification";
 
 export default function Permissions() {
     const appState = useRef(AppState.currentState);
     const [permissions, setPermissions] = useState<
         Record<IPermissionTypes, boolean>
     >({
-        floatingWindow: false,
-        fileStorage: false,
         notification: false,
         // background: false,
     });
@@ -31,15 +26,6 @@ export default function Permissions() {
     async function checkPermission(type?: IPermissionTypes) {
         const newPermissions: Partial<Record<IPermissionTypes, boolean>> = {};
         
-        if (!type || type === "floatingWindow") {
-            const hasPermission = await LyricUtil.checkSystemAlertPermission();
-            newPermissions.floatingWindow = hasPermission;
-        }
-        if (!type || type === "fileStorage") {
-            const hasPermission = await NativeUtils.checkStoragePermission();
-            devLog("info", "📁[权限页面] 存储权限检查", { hasPermission });
-            newPermissions.fileStorage = hasPermission;
-        }
         if (!type || type === "notification") {
             const hasPermission = await downloadNotificationManager.checkNotificationPermission();
             newPermissions.notification = hasPermission;
@@ -82,50 +68,6 @@ export default function Permissions() {
             <ThemeText style={styles.description}>
                 {t("permissionSetting.description")}
             </ThemeText>
-            <ListItem
-                withHorizontalPadding
-                heightType="big">
-                <ListItem.Content
-                    title={t("permissionSetting.floatWindowPermission")}
-                    description={t("permissionSetting.floatWindowPermissionDescription")}
-                />
-                <ThemeSwitch 
-                    value={permissions.floatingWindow} 
-                    onValueChange={async (newValue) => {
-                        if (newValue) {
-                            // 请求开启权限
-                            LyricUtil.requestSystemAlertPermission();
-                            // 请求完成后立即更新状态
-                            setTimeout(() => {
-                                checkPermission("floatingWindow");
-                            }, 500);
-                        }
-                        // 如果是关闭，Android 系统不支持应用直接关闭权限
-                    }}
-                />
-            </ListItem>
-            <ListItem
-                withHorizontalPadding
-                heightType="big">
-                <ListItem.Content
-                    title={t("permissionSetting.fileReadWritePermission")}
-                    description={t("permissionSetting.fileReadWritePermissionDescription")}
-                />
-                <ThemeSwitch 
-                    value={permissions.fileStorage} 
-                    onValueChange={async (newValue) => {
-                        if (newValue) {
-                            // 请求开启权限
-                            NativeUtils.requestStoragePermission();
-                            // 请求完成后立即更新状态
-                            setTimeout(() => {
-                                checkPermission("fileStorage");
-                            }, 500);
-                        }
-                        // 如果是关闭，Android 系统不支持应用直接关闭权限
-                    }}
-                />
-            </ListItem>
             <ListItem
                 withHorizontalPadding
                 heightType="big">

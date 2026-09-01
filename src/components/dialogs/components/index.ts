@@ -1,4 +1,3 @@
-import CheckStorage from "@/components/dialogs/components/checkStorage.tsx";
 import EditSheetDetailDialog from "./editSheetDetail";
 import LoadingDialog from "./loadingDialog";
 import MarkdownDialog from "./markdownDialog";
@@ -13,7 +12,6 @@ const dialogs = {
     SubscribePluginDialog,
     LoadingDialog,
     EditSheetDetailDialog,
-    CheckStorage,
     MarkdownDialog,
     SetScheduleCloseTimeDialog,
 };

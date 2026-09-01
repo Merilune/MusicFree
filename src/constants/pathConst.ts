@@ -8,8 +8,29 @@ export const basePath =
 
 const defaultDownloadMusicPath =
     Platform.OS === "android"
-        ? "/storage/emulated/0/Music/Audiora"
+        ? `${basePath}/download/`
         : `${basePath}/download`;
+
+/**
+ * Android no longer has broad storage access. Keep downloads inside the app's
+ * external files directory, and migrate any legacy/public configured path to it.
+ */
+export function getDownloadMusicPath(configuredPath?: string | null) {
+    if (!configuredPath) {
+        return defaultDownloadMusicPath;
+    }
+
+    if (Platform.OS !== "android") {
+        return configuredPath;
+    }
+
+    const normalizedPath = configuredPath.startsWith("file://")
+        ? configuredPath.slice(7)
+        : configuredPath;
+    return normalizedPath === basePath || normalizedPath.startsWith(`${basePath}/`)
+        ? normalizedPath
+        : defaultDownloadMusicPath;
+}
 
 export default {
     basePath,

@@ -6,6 +6,7 @@ import Button from "@/components/base/textButton.tsx";
 import ThemeText from "@/components/base/themeText";
 import VerticalSafeAreaView from "@/components/base/verticalSafeAreaView";
 import globalStyle from "@/constants/globalStyle";
+import pathConst from "@/constants/pathConst";
 import i18n from "@/core/i18n";
 import { useParams } from "@/core/router";
 import useColors from "@/hooks/useColors";
@@ -13,14 +14,18 @@ import useHardwareBack from "@/hooks/useHardwareBack";
 import rpx from "@/utils/rpx";
 import { useNavigation } from "@react-navigation/native";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Pressable, StyleSheet, View } from "react-native";
+import { Platform, Pressable, StyleSheet, View } from "react-native";
 import {
     ExternalStorageDirectoryPath,
     exists,
     getAllExternalFilesDirs,
     readDir,
+    copyFile,
+    mkdir,
 } from "react-native-fs";
 import { FlatList } from "react-native-gesture-handler";
+import { getDocumentAsync } from "expo-document-picker";
+import { getFileName, removeFileScheme } from "@/utils/fileUtils";
 import FileItem from "./fileItem";
 
 interface IPathItem {
@@ -59,8 +64,53 @@ export default function FileSelector() {
     const navigation = useNavigation();
     const colors = useColors();
     const [loading, setLoading] = useState(false);
+    const systemPickerStarted = useRef(false);
 
     useEffect(() => {
+        if (Platform.OS === "android") {
+            if (systemPickerStarted.current) {
+                return;
+            }
+            systemPickerStarted.current = true;
+            setLoading(true);
+            void (async () => {
+                try {
+                    const result = await getDocumentAsync({
+                        copyToCacheDirectory: true,
+                        multiple: multi,
+                        type: fileType === "file" ? "audio/*" : "*/*",
+                    });
+                    if (result.canceled) {
+                        navigation.goBack();
+                        return;
+                    }
+
+                    const importPath = `${pathConst.dataPath}imported_music/`;
+                    if (!(await exists(importPath))) {
+                        await mkdir(importPath);
+                    }
+                    const selectedFiles = await Promise.all(
+                        result.assets.map(async (asset, index) => {
+                            const sourcePath = removeFileScheme(asset.uri);
+                            const filename = getFileName(asset.name || asset.uri);
+                            const targetPath = `${importPath}${Date.now()}_${index}_${filename}`;
+                            await copyFile(sourcePath, targetPath);
+                            return { path: targetPath, type: "file" as const };
+                        }),
+                    );
+                    const shouldBack = await onAction?.(selectedFiles);
+                    if (shouldBack !== false) {
+                        navigation.goBack();
+                    }
+                } catch {
+                    setFilesData([]);
+                } finally {
+                    setLoading(false);
+                }
+            })();
+            return;
+        }
+
         (async () => {
             // 路径变化时，重新读取
             setLoading(true);
@@ -137,7 +187,7 @@ export default function FileSelector() {
             setLoading(false);
             currentPathRef.current = currentPath;
         })();
-    }, [currentPath, fileType, matchExtension]);
+    }, [currentPath, fileType, matchExtension, multi, navigation, onAction]);
 
     useHardwareBack(() => {
         // 注意闭包
