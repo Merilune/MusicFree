@@ -37,6 +37,7 @@ export default {
     pluginPath: `${basePath}/plugins/`,
     logPath: `${basePath}/log/`,
     dataPath: `${basePath}/data/`,
+    importedMusicPath: `${basePath}/data/imported_music/`,
     cachePath: `${basePath}/cache/`,
     musicCachePath: CachesDirectoryPath + "/TrackPlayer",
     imageCachePath: CachesDirectoryPath + "/image_manager_disk_cache",

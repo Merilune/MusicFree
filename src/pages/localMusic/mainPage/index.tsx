@@ -56,6 +56,13 @@ export default function MainPage() {
                                                 hideDialog();
                                                 resolve(false);
                                             },
+                                            onReject(reason, hideDialog) {
+                                                hideDialog();
+                                                Toast.warn(
+                                                    `${t("toast.failToImportMusic")}: ${reason?.message ?? reason}`,
+                                                );
+                                                resolve(false);
+                                            },
                                         });
                                     });
                                 },

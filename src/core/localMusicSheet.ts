@@ -1,12 +1,10 @@
 import {
     StorageKeys,
     internalSerializeKey,
-    supportLocalMediaType,
 } from "@/constants/commonConst";
 import pathConst from "@/constants/pathConst";
 import mp3Util from "@/native/mp3Util";
 import {
-    addFileScheme,
     getFileName,
     removeFileScheme,
 } from "@/utils/fileUtils.ts";
@@ -20,7 +18,9 @@ import CryptoJs from "crypto-js";
 import { nanoid } from "@/utils/nanoid";
 import { useEffect, useState } from "react";
 import { Platform } from "react-native";
-import { ReadDirItem, exists, readDir, unlink } from "react-native-fs";
+import { exists, unlink } from "react-native-fs";
+import { scanLocalMusicPaths } from "./localMusicScanner";
+import { shouldRetainUnavailableLocalPath } from "./localMusicPathPolicy";
 
 let localSheet: IMusic.IMusicItem[] = [];
 const localSheetStateMapper = new StateMapper(() => localSheet);
@@ -156,6 +156,11 @@ export async function setup() {
                             localPath: existingPath,
                         },
                     });
+                } else if (shouldRetainUnavailableLocalPath(localPath)) {
+                    // Android may no longer be allowed to stat legacy public paths
+                    // after broad storage access is removed. Preserve the library
+                    // record until the user explicitly re-authorizes or removes it.
+                    validSheet.push(musicItem);
                 } else {
                     hasChanged = true;
                 }
@@ -253,37 +258,15 @@ function parseFilename(fn: string): Partial<IMusic.IMusicItem> | null {
     };
 }
 
-function localMediaFilter(filename: string) {
-    return supportLocalMediaType.some(ext => filename.toLowerCase().endsWith(ext));
-}
-
 let importToken: string | null = null;
 // 获取本地的文件列表
 async function getMusicStats(folderPaths: string[]) {
     const _importToken = nanoid();
     importToken = _importToken;
-    const musicList: string[] = [];
-    let peek: string | undefined;
-    let dirFiles: ReadDirItem[] = [];
-    while (folderPaths.length !== 0) {
-        if (importToken !== _importToken) {
-            throw new Error("Import Broken");
-        }
-        peek = folderPaths.shift() as string;
-        try {
-            dirFiles = await readDir(peek);
-        } catch {
-            dirFiles = [];
-        }
-
-        dirFiles.forEach(item => {
-            if (item.isDirectory() && !folderPaths.includes(item.path)) {
-                folderPaths.push(item.path);
-            } else if (localMediaFilter(item.path)) {
-                musicList.push(item.path);
-            }
-        });
-    }
+    const musicList = await scanLocalMusicPaths(
+        folderPaths,
+        () => importToken === _importToken,
+    );
 
     return { musicList, token: _importToken };
 }
@@ -295,7 +278,7 @@ function cancelImportLocal() {
 // 导入本地音乐
 const groupNum = 25;
 async function importLocal(_folderPaths: string[]) {
-    const folderPaths = [..._folderPaths.map(it => addFileScheme(it))];
+    const folderPaths = [..._folderPaths.map(it => removeFileScheme(it))];
     const { musicList, token } = await getMusicStats(folderPaths);
     if (token !== importToken) {
         throw new Error("Import Broken");

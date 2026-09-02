@@ -22,11 +22,14 @@ import {
     readDir,
     copyFile,
     mkdir,
+    unlink,
 } from "react-native-fs";
 import { FlatList } from "react-native-gesture-handler";
 import { getDocumentAsync } from "expo-document-picker";
 import { getFileName, removeFileScheme } from "@/utils/fileUtils";
 import FileItem from "./fileItem";
+import { errorLog } from "@/utils/log";
+import Toast from "@/utils/toast";
 
 interface IPathItem {
     path: string;
@@ -74,6 +77,7 @@ export default function FileSelector() {
             systemPickerStarted.current = true;
             setLoading(true);
             void (async () => {
+                const copiedPaths: string[] = [];
                 try {
                     const result = await getDocumentAsync({
                         copyToCacheDirectory: true,
@@ -85,25 +89,38 @@ export default function FileSelector() {
                         return;
                     }
 
-                    const importPath = `${pathConst.dataPath}imported_music/`;
+                    const importPath = pathConst.importedMusicPath;
                     if (!(await exists(importPath))) {
                         await mkdir(importPath);
                     }
-                    const selectedFiles = await Promise.all(
-                        result.assets.map(async (asset, index) => {
-                            const sourcePath = removeFileScheme(asset.uri);
-                            const filename = getFileName(asset.name || asset.uri);
-                            const targetPath = `${importPath}${Date.now()}_${index}_${filename}`;
-                            await copyFile(sourcePath, targetPath);
-                            return { path: targetPath, type: "file" as const };
-                        }),
-                    );
+                    const selectedFiles: IFileItem[] = [];
+                    for (const [index, asset] of result.assets.entries()) {
+                        const sourcePath = removeFileScheme(asset.uri);
+                        const filename = getFileName(asset.name || asset.uri);
+                        const targetPath = `${importPath}${Date.now()}_${index}_${filename}`;
+                        await copyFile(sourcePath, targetPath);
+                        copiedPaths.push(targetPath);
+                        selectedFiles.push({ path: targetPath, type: "file" });
+                    }
                     const shouldBack = await onAction?.(selectedFiles);
                     if (shouldBack !== false) {
                         navigation.goBack();
+                    } else {
+                        await Promise.all(
+                            copiedPaths.map(filePath =>
+                                unlink(filePath).catch(() => undefined),
+                            ),
+                        );
                     }
-                } catch {
-                    setFilesData([]);
+                } catch (error) {
+                    await Promise.all(
+                        copiedPaths.map(filePath =>
+                            unlink(filePath).catch(() => undefined),
+                        ),
+                    );
+                    errorLog("Android 文件选择失败", error);
+                    Toast.warn(i18n.t("toast.folderNotExistOrNoPermission"));
+                    navigation.goBack();
                 } finally {
                     setLoading(false);
                 }
