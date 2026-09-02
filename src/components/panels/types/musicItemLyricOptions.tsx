@@ -33,6 +33,11 @@ import { writeFile } from "react-native-fs";
 import { escapeCharacter } from "@/utils/fileUtils";
 import { getDownloadMusicPath } from "@/constants/pathConst";
 import { formatLyricsByTimestamp } from "@/utils/lrcParser";
+import {
+    isAndroidSafUri,
+    requestAndroidDirectoryAccess,
+    writeTextToAndroidDirectory,
+} from "@/utils/androidSaf";
 
 interface IMusicItemLyricOptionsProps {
     /** 歌曲信息 */
@@ -286,7 +291,8 @@ export default function MusicItemLyricOptions(
                     const lyricFileFormat = Config.getConfig("basic.lyricFileFormat") ?? "lrc";
                     const lyricOrder = Config.getConfig("basic.lyricOrder") ?? ["romanization", "original", "translation"];
                     const enableWordByWord = Config.getConfig("lyric.enableWordByWord") ?? false;
-                    const downloadPath = getDownloadMusicPath(Config.getConfig("basic.downloadPath"));
+                    const configuredDownloadPath = Config.getConfig("basic.downloadPath");
+                    const downloadPath = getDownloadMusicPath(configuredDownloadPath);
 
                     devLog("info", "[歌词下载] 配置信息", {
                         format: lyricFileFormat,
@@ -323,11 +329,27 @@ export default function MusicItemLyricOptions(
                     const safeTitle = escapeCharacter(musicItem.title || "unknown");
                     const safeArtist = escapeCharacter(musicItem.artist || "unknown");
                     const filename = `${safeTitle} - ${safeArtist}.${lyricFileFormat}`;
-                    const basePath = downloadPath.endsWith("/") ? downloadPath : `${downloadPath}/`;
-                    const filePath = `${basePath}${filename}`;
-
-                    // Write file
-                    await writeFile(filePath, lyricContent, "utf8");
+                    let filePath: string;
+                    if (Platform.OS === "android") {
+                        const directoryUri = isAndroidSafUri(configuredDownloadPath)
+                            ? configuredDownloadPath
+                            : await requestAndroidDirectoryAccess();
+                        if (!directoryUri) {
+                            return;
+                        }
+                        Config.setConfig("basic.downloadPath", directoryUri);
+                        filePath = await writeTextToAndroidDirectory(
+                            directoryUri,
+                            filename,
+                            lyricContent,
+                        );
+                    } else {
+                        const basePath = downloadPath.endsWith("/")
+                            ? downloadPath
+                            : `${downloadPath}/`;
+                        filePath = `${basePath}${filename}`;
+                        await writeFile(filePath, lyricContent, "utf8");
+                    }
 
                     devLog("info", "[歌词下载] 保存成功", {
                         path: filePath,

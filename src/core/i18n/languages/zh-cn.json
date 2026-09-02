@@ -459,7 +459,7 @@
     "panel.imageViewer.saveImageSuccess": "图片已保存到 {path}",
     "panel.imageViewer.saveImageFail": "保存图片失败: {reason}",
     "panel.coverOptions.viewImage": "查看大图",
-    "panel.coverOptions.saveImage": "保存到相册",
+    "panel.coverOptions.saveImage": "保存图片",
     "panel.coverOptions.searchCover": "搜索并关联封面",
     "panel.coverOptions.pickFromGallery": "从相册选择",
     "panel.coverOptions.restoreDefault": "恢复默认封面",

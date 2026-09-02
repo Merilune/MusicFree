@@ -45,4 +45,24 @@ describe("Android permission and network policy", () => {
         expect(lyricModule).toContain("import android.content.Intent");
         expect(lyricModule).toContain("val intent = Intent(\"mf.compact.favstate\")");
     });
+
+    it("stores exported images in the app-specific pictures directory", () => {
+        const utilsModule = readRepositoryFile(
+            "android", "app", "src", "main", "java", "fun", "xwj",
+            "musicfree", "utils", "UtilsModule.kt",
+        );
+        expect(utilsModule).toContain("getExternalFilesDir(Environment.DIRECTORY_PICTURES)");
+        expect(utilsModule).toContain("contentResolver.openInputStream(sourceUri)");
+        expect(utilsModule).not.toContain("MediaStore.Images");
+    });
+
+    it("imports Android music through an authorized directory without copying", () => {
+        const fileSelector = readRepositoryFile(
+            "src", "pages", "fileSelector", "index.tsx",
+        );
+        expect(fileSelector).toContain("requestAndroidDirectoryAccess");
+        expect(fileSelector).toContain("copyToCacheDirectory: false");
+        expect(fileSelector).not.toContain("copyFile(");
+        expect(fileSelector).not.toContain("importedMusicPath");
+    });
 });

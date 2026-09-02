@@ -21,6 +21,11 @@ import { Platform } from "react-native";
 import { exists, unlink } from "react-native-fs";
 import { scanLocalMusicPaths } from "./localMusicScanner";
 import { shouldRetainUnavailableLocalPath } from "./localMusicPathPolicy";
+import {
+    androidSafUriExists,
+    deleteAndroidSafUri,
+    isAndroidSafUri,
+} from "@/utils/androidSaf";
 
 let localSheet: IMusic.IMusicItem[] = [];
 const localSheetStateMapper = new StateMapper(() => localSheet);
@@ -47,6 +52,9 @@ function getLocalPathCandidates(localPath: string) {
 }
 
 async function getExistingLocalPath(localPath: string) {
+    if (isAndroidSafUri(localPath)) {
+        return await androidSafUriExists(localPath) ? localPath : null;
+    }
     const candidates = getLocalPathCandidates(localPath);
     for (let candidate of candidates) {
         if (await exists(candidate)) {
@@ -186,8 +194,18 @@ export async function addMusic(
     }
     let newSheet = [...localSheet];
     musicItem.forEach(mi => {
-        if (localSheet.findIndex(_ => isSameMediaItem(mi, _)) === -1) {
+        const existingIndex = newSheet.findIndex(_ => isSameMediaItem(mi, _));
+        if (existingIndex === -1) {
             newSheet.push(mi);
+        } else {
+            newSheet[existingIndex] = {
+                ...newSheet[existingIndex],
+                ...mi,
+                [internalSerializeKey]: {
+                    ...(newSheet[existingIndex][internalSerializeKey] ?? {}),
+                    ...(mi[internalSerializeKey] ?? {}),
+                },
+            };
         }
     });
     await setStorage(StorageKeys.LocalMusicSheet, newSheet);
@@ -228,9 +246,13 @@ export async function removeMusic(
             getLocalPath(musicItem);
         if (deleteOriginalFile && localPath) {
             try {
-                const existingPath = await getExistingLocalPath(localPath);
-                if (existingPath) {
-                    await unlink(existingPath);
+                if (isAndroidSafUri(localPath)) {
+                    await deleteAndroidSafUri(localPath);
+                } else {
+                    const existingPath = await getExistingLocalPath(localPath);
+                    if (existingPath) {
+                        await unlink(existingPath);
+                    }
                 }
             } catch (e: any) {
                 if (!isFileNotFoundError(e)) {
@@ -263,12 +285,12 @@ let importToken: string | null = null;
 async function getMusicStats(folderPaths: string[]) {
     const _importToken = nanoid();
     importToken = _importToken;
-    const musicList = await scanLocalMusicPaths(
+    const musicFiles = await scanLocalMusicPaths(
         folderPaths,
         () => importToken === _importToken,
     );
 
-    return { musicList, token: _importToken };
+    return { musicFiles, token: _importToken };
 }
 
 function cancelImportLocal() {
@@ -279,17 +301,19 @@ function cancelImportLocal() {
 const groupNum = 25;
 async function importLocal(_folderPaths: string[]) {
     const folderPaths = [..._folderPaths.map(it => removeFileScheme(it))];
-    const { musicList, token } = await getMusicStats(folderPaths);
+    const { musicFiles, token } = await getMusicStats(folderPaths);
     if (token !== importToken) {
         throw new Error("Import Broken");
     }
     // 分组请求，不然序列化可能出问题
     let metas: any[] = [];
-    const groups = Math.ceil(musicList.length / groupNum);
+    const groups = Math.ceil(musicFiles.length / groupNum);
     for (let i = 0; i < groups; ++i) {
         metas = metas.concat(
             await mp3Util.getMediaMeta(
-                musicList.slice(i * groupNum, (i + 1) * groupNum),
+                musicFiles
+                    .slice(i * groupNum, (i + 1) * groupNum)
+                    .map(file => file.path),
             ),
         );
     }
@@ -297,18 +321,21 @@ async function importLocal(_folderPaths: string[]) {
         throw new Error("Import Broken");
     }
     const musicItems: IMusic.IMusicItem[] = await Promise.all(
-        musicList.map(async (musicPath, index) => {
+        musicFiles.map(async (musicFile, index) => {
+            const musicPath = musicFile.path;
             let { platform, id, title, artist } =
-                parseFilename(getFileName(musicPath, true)) ?? {};
+                parseFilename(getFileName(musicFile.name, true)) ?? {};
             const meta = metas[index];
             if (!platform || !id) {
                 platform = "本地";
-                id = CryptoJs.MD5(musicPath).toString(CryptoJs.enc.Hex);
+                id = CryptoJs.MD5(
+                    musicFile.legacyPath ?? musicPath,
+                ).toString(CryptoJs.enc.Hex);
             }
             return {
                 id,
                 platform,
-                title: title ?? meta?.title ?? getFileName(musicPath),
+                title: title ?? meta?.title ?? getFileName(musicFile.name),
                 artist: artist ?? meta?.artist ?? "未知歌手",
                 duration: parseInt(meta?.duration ?? "0", 10) / 1000,
                 album: meta?.album ?? "未知专辑",

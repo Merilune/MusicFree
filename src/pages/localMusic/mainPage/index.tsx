@@ -33,8 +33,8 @@ export default function MainPage() {
                         title: t("localMusic.scanLocalMusic"),
                         async onPress() {
                             navigate(ROUTE_PATH.FILE_SELECTOR, {
-                                fileType: "file",
-                                multi: true,
+                                fileType: "folder",
+                                multi: false,
                                 actionText: t("localMusic.beginScan"),
                                 async onAction(selectedFiles) {
                                     return new Promise(resolve => {

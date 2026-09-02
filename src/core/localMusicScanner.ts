@@ -1,5 +1,15 @@
 import { supportLocalMediaType } from "@/constants/mediaConst";
+import {
+    getLegacyPathFromAndroidDocumentId,
+    scanAndroidSafAudioFiles,
+} from "@/utils/androidSaf";
 import { readDir, stat } from "react-native-fs";
+
+export interface ILocalMediaFile {
+    path: string;
+    name: string;
+    legacyPath?: string;
+}
 
 function normalizeLocalPath(filePath: string) {
     return filePath.startsWith("file://") ? filePath.slice(7) : filePath;
@@ -16,9 +26,30 @@ export async function scanLocalMusicPaths(
     inputPaths: string[],
     shouldContinue: () => boolean = () => true,
 ) {
-    const pendingPaths = inputPaths.map(normalizeLocalPath);
-    const musicPaths: string[] = [];
+    const safDirectories = inputPaths.filter(path => path.startsWith("content://"));
+    const pendingPaths = inputPaths
+        .filter(path => !path.startsWith("content://"))
+        .map(normalizeLocalPath);
+    const musicFiles: ILocalMediaFile[] = [];
     const visitedDirectories = new Set<string>();
+
+    for (const directoryUri of safDirectories) {
+        if (!shouldContinue()) {
+            throw new Error("Import Broken");
+        }
+        const files = await scanAndroidSafAudioFiles(directoryUri);
+        files.forEach(file => {
+            if (isSupportedLocalMedia(file.name)) {
+                musicFiles.push({
+                    path: file.uri,
+                    name: file.name,
+                    legacyPath: getLegacyPathFromAndroidDocumentId(
+                        file.documentId,
+                    ) ?? undefined,
+                });
+            }
+        });
+    }
 
     while (pendingPaths.length) {
         if (!shouldContinue()) {
@@ -30,7 +61,10 @@ export async function scanLocalMusicPaths(
             const currentStat = await stat(currentPath);
             if (currentStat.isFile()) {
                 if (isSupportedLocalMedia(currentPath)) {
-                    musicPaths.push(currentPath);
+                    musicFiles.push({
+                        path: currentPath,
+                        name: currentPath.split("/").pop() ?? currentPath,
+                    });
                 }
                 continue;
             }
@@ -44,7 +78,10 @@ export async function scanLocalMusicPaths(
                 if (child.isDirectory()) {
                     pendingPaths.push(child.path);
                 } else if (child.isFile() && isSupportedLocalMedia(child.path)) {
-                    musicPaths.push(child.path);
+                    musicFiles.push({
+                        path: child.path,
+                        name: child.name,
+                    });
                 }
             });
         } catch {
@@ -52,5 +89,5 @@ export async function scanLocalMusicPaths(
         }
     }
 
-    return [...new Set(musicPaths)];
+    return [...new Map(musicFiles.map(file => [file.path, file])).values()];
 }

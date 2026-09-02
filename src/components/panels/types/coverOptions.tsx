@@ -20,7 +20,7 @@ import {
 import { useMediaExtraProperty } from "@/utils/mediaExtra";
 import Toast from "@/utils/toast";
 import { errorLog } from "@/utils/log";
-import { saveToGallery } from "@/utils/fileUtils";
+import { saveImageToStorage } from "@/utils/fileUtils";
 import { FlatList } from "react-native-gesture-handler";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import PanelBase from "../base/panelBase";
@@ -78,7 +78,7 @@ export default function CoverOptions(props: ICoverOptionsProps) {
                     if (!artwork) {
                         return;
                     }
-                    saveToGallery(artwork)
+                    saveImageToStorage(artwork)
                         .then(resultPath => {
                             Toast.success(
                                 t("panel.imageViewer.saveImageSuccess", {

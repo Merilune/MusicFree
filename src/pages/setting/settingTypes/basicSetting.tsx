@@ -29,6 +29,11 @@ import {
     DEFAULT_FILE_NAMING_CONFIG,
     TEMPLATE_VARIABLES,
 } from "@/utils/fileNamingFormatter";
+import {
+    getAndroidSafDirectoryLabel,
+    isAndroidSafUri,
+    requestAndroidDirectoryAccess,
+} from "@/utils/androidSaf";
 
 function createSwitch(
     title: string,
@@ -380,9 +385,32 @@ export default function BasicSetting() {
                             fontSize="subTitle"
                             style={styles.centerText}
                             numberOfLines={3}>
-                            {getDownloadMusicPath(downloadPath)}
+                            {Platform.OS === "android"
+                                ? getAndroidSafDirectoryLabel(downloadPath)
+                                : getDownloadMusicPath(downloadPath)}
                         </ThemeText>
                     ),
+                    async onPress() {
+                        if (Platform.OS !== "android") {
+                            return;
+                        }
+                        try {
+                            const directoryUri = await requestAndroidDirectoryAccess(
+                                isAndroidSafUri(downloadPath)
+                                    ? downloadPath
+                                    : undefined,
+                            );
+                            if (directoryUri) {
+                                Config.setConfig("basic.downloadPath", directoryUri);
+                            }
+                        } catch (error) {
+                            Toast.warn(
+                                error instanceof Error
+                                    ? error.message
+                                    : String(error),
+                            );
+                        }
+                    },
                 },
                 createRadio(
                     t("basicSettings.maxDownload"),

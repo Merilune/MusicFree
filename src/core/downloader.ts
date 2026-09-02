@@ -1,8 +1,8 @@
 import { internalSerializeKey, supportLocalMediaType } from "@/constants/commonConst";
-import { getDownloadMusicPath } from "@/constants/pathConst";
+import pathConst, { getDownloadMusicPath } from "@/constants/pathConst";
 import { IAppConfig } from "@/types/core/config";
 import { IInjectable } from "@/types/infra";
-import { escapeCharacter, mkdirR, removeFileScheme } from "@/utils/fileUtils";
+import { escapeCharacter, getFileName, mkdirR, removeFileScheme } from "@/utils/fileUtils";
 import { errorLog, devLog } from "@/utils/log";
 import { getMediaExtraProperty, patchMediaExtra } from "@/utils/mediaExtra";
 import { getMediaUniqueKey, isSameMediaItem } from "@/utils/mediaUtils";
@@ -28,6 +28,11 @@ import { IPluginManager } from "@/types/core/pluginManager";
 import musicMetadataManager from "./musicMetadataManager";
 import type { IDownloadMetadataConfig, IDownloadTaskMetadata } from "@/types/metadata";
 import { autoDecryptLyric } from "@/utils/musicDecrypter";
+import {
+    copyLocalFileToAndroidDirectory,
+    isAndroidSafUri,
+    requestAndroidDirectoryAccess,
+} from "@/utils/androidSaf";
 
 export enum DownloadStatus {
     Pending,
@@ -72,6 +77,7 @@ interface IDownloadRuntimeInfo {
     cencCek?: string;
     extension: string;
     encryptedExtension: string;
+    safDirectoryUri?: string;
 }
 
 interface IPrepareTask {
@@ -115,6 +121,7 @@ class Downloader extends EventEmitter<IEvents> implements IInjectable {
     private activePrepareCount = 0;
 
     private queueBusy = false;
+    private androidDirectoryRequest: Promise<string | null> | null = null;
 
     // 有原生队列时，准备阶段（解析音源）并发固定为 3，真正的下载并发由原生按 basic.maxDownload 控制；
     // 无原生队列（JS 回退下载）时，准备阶段即下载阶段，并发跟随 basic.maxDownload 配置。
@@ -363,22 +370,22 @@ class Downloader extends EventEmitter<IEvents> implements IInjectable {
 
     private mapNativeStatus(status?: string): DownloadStatus {
         switch (status) {
-            case "PENDING":
-                return DownloadStatus.Pending;
-            case "PREPARING":
-                return DownloadStatus.Preparing;
-            case "DOWNLOADING":
-                return DownloadStatus.Downloading;
-            case "PAUSED":
-                return DownloadStatus.Pending;
-            case "COMPLETED":
-                return DownloadStatus.Completed;
-            case "ERROR":
-                return DownloadStatus.Error;
-            case "CANCELED":
-                return DownloadStatus.Error;
-            default:
-                return DownloadStatus.Error;
+        case "PENDING":
+            return DownloadStatus.Pending;
+        case "PREPARING":
+            return DownloadStatus.Preparing;
+        case "DOWNLOADING":
+            return DownloadStatus.Downloading;
+        case "PAUSED":
+            return DownloadStatus.Pending;
+        case "COMPLETED":
+            return DownloadStatus.Completed;
+        case "ERROR":
+            return DownloadStatus.Error;
+        case "CANCELED":
+            return DownloadStatus.Error;
+        default:
+            return DownloadStatus.Error;
         }
     }
 
@@ -410,9 +417,10 @@ class Downloader extends EventEmitter<IEvents> implements IInjectable {
     }
 
     private getDownloadPath(fileName: string) {
-        const dlPath = removeFileScheme(
-            getDownloadMusicPath(this.configService.getConfig("basic.downloadPath")),
-        );
+        const configuredPath = this.configService.getConfig("basic.downloadPath");
+        const dlPath = Platform.OS === "android" && isAndroidSafUri(configuredPath)
+            ? pathConst.downloadPath
+            : removeFileScheme(getDownloadMusicPath(configuredPath));
         if (!dlPath.endsWith("/")) {
             return `${dlPath}/${fileName ?? ""}`;
         }
@@ -462,10 +470,13 @@ class Downloader extends EventEmitter<IEvents> implements IInjectable {
         }
     }
 
-    private async downloadLyricFile(musicItem: IMusic.IMusicItem, musicFilePath: string): Promise<void> {
+    private async downloadLyricFile(
+        musicItem: IMusic.IMusicItem,
+        musicFilePath: string,
+    ): Promise<string | null> {
         const downloadLyricFile = this.configService.getConfig("basic.downloadLyricFile") ?? false;
         if (!downloadLyricFile) {
-            return;
+            return null;
         }
 
         const lyricFileFormat = this.configService.getConfig("basic.lyricFileFormat") ?? "lrc";
@@ -475,12 +486,12 @@ class Downloader extends EventEmitter<IEvents> implements IInjectable {
         try {
             const plugin = this.pluginManagerService.getByName(musicItem.platform);
             if (!plugin) {
-                return;
+                return null;
             }
 
             const lyricSource = await plugin.methods.getLyric(musicItem);
             if (!lyricSource) {
-                return;
+                return null;
             }
 
             const rawLrc = lyricSource.rawLrc ? await autoDecryptLyric(lyricSource.rawLrc, enableWordByWord) : undefined;
@@ -488,7 +499,7 @@ class Downloader extends EventEmitter<IEvents> implements IInjectable {
             const romanization = lyricSource.romanization ? await autoDecryptLyric(lyricSource.romanization, enableWordByWord) : undefined;
 
             if (!rawLrc) {
-                return;
+                return null;
             }
 
             const lyricContent = formatLyricsByTimestamp(
@@ -500,17 +511,19 @@ class Downloader extends EventEmitter<IEvents> implements IInjectable {
             );
 
             if (!lyricContent) {
-                return;
+                return null;
             }
 
             const lyricFilePath = `${musicFilePath.replace(/\.[^.]+$/, "")}.${lyricFileFormat}`;
             const { writeFile } = require("react-native-fs");
             await writeFile(removeFileScheme(lyricFilePath), lyricContent, "utf8");
+            return lyricFilePath;
         } catch (error) {
             errorLog("歌词文件下载失败", {
                 musicItem: musicItem.title,
                 error: error instanceof Error ? error.message : String(error),
             });
+            return null;
         }
     }
 
@@ -531,19 +544,19 @@ class Downloader extends EventEmitter<IEvents> implements IInjectable {
         }
         const unit = (match[2] ?? "B").toUpperCase();
         switch (unit) {
-            case "B":
-                return value;
-            case "K":
-            case "KB":
-                return value * 1024;
-            case "M":
-            case "MB":
-                return value * 1024 * 1024;
-            case "G":
-            case "GB":
-                return value * 1024 * 1024 * 1024;
-            default:
-                return 0;
+        case "B":
+            return value;
+        case "K":
+        case "KB":
+            return value * 1024;
+        case "M":
+        case "MB":
+            return value * 1024 * 1024;
+        case "G":
+        case "GB":
+            return value * 1024 * 1024 * 1024;
+        default:
+            return 0;
         }
     }
 
@@ -1113,6 +1126,11 @@ class Downloader extends EventEmitter<IEvents> implements IInjectable {
             cencCek,
             extension,
             encryptedExtension,
+            safDirectoryUri: Platform.OS === "android" && isAndroidSafUri(
+                this.configService.getConfig("basic.downloadPath"),
+            )
+                ? this.configService.getConfig("basic.downloadPath")
+                : undefined,
         };
 
         const nativeParams: INativeDownloadTaskParams = {
@@ -1188,54 +1206,54 @@ class Downloader extends EventEmitter<IEvents> implements IInjectable {
 
         const musicItem = taskInfo.musicItem;
         switch (rawTask.status) {
-            case "PENDING":
-                this.updateDownloadTask(musicItem, {
-                    status: DownloadStatus.Pending,
-                    downloadedSize: rawTask.downloaded > 0 ? rawTask.downloaded : taskInfo.downloadedSize,
-                    fileSize: rawTask.total > 0 ? rawTask.total : taskInfo.fileSize,
-                    progressText: rawTask.progressText ?? taskInfo.progressText,
-                });
-                break;
-            case "PREPARING":
-                this.updateDownloadTask(musicItem, {
-                    status: DownloadStatus.Preparing,
-                    progressText: rawTask.progressText ?? taskInfo.progressText,
-                });
-                break;
-            case "DOWNLOADING":
-                this.updateDownloadTask(musicItem, {
-                    status: DownloadStatus.Downloading,
-                    downloadedSize: rawTask.downloaded > 0 ? rawTask.downloaded : taskInfo.downloadedSize,
-                    fileSize: rawTask.total > 0 ? rawTask.total : taskInfo.fileSize,
-                    progressText: rawTask.progressText ?? taskInfo.progressText,
-                });
-                break;
-            case "PAUSED":
-                this.updateDownloadTask(musicItem, {
-                    status: DownloadStatus.Pending,
-                    downloadedSize: rawTask.downloaded > 0 ? rawTask.downloaded : taskInfo.downloadedSize,
-                    fileSize: rawTask.total > 0 ? rawTask.total : taskInfo.fileSize,
-                    progressText: rawTask.progressText ?? taskInfo.progressText,
-                });
-                break;
-            case "ERROR": {
-                const reason = this.mapNativeErrorToReason(rawTask.error);
-                this.updateDownloadTask(musicItem, {
-                    status: DownloadStatus.Error,
-                    errorReason: reason,
-                    progressText: rawTask.progressText ?? taskInfo.progressText,
-                });
-                this.emit(DownloaderEvent.DownloadTaskError, reason, musicItem);
-                break;
-            }
-            case "CANCELED":
-                this.cleanupTaskStateByKey(taskId, false);
-                break;
-            case "COMPLETED":
-                await this.completeTaskAfterDownload(taskId, true);
-                break;
-            default:
-                break;
+        case "PENDING":
+            this.updateDownloadTask(musicItem, {
+                status: DownloadStatus.Pending,
+                downloadedSize: rawTask.downloaded > 0 ? rawTask.downloaded : taskInfo.downloadedSize,
+                fileSize: rawTask.total > 0 ? rawTask.total : taskInfo.fileSize,
+                progressText: rawTask.progressText ?? taskInfo.progressText,
+            });
+            break;
+        case "PREPARING":
+            this.updateDownloadTask(musicItem, {
+                status: DownloadStatus.Preparing,
+                progressText: rawTask.progressText ?? taskInfo.progressText,
+            });
+            break;
+        case "DOWNLOADING":
+            this.updateDownloadTask(musicItem, {
+                status: DownloadStatus.Downloading,
+                downloadedSize: rawTask.downloaded > 0 ? rawTask.downloaded : taskInfo.downloadedSize,
+                fileSize: rawTask.total > 0 ? rawTask.total : taskInfo.fileSize,
+                progressText: rawTask.progressText ?? taskInfo.progressText,
+            });
+            break;
+        case "PAUSED":
+            this.updateDownloadTask(musicItem, {
+                status: DownloadStatus.Pending,
+                downloadedSize: rawTask.downloaded > 0 ? rawTask.downloaded : taskInfo.downloadedSize,
+                fileSize: rawTask.total > 0 ? rawTask.total : taskInfo.fileSize,
+                progressText: rawTask.progressText ?? taskInfo.progressText,
+            });
+            break;
+        case "ERROR": {
+            const reason = this.mapNativeErrorToReason(rawTask.error);
+            this.updateDownloadTask(musicItem, {
+                status: DownloadStatus.Error,
+                errorReason: reason,
+                progressText: rawTask.progressText ?? taskInfo.progressText,
+            });
+            this.emit(DownloaderEvent.DownloadTaskError, reason, musicItem);
+            break;
+        }
+        case "CANCELED":
+            this.cleanupTaskStateByKey(taskId, false);
+            break;
+        case "COMPLETED":
+            await this.completeTaskAfterDownload(taskId, true);
+            break;
+        default:
+            break;
         }
 
         this.maybeEmitQueueCompleted();
@@ -1307,18 +1325,47 @@ class Downloader extends EventEmitter<IEvents> implements IInjectable {
             }
 
             await this.writeMetadataToFile(task.musicItem, runtimeInfo.targetDownloadPath);
-            await this.downloadLyricFile(task.musicItem, runtimeInfo.targetDownloadPath);
+            const lyricFilePath = await this.downloadLyricFile(
+                task.musicItem,
+                runtimeInfo.targetDownloadPath,
+            );
+
+            let completedFilePath = runtimeInfo.targetDownloadPath;
+            if (runtimeInfo.safDirectoryUri) {
+                completedFilePath = await copyLocalFileToAndroidDirectory(
+                    runtimeInfo.targetDownloadPath,
+                    runtimeInfo.safDirectoryUri,
+                    getFileName(runtimeInfo.targetDownloadPath),
+                );
+                if (lyricFilePath) {
+                    try {
+                        await copyLocalFileToAndroidDirectory(
+                            lyricFilePath,
+                            runtimeInfo.safDirectoryUri,
+                            getFileName(lyricFilePath),
+                        );
+                    } catch (error) {
+                        errorLog("歌词文件写入授权目录失败", error);
+                    }
+                }
+                await unlink(removeFileScheme(runtimeInfo.targetDownloadPath)).catch(error => {
+                    errorLog("授权目录写入成功，但下载临时文件清理失败", error);
+                });
+                if (lyricFilePath) {
+                    await unlink(removeFileScheme(lyricFilePath)).catch(() => {});
+                }
+            }
 
             LocalMusicSheet.addMusic({
                 ...task.musicItem,
                 [internalSerializeKey]: {
-                    localPath: runtimeInfo.targetDownloadPath,
+                    localPath: completedFilePath,
                 },
             });
 
             patchMediaExtra(task.musicItem, {
                 downloaded: true,
-                localPath: runtimeInfo.targetDownloadPath,
+                localPath: completedFilePath,
             });
 
             this.updateDownloadTask(task.musicItem, {
@@ -1379,6 +1426,43 @@ class Downloader extends EventEmitter<IEvents> implements IInjectable {
 
         if (network.isCellular && !this.configService.getConfig("basic.useCelluarNetworkDownload")) {
             this.emit(DownloaderEvent.DownloadError, DownloadFailReason.NotAllowToDownloadInCellular);
+            return;
+        }
+
+        if (
+            Platform.OS === "android" &&
+            !isAndroidSafUri(this.configService.getConfig("basic.downloadPath"))
+        ) {
+            if (!this.androidDirectoryRequest) {
+                this.androidDirectoryRequest = requestAndroidDirectoryAccess()
+                    .finally(() => {
+                        this.androidDirectoryRequest = null;
+                    });
+            }
+            this.androidDirectoryRequest.then(directoryUri => {
+                if (!directoryUri) {
+                    const firstItem = Array.isArray(musicItems)
+                        ? musicItems[0]
+                        : musicItems;
+                    this.emit(DownloaderEvent.DownloadError, DownloadFailReason.NoWritePermission);
+                    if (firstItem) {
+                        this.emit(
+                            DownloaderEvent.DownloadTaskError,
+                            DownloadFailReason.NoWritePermission,
+                            firstItem,
+                        );
+                    }
+                    return;
+                }
+                this.configService.setConfig("basic.downloadPath", directoryUri);
+                this.download(musicItems, quality);
+            }).catch(error => {
+                this.emit(
+                    DownloaderEvent.DownloadError,
+                    DownloadFailReason.NoWritePermission,
+                    error as Error,
+                );
+            });
             return;
         }
 

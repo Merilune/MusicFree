@@ -6,7 +6,6 @@ import Button from "@/components/base/textButton.tsx";
 import ThemeText from "@/components/base/themeText";
 import VerticalSafeAreaView from "@/components/base/verticalSafeAreaView";
 import globalStyle from "@/constants/globalStyle";
-import pathConst from "@/constants/pathConst";
 import i18n from "@/core/i18n";
 import { useParams } from "@/core/router";
 import useColors from "@/hooks/useColors";
@@ -20,16 +19,13 @@ import {
     exists,
     getAllExternalFilesDirs,
     readDir,
-    copyFile,
-    mkdir,
-    unlink,
 } from "react-native-fs";
 import { FlatList } from "react-native-gesture-handler";
 import { getDocumentAsync } from "expo-document-picker";
-import { getFileName, removeFileScheme } from "@/utils/fileUtils";
 import FileItem from "./fileItem";
 import { errorLog } from "@/utils/log";
 import Toast from "@/utils/toast";
+import { requestAndroidDirectoryAccess } from "@/utils/androidSaf";
 
 interface IPathItem {
     path: string;
@@ -77,10 +73,23 @@ export default function FileSelector() {
             systemPickerStarted.current = true;
             setLoading(true);
             void (async () => {
-                const copiedPaths: string[] = [];
                 try {
+                    if (fileType === "folder") {
+                        const directoryUri = await requestAndroidDirectoryAccess();
+                        if (!directoryUri) {
+                            navigation.goBack();
+                            return;
+                        }
+                        await onAction?.([{
+                            path: directoryUri,
+                            type: "folder",
+                        }]);
+                        navigation.goBack();
+                        return;
+                    }
+
                     const result = await getDocumentAsync({
-                        copyToCacheDirectory: true,
+                        copyToCacheDirectory: false,
                         multiple: multi,
                         type: fileType === "file" ? "audio/*" : "*/*",
                     });
@@ -89,35 +98,13 @@ export default function FileSelector() {
                         return;
                     }
 
-                    const importPath = pathConst.importedMusicPath;
-                    if (!(await exists(importPath))) {
-                        await mkdir(importPath);
-                    }
-                    const selectedFiles: IFileItem[] = [];
-                    for (const [index, asset] of result.assets.entries()) {
-                        const sourcePath = removeFileScheme(asset.uri);
-                        const filename = getFileName(asset.name || asset.uri);
-                        const targetPath = `${importPath}${Date.now()}_${index}_${filename}`;
-                        await copyFile(sourcePath, targetPath);
-                        copiedPaths.push(targetPath);
-                        selectedFiles.push({ path: targetPath, type: "file" });
-                    }
-                    const shouldBack = await onAction?.(selectedFiles);
-                    if (shouldBack !== false) {
-                        navigation.goBack();
-                    } else {
-                        await Promise.all(
-                            copiedPaths.map(filePath =>
-                                unlink(filePath).catch(() => undefined),
-                            ),
-                        );
-                    }
+                    const selectedFiles = result.assets.map(asset => ({
+                        path: asset.uri,
+                        type: "file" as const,
+                    }));
+                    await onAction?.(selectedFiles);
+                    navigation.goBack();
                 } catch (error) {
-                    await Promise.all(
-                        copiedPaths.map(filePath =>
-                            unlink(filePath).catch(() => undefined),
-                        ),
-                    );
                     errorLog("Android 文件选择失败", error);
                     Toast.warn(i18n.t("toast.folderNotExistOrNoPermission"));
                     navigation.goBack();

@@ -12,8 +12,8 @@ const defaultDownloadMusicPath =
         : `${basePath}/download`;
 
 /**
- * Android no longer has broad storage access. Keep downloads inside the app's
- * external files directory, and migrate any legacy/public configured path to it.
+ * Android public directories are represented by a persisted SAF URI. Legacy
+ * raw public paths fall back to app storage until the user authorizes a folder.
  */
 export function getDownloadMusicPath(configuredPath?: string | null) {
     if (!configuredPath) {
@@ -21,6 +21,10 @@ export function getDownloadMusicPath(configuredPath?: string | null) {
     }
 
     if (Platform.OS !== "android") {
+        return configuredPath;
+    }
+
+    if (configuredPath.startsWith("content://")) {
         return configuredPath;
     }
 
@@ -37,7 +41,6 @@ export default {
     pluginPath: `${basePath}/plugins/`,
     logPath: `${basePath}/log/`,
     dataPath: `${basePath}/data/`,
-    importedMusicPath: `${basePath}/data/imported_music/`,
     cachePath: `${basePath}/cache/`,
     musicCachePath: CachesDirectoryPath + "/TrackPlayer",
     imageCachePath: CachesDirectoryPath + "/image_manager_disk_cache",

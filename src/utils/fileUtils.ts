@@ -24,7 +24,7 @@ const galleryBasePath = `${PicturesDirectoryPath}/Audiora/`;
  * @param src 图片地址
  * @returns 保存后的文件路径
  */
-export async function saveToGallery(src: string) {
+export async function saveImageToStorage(src: string) {
     const fileName = `${Date.now()}.png`;
     let sourcePath: string | null = null;
     let temporaryPath: string | null = null;
@@ -47,14 +47,19 @@ export async function saveToGallery(src: string) {
                 const [, data = ""] = src.split(",", 2);
                 await writeFile(temporaryPath, data, "base64");
                 sourcePath = temporaryPath;
+            } else if (src.startsWith("content://")) {
+                sourcePath = src;
             } else {
                 sourcePath = removeFileScheme(src);
             }
 
-            if (!sourcePath || !(await exists(sourcePath))) {
+            if (
+                !sourcePath ||
+                (!sourcePath.startsWith("content://") && !(await exists(sourcePath)))
+            ) {
                 throw new Error("图片文件不存在");
             }
-            return await NativeUtils.saveImageToGallery(sourcePath, fileName);
+            return await NativeUtils.saveImageToAppStorage(sourcePath, fileName);
         } finally {
             if (temporaryPath) {
                 await unlink(temporaryPath).catch(() => { });

@@ -459,7 +459,7 @@
     "panel.imageViewer.saveImageSuccess": "Image saved to {path}",
     "panel.imageViewer.saveImageFail": "Failed to save image: {reason}",
     "panel.coverOptions.viewImage": "View Full Image",
-    "panel.coverOptions.saveImage": "Save to Gallery",
+    "panel.coverOptions.saveImage": "Save Image",
     "panel.coverOptions.searchCover": "Search & Associate Cover",
     "panel.coverOptions.pickFromGallery": "Choose from Gallery",
     "panel.coverOptions.restoreDefault": "Restore Default Cover",

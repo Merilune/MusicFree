@@ -4,6 +4,7 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.media.MediaMetadataRetriever
 import android.net.Uri
+import android.provider.OpenableColumns
 import com.facebook.react.bridge.*
 import org.jaudiotagger.audio.AudioFileIO
 import org.jaudiotagger.tag.FieldKey
@@ -164,13 +165,15 @@ class Mp3UtilModule(private val reactContext: ReactApplicationContext) : ReactCo
     @ReactMethod
     fun getMediaCoverImg(filePath: String, promise: Promise) {
         try {
-            val file = File(filePath)
-            if (!file.exists()) {
+            val uri = Uri.parse(filePath)
+            val contentUri = isContentUri(uri)
+            val file = if (contentUri) null else File(filePath)
+            if (!contentUri && file?.exists() != true) {
                 promise.reject("File not exist", "File not exist")
                 return
             }
 
-            val pathHashCode = file.hashCode()
+            val pathHashCode = filePath.hashCode()
             if (pathHashCode == 0) {
                 promise.resolve(null)
                 return
@@ -184,7 +187,11 @@ class Mp3UtilModule(private val reactContext: ReactApplicationContext) : ReactCo
             }
 
             val mmr = MediaMetadataRetriever()
-            mmr.setDataSource(filePath)
+            if (contentUri) {
+                mmr.setDataSource(reactApplicationContext, uri)
+            } else {
+                mmr.setDataSource(filePath)
+            }
             val coverImg = mmr.embeddedPicture
             if (coverImg != null) {
                 val bitmap = BitmapFactory.decodeByteArray(coverImg, 0, coverImg.size)
@@ -205,15 +212,39 @@ class Mp3UtilModule(private val reactContext: ReactApplicationContext) : ReactCo
     @ReactMethod
     fun getLyric(filePath: String, promise: Promise) {
         try {
-            val file = File(filePath)
-            if (file.exists()) {
+            val uri = Uri.parse(filePath)
+            val lrc = if (isContentUri(uri)) {
+                val displayName = reactContext.contentResolver.query(
+                    uri,
+                    arrayOf(OpenableColumns.DISPLAY_NAME),
+                    null,
+                    null,
+                    null,
+                )?.use { cursor ->
+                    if (cursor.moveToFirst()) cursor.getString(0) else null
+                }
+                val extension = displayName
+                    ?.substringAfterLast('.', "")
+                    ?.lowercase()
+                    ?.takeIf { it.isNotEmpty() }
+                    ?: throw IOException("Unable to determine audio format")
+                reactContext.contentResolver.openFileDescriptor(uri, "r")?.use { descriptor ->
+                    val audioFile = AudioFileIO.readAs(
+                        File("/proc/self/fd/${descriptor.fd}"),
+                        extension,
+                    )
+                    audioFile.tag.getFirst(FieldKey.LYRICS)
+                } ?: throw IOException("Unable to open content URI")
+            } else {
+                val file = File(filePath)
+                if (!file.exists()) {
+                    throw IOException("File not found")
+                }
                 val audioFile = AudioFileIO.read(file)
                 val tag = audioFile.tag
-                val lrc = tag.getFirst(FieldKey.LYRICS)
-                promise.resolve(lrc)
-            } else {
-                throw IOException("File not found")
+                tag.getFirst(FieldKey.LYRICS)
             }
+            promise.resolve(lrc)
         } catch (e: Exception) {
             promise.reject("Error", e.message)
         }

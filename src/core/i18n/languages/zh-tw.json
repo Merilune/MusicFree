@@ -459,7 +459,7 @@
     "panel.imageViewer.saveImageSuccess": "圖片已儲存到 {path}",
     "panel.imageViewer.saveImageFail": "儲存圖片失敗: {reason}",
     "panel.coverOptions.viewImage": "檢視大圖",
-    "panel.coverOptions.saveImage": "儲存到相簿",
+    "panel.coverOptions.saveImage": "儲存圖片",
     "panel.coverOptions.searchCover": "搜尋並關聯封面",
     "panel.coverOptions.pickFromGallery": "從相簿選擇",
     "panel.coverOptions.restoreDefault": "恢復預設封面",
