@@ -41,6 +41,7 @@ import Network from "../../utils/network";
 import MediaCache from "../mediaCache";
 import _internalPluginMeta from "./meta";
 import { normalizePluginMusicItem } from "@/utils/qualities";
+import { androidSafUriExists, isAndroidSafUri } from "@/utils/androidSaf";
 
 
 axios.defaults.timeout = 2000;
@@ -381,7 +382,12 @@ class PluginMethodsWrapper implements IPlugin.IPluginInstanceMethods {
         const localPathInMediaExtra = getMediaExtraProperty(musicItem, "localPath");
         const localPath = getLocalPath(musicItem);
         if (!bypassLocalAndCache) {
-            if (localPath && (await exists(localPath))) {
+            const localPathExists = localPath && (
+                isAndroidSafUri(localPath)
+                    ? await androidSafUriExists(localPath)
+                    : await exists(localPath)
+            );
+            if (localPath && localPathExists) {
                 trace("本地播放", localPath);
                 if (localPathInMediaExtra !== localPath) {
                     // 修正一下本地数据

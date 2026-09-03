@@ -5,10 +5,9 @@ import ThemeText from "@/components/base/themeText";
 import { showDialog } from "@/components/dialogs/useDialog";
 import { showPanel } from "@/components/panels/usePanel";
 import { SortType } from "@/constants/commonConst.ts";
-import pathConst from "@/constants/pathConst";
+import { getDownloadMusicPath } from "@/constants/pathConst";
 import Config, { useAppConfig } from "@/core/appConfig";
 import { useI18N } from "@/core/i18n";
-import { ROUTE_PATH, useNavigate } from "@/core/router";
 import useColors from "@/hooks/useColors";
 import LyricUtil, { LYRIC_COLOR_PRESETS } from "@/native/lyricUtil";
 import { resolveLyricPresets } from "@/utils/lyricPreset";
@@ -21,8 +20,7 @@ import Toast from "@/utils/toast";
 import Clipboard from "@react-native-clipboard/clipboard";
 import Slider from "@react-native-community/slider";
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { AppState, SectionList, StyleSheet, TouchableOpacity, View } from "react-native";
-import { readdir, unlink as unlinkFile, writeFile } from "react-native-fs";
+import { AppState, Platform, SectionList, StyleSheet, TouchableOpacity, View } from "react-native";
 import { FlatList, ScrollView } from "react-native-gesture-handler";
 import lyricManager from "@/core/lyricManager";
 import {
@@ -31,6 +29,11 @@ import {
     DEFAULT_FILE_NAMING_CONFIG,
     TEMPLATE_VARIABLES,
 } from "@/utils/fileNamingFormatter";
+import {
+    getAndroidSafDirectoryLabel,
+    isAndroidSafUri,
+    requestAndroidDirectoryAccess,
+} from "@/utils/androidSaf";
 
 function createSwitch(
     title: string,
@@ -154,8 +157,6 @@ export default function BasicSetting() {
     const debugEnableErrorLog = useAppConfig("debug.errorLog");
     const debugEnableTraceLog = useAppConfig("debug.traceLog");
     const debugEnableDevLog = useAppConfig("debug.devLog");
-
-    const navigate = useNavigate();
 
     const [cacheSize, refreshCacheSize] = useCacheSize();
 
@@ -384,74 +385,31 @@ export default function BasicSetting() {
                             fontSize="subTitle"
                             style={styles.centerText}
                             numberOfLines={3}>
-                            {downloadPath ??
-                                pathConst.downloadMusicPath}
+                            {Platform.OS === "android"
+                                ? getAndroidSafDirectoryLabel(downloadPath)
+                                : getDownloadMusicPath(downloadPath)}
                         </ThemeText>
                     ),
-                    onPress() {
-                        const handlePathSelection = async (selectedFiles: any[]) => {
-                            try {
-                                const targetDir = selectedFiles[0];
-                                // 先检查基本权限
-                                await readdir(targetDir.path);
-                                
-                                // 检查目标目录是否可写（Native 下载器基于 FileOutputStream）
-                                try {
-                                    const testPath = `${targetDir.path}/musicfree_path_test.tmp`;
-                                    await writeFile(testPath, "musicfree_path_test", "utf8");
-                                    await unlinkFile(testPath).catch(() => {});
-                                    
-                                    // 如果到这里说明路径支持，设置路径
-                                    Config.setConfig(
-                                        "basic.downloadPath",
-                                        targetDir.path,
-                                    );
-                                    return true;
-                                } catch (pathError: any) {
-                                    // 检查是否是路径不支持错误
-                                    if (pathError?.code === "EACCES" || 
-                                        pathError?.message?.includes("permission") ||
-                                        pathError?.message?.includes("denied")) {
-                                        // 显示用户友好的对话框提示
-                                        showDialog("SimpleDialog", {
-                                            title: "路径不支持",
-                                            content: "该目录不可写，请选择有写入权限的目录（如 Music 或 Downloads）",
-                                            cancelText: "知道了",
-                                            okText: "重新选择",
-                                            onOk() {
-                                                // 重新触发文件选择器
-                                                setTimeout(() => {
-                                                    navigate<"file-selector">(ROUTE_PATH.FILE_SELECTOR, {
-                                                        fileType: "folder",
-                                                        multi: false,
-                                                        actionText: t("basicSettings.fileSelector.selectFolder"),
-                                                        onAction: handlePathSelection,
-                                                    });
-                                                }, 100);
-                                            },
-                                        });
-                                        return false;
-                                    } else {
-                                        // 其他错误，可能是网络问题等，仍然允许设置路径
-                                        Config.setConfig(
-                                            "basic.downloadPath",
-                                            targetDir.path,
-                                        );
-                                        return true;
-                                    }
-                                }
-                            } catch {
-                                Toast.warn(t("toast.folderNotExistOrNoPermission"));
-                                return false;
+                    async onPress() {
+                        if (Platform.OS !== "android") {
+                            return;
+                        }
+                        try {
+                            const directoryUri = await requestAndroidDirectoryAccess(
+                                isAndroidSafUri(downloadPath)
+                                    ? downloadPath
+                                    : undefined,
+                            );
+                            if (directoryUri) {
+                                Config.setConfig("basic.downloadPath", directoryUri);
                             }
-                        };
-                        
-                        navigate<"file-selector">(ROUTE_PATH.FILE_SELECTOR, {
-                            fileType: "folder",
-                            multi: false,
-                            actionText: t("basicSettings.fileSelector.selectFolder"),
-                            onAction: handlePathSelection,
-                        });
+                        } catch (error) {
+                            Toast.warn(
+                                error instanceof Error
+                                    ? error.message
+                                    : String(error),
+                            );
+                        }
                     },
                 },
                 createRadio(
@@ -1056,140 +1014,142 @@ function LyricSetting() {
                 {breathingDots.right}
             </ListItem>
 
-            {/* 桌面歌词设置（以下仅对悬浮在桌面/状态栏的歌词生效） */}
-            <ThemeText style={lyricStyles.subHeader}>
-                桌面歌词（仅对悬浮歌词生效）
-            </ThemeText>
-            <ListItem withHorizontalPadding heightType="small" onPress={openStatusBarLyric.onPress}>
-                <ListItem.Content title={openStatusBarLyric.title} />
-                {openStatusBarLyric.right}
-            </ListItem>
-            <ListItem withHorizontalPadding heightType="small" onPress={hideWhenPaused.onPress}>
-                <ListItem.Content title={hideWhenPaused.title} />
-                {hideWhenPaused.right}
-            </ListItem>
-            <ListItem withHorizontalPadding heightType="small" onPress={desktopTranslation.onPress}>
-                <ListItem.Content title={desktopTranslation.title} />
-                {desktopTranslation.right}
-            </ListItem>
-            <ListItem withHorizontalPadding heightType="small" onPress={desktopRomanization.onPress}>
-                <ListItem.Content title={desktopRomanization.title} />
-                {desktopRomanization.right}
-            </ListItem>
-            <ListItem withHorizontalPadding heightType="small">
-                <ListItem.Content title={`副行字号比例  ${((desktopSecondaryFontRatio ?? 0.85) * 100).toFixed(0)}%`} />
-            </ListItem>
-            <View style={lyricStyles.sliderContainer}>
-                <Slider
-                    style={lyricStyles.slider}
-                    minimumValue={0.5}
-                    maximumValue={1}
-                    step={0.01}
-                    value={desktopSecondaryFontRatio ?? 0.85}
-                    onValueChange={(val: number) => {
-                        if (showStatusBarLyric) {
-                            LyricUtil.setSecondaryFontRatio(val);
-                        }
-                    }}
-                    onSlidingComplete={(val: number) => {
-                        Config.setConfig("lyric.desktopSecondaryFontRatio", val);
-                    }}
-                    minimumTrackTintColor={colors.textHighlight}
-                    maximumTrackTintColor={colors.textSecondary + "40"}
-                    thumbTintColor={colors.textHighlight}
-                />
-            </View>
-            <ListItem withHorizontalPadding heightType="small">
-                <ListItem.Content title={`副行透明度比例  ${((desktopSecondaryAlphaRatio ?? 0.90) * 100).toFixed(0)}%`} />
-            </ListItem>
-            <View style={lyricStyles.sliderContainer}>
-                <Slider
-                    style={lyricStyles.slider}
-                    minimumValue={0.3}
-                    maximumValue={1}
-                    step={0.01}
-                    value={desktopSecondaryAlphaRatio ?? 0.90}
-                    onValueChange={(val: number) => {
-                        if (showStatusBarLyric) {
-                            LyricUtil.setSecondaryAlphaRatio(val);
-                        }
-                    }}
-                    onSlidingComplete={(val: number) => {
-                        Config.setConfig("lyric.desktopSecondaryAlphaRatio", val);
-                    }}
-                    minimumTrackTintColor={colors.textHighlight}
-                    maximumTrackTintColor={colors.textSecondary + "40"}
-                    thumbTintColor={colors.textHighlight}
-                />
-            </View>
-            <ListItem withHorizontalPadding heightType="small" onPress={invertColorsSwitch.onPress}>
-                <ListItem.Content title={invertColorsSwitch.title} />
-                {invertColorsSwitch.right}
-            </ListItem>
-
-            {/* 位置控制 */}
-            <ListItem withHorizontalPadding heightType="small">
-                <ListItem.Content title={`歌词宽度  ${Math.round((widthPercent ?? 0.8) * 100)}%`} />
-            </ListItem>
-            <View style={lyricStyles.sliderContainer}>
-                <Slider
-                    style={lyricStyles.slider}
-                    minimumValue={0.3}
-                    maximumValue={1}
-                    step={0.01}
-                    value={widthPercent ?? 0.8}
-                    onValueChange={(val: number) => {
-                        if (showStatusBarLyric) {
-                            LyricUtil.setStatusBarLyricWidth(val);
-                        }
-                    }}
-                    onSlidingComplete={(val: number) => {
-                        Config.setConfig("lyric.widthPercent", val);
-                    }}
-                    minimumTrackTintColor={colors.textHighlight}
-                    maximumTrackTintColor={colors.textSecondary + "40"}
-                    thumbTintColor={colors.textHighlight}
-                />
-            </View>
-
-            {/* 预设颜色方案（纯圆点，长按自定义） */}
-            <ListItem withHorizontalPadding heightType="small">
-                <ListItem.Content title={t("basicSettings.lyric.colorPreset")} />
-            </ListItem>
-            <View style={lyricStyles.presetRow}>
-                {LYRIC_COLOR_PRESETS.map((preset, idx) => (
-                    <TouchableOpacity
-                        key={idx}
-                        style={[
-                            lyricStyles.presetDotWrapper,
-                            (presetIndex ?? 0) === idx && lyricStyles.presetDotActive,
-                        ]}
-                        onPress={() => {
-                            Config.setConfig("lyric.presetIndex", idx);
+            {Platform.OS !== "android" && <>
+                {/* 桌面歌词设置（以下仅对悬浮在桌面/状态栏的歌词生效） */}
+                <ThemeText style={lyricStyles.subHeader}>
+                    桌面歌词（仅对悬浮歌词生效）
+                </ThemeText>
+                <ListItem withHorizontalPadding heightType="small" onPress={openStatusBarLyric.onPress}>
+                    <ListItem.Content title={openStatusBarLyric.title} />
+                    {openStatusBarLyric.right}
+                </ListItem>
+                <ListItem withHorizontalPadding heightType="small" onPress={hideWhenPaused.onPress}>
+                    <ListItem.Content title={hideWhenPaused.title} />
+                    {hideWhenPaused.right}
+                </ListItem>
+                <ListItem withHorizontalPadding heightType="small" onPress={desktopTranslation.onPress}>
+                    <ListItem.Content title={desktopTranslation.title} />
+                    {desktopTranslation.right}
+                </ListItem>
+                <ListItem withHorizontalPadding heightType="small" onPress={desktopRomanization.onPress}>
+                    <ListItem.Content title={desktopRomanization.title} />
+                    {desktopRomanization.right}
+                </ListItem>
+                <ListItem withHorizontalPadding heightType="small">
+                    <ListItem.Content title={`副行字号比例  ${((desktopSecondaryFontRatio ?? 0.85) * 100).toFixed(0)}%`} />
+                </ListItem>
+                <View style={lyricStyles.sliderContainer}>
+                    <Slider
+                        style={lyricStyles.slider}
+                        minimumValue={0.5}
+                        maximumValue={1}
+                        step={0.01}
+                        value={desktopSecondaryFontRatio ?? 0.85}
+                        onValueChange={(val: number) => {
                             if (showStatusBarLyric) {
-                                LyricUtil.setColorPreset(idx);
+                                LyricUtil.setSecondaryFontRatio(val);
                             }
                         }}
-                        onLongPress={() => {
-                            handleCustomizePreset(idx);
-                        }}>
-                        <View style={[lyricStyles.presetDot, { backgroundColor: getPresetColor(idx).slice(0, 7) }]} />
-                    </TouchableOpacity>
-                ))}
-            </View>
-
-            {/* 锁定时显示解锁按钮 */}
-            {isLocked && showStatusBarLyric && (
-                <ListItem
-                    withHorizontalPadding
-                    heightType="small"
-                    onPress={() => {
-                        LyricUtil.unlockDesktopLyric();
-                        Config.setConfig("lyric.isLocked", false);
-                    }}>
-                    <ListItem.Content title={t("basicSettings.lyric.unlock")} />
+                        onSlidingComplete={(val: number) => {
+                            Config.setConfig("lyric.desktopSecondaryFontRatio", val);
+                        }}
+                        minimumTrackTintColor={colors.textHighlight}
+                        maximumTrackTintColor={colors.textSecondary + "40"}
+                        thumbTintColor={colors.textHighlight}
+                    />
+                </View>
+                <ListItem withHorizontalPadding heightType="small">
+                    <ListItem.Content title={`副行透明度比例  ${((desktopSecondaryAlphaRatio ?? 0.90) * 100).toFixed(0)}%`} />
                 </ListItem>
-            )}
+                <View style={lyricStyles.sliderContainer}>
+                    <Slider
+                        style={lyricStyles.slider}
+                        minimumValue={0.3}
+                        maximumValue={1}
+                        step={0.01}
+                        value={desktopSecondaryAlphaRatio ?? 0.90}
+                        onValueChange={(val: number) => {
+                            if (showStatusBarLyric) {
+                                LyricUtil.setSecondaryAlphaRatio(val);
+                            }
+                        }}
+                        onSlidingComplete={(val: number) => {
+                            Config.setConfig("lyric.desktopSecondaryAlphaRatio", val);
+                        }}
+                        minimumTrackTintColor={colors.textHighlight}
+                        maximumTrackTintColor={colors.textSecondary + "40"}
+                        thumbTintColor={colors.textHighlight}
+                    />
+                </View>
+                <ListItem withHorizontalPadding heightType="small" onPress={invertColorsSwitch.onPress}>
+                    <ListItem.Content title={invertColorsSwitch.title} />
+                    {invertColorsSwitch.right}
+                </ListItem>
+
+                {/* 位置控制 */}
+                <ListItem withHorizontalPadding heightType="small">
+                    <ListItem.Content title={`歌词宽度  ${Math.round((widthPercent ?? 0.8) * 100)}%`} />
+                </ListItem>
+                <View style={lyricStyles.sliderContainer}>
+                    <Slider
+                        style={lyricStyles.slider}
+                        minimumValue={0.3}
+                        maximumValue={1}
+                        step={0.01}
+                        value={widthPercent ?? 0.8}
+                        onValueChange={(val: number) => {
+                            if (showStatusBarLyric) {
+                                LyricUtil.setStatusBarLyricWidth(val);
+                            }
+                        }}
+                        onSlidingComplete={(val: number) => {
+                            Config.setConfig("lyric.widthPercent", val);
+                        }}
+                        minimumTrackTintColor={colors.textHighlight}
+                        maximumTrackTintColor={colors.textSecondary + "40"}
+                        thumbTintColor={colors.textHighlight}
+                    />
+                </View>
+
+                {/* 预设颜色方案（纯圆点，长按自定义） */}
+                <ListItem withHorizontalPadding heightType="small">
+                    <ListItem.Content title={t("basicSettings.lyric.colorPreset")} />
+                </ListItem>
+                <View style={lyricStyles.presetRow}>
+                    {LYRIC_COLOR_PRESETS.map((preset, idx) => (
+                        <TouchableOpacity
+                            key={idx}
+                            style={[
+                                lyricStyles.presetDotWrapper,
+                                (presetIndex ?? 0) === idx && lyricStyles.presetDotActive,
+                            ]}
+                            onPress={() => {
+                                Config.setConfig("lyric.presetIndex", idx);
+                                if (showStatusBarLyric) {
+                                    LyricUtil.setColorPreset(idx);
+                                }
+                            }}
+                            onLongPress={() => {
+                                handleCustomizePreset(idx);
+                            }}>
+                            <View style={[lyricStyles.presetDot, { backgroundColor: getPresetColor(idx).slice(0, 7) }]} />
+                        </TouchableOpacity>
+                    ))}
+                </View>
+
+                {/* 锁定时显示解锁按钮 */}
+                {isLocked && showStatusBarLyric && (
+                    <ListItem
+                        withHorizontalPadding
+                        heightType="small"
+                        onPress={() => {
+                            LyricUtil.unlockDesktopLyric();
+                            Config.setConfig("lyric.isLocked", false);
+                        }}>
+                        <ListItem.Content title={t("basicSettings.lyric.unlock")} />
+                    </ListItem>
+                )}
+            </>}
         </View>
     );
 }

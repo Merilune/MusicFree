@@ -34,7 +34,7 @@ export default function MainPage() {
                         async onPress() {
                             navigate(ROUTE_PATH.FILE_SELECTOR, {
                                 fileType: "folder",
-                                multi: true,
+                                multi: false,
                                 actionText: t("localMusic.beginScan"),
                                 async onAction(selectedFiles) {
                                     return new Promise(resolve => {
@@ -54,6 +54,13 @@ export default function MainPage() {
                                             onCancel(hideDialog) {
                                                 LocalMusicSheet.cancelImportLocal();
                                                 hideDialog();
+                                                resolve(false);
+                                            },
+                                            onReject(reason, hideDialog) {
+                                                hideDialog();
+                                                Toast.warn(
+                                                    `${t("toast.failToImportMusic")}: ${reason?.message ?? reason}`,
+                                                );
                                                 resolve(false);
                                             },
                                         });

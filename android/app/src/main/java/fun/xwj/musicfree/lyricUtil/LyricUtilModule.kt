@@ -1,14 +1,9 @@
 package `fun`.xwj.musicfree.lyricUtil
 
-import android.app.Activity
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
-import android.os.Build
 import android.os.SystemClock
-import android.provider.Settings
 import android.util.Log
-import androidx.annotation.RequiresApi
 import com.facebook.react.bridge.*
 import com.facebook.react.modules.core.DeviceEventManagerModule
 import java.util.*
@@ -41,28 +36,6 @@ class LyricUtilModule(private val reactContext: ReactApplicationContext): ReactC
             left.toDouble().coerceIn(0.0, 1.0),
             top.toDouble().coerceIn(0.0, 1.0),
         )
-    }
-
-    @ReactMethod
-    fun checkSystemAlertPermission(promise: Promise) {
-        try {
-            promise.resolve(Settings.canDrawOverlays(reactContext))
-        } catch (e: Exception) {
-            promise.reject("Error", e.message)
-        }
-    }
-
-    @ReactMethod
-    fun requestSystemAlertPermission(promise: Promise) {
-        try {
-            val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION).apply {
-                data = Uri.parse("package:" + reactContext.packageName)
-            }
-            reactContext.currentActivity?.startActivity(intent)
-            promise.resolve(true)
-        } catch (e: Exception) {
-            promise.reject("Error", e.message)
-        }
     }
 
     @ReactMethod

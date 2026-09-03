@@ -1,16 +1,13 @@
 package `fun`.xwj.musicfree.utils; // replace your-apps-package-name with your app's package name
-import android.Manifest
 import android.content.Context
-import android.content.Intent
-import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
-import android.provider.Settings
+import android.provider.DocumentsContract
 import android.util.DisplayMetrics
 import android.view.WindowInsets
 import android.view.WindowManager
-import androidx.core.content.ContextCompat
+import androidx.documentfile.provider.DocumentFile
 import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
@@ -18,6 +15,9 @@ import com.facebook.react.bridge.ReactContextBaseJavaModule
 import com.facebook.react.bridge.ReactMethod
 import com.facebook.react.bridge.WritableMap
 import com.facebook.react.bridge.ReadableArray
+import java.io.File
+import java.util.ArrayDeque
+import java.util.concurrent.Executors
 import kotlin.system.exitProcess
 import javax.crypto.Cipher
 import javax.crypto.spec.SecretKeySpec
@@ -25,8 +25,19 @@ import javax.crypto.spec.SecretKeySpec
 class UtilsModule(context: ReactApplicationContext) : ReactContextBaseJavaModule(context) {
 
     private val reactContext: ReactApplicationContext = context;
+    private val fileExecutor = Executors.newSingleThreadExecutor { runnable ->
+        Thread(runnable, "Audiora-SAF").apply { isDaemon = true }
+    }
+    private val supportedAudioExtensions = setOf(
+        "mp3", "flac", "wma", "wav", "m4a", "ogg", "acc", "aac", "ape", "opus",
+    )
 
     override fun getName() = "NativeUtils"
+
+    override fun invalidate() {
+        fileExecutor.shutdownNow()
+        super.invalidate()
+    }
 
     @ReactMethod
     fun exitApp() {
@@ -37,28 +48,149 @@ class UtilsModule(context: ReactApplicationContext) : ReactContextBaseJavaModule
     }
 
     @ReactMethod
-    fun checkStoragePermission(promise: Promise) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            promise.resolve(Environment.isExternalStorageManager())
-        } else {
-            val readPermission = ContextCompat.checkSelfPermission(reactContext, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
-            val writePermission = ContextCompat.checkSelfPermission(reactContext, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
-            promise.resolve(readPermission && writePermission)
+    fun saveImageToAppStorage(sourcePath: String, displayName: String, promise: Promise) {
+        try {
+            val imageDir = File(
+                reactContext.getExternalFilesDir(Environment.DIRECTORY_PICTURES),
+                "Audiora",
+            )
+            require(imageDir.exists() || imageDir.mkdirs()) {
+                "Unable to create image directory"
+            }
+            val target = File(imageDir, displayName)
+            val sourceUri = Uri.parse(sourcePath)
+            val input = if (sourceUri.scheme.equals("content", ignoreCase = true)) {
+                reactContext.contentResolver.openInputStream(sourceUri)
+            } else {
+                val sourceFilePath = if (sourcePath.startsWith("file://")) {
+                    sourceUri.path ?: sourcePath
+                } else {
+                    sourcePath
+                }
+                File(sourceFilePath).takeIf(File::isFile)?.inputStream()
+            }
+            require(input != null) { "Image source does not exist" }
+            input.use { source ->
+                target.outputStream().use { output -> source.copyTo(output) }
+            }
+            promise.resolve(Uri.fromFile(target).toString())
+        } catch (error: Exception) {
+            promise.reject("SaveImageToAppStorageFailed", error.message, error)
         }
     }
 
     @ReactMethod
-    fun requestStoragePermission() {
-        val intent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION).apply {
-                data = Uri.parse("package:${reactContext.packageName}")
-            }
-        } else {
-            Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
-                data = Uri.parse("package:${reactContext.packageName}")
+    fun scanSafAudioFiles(directoryUri: String, promise: Promise) {
+        fileExecutor.execute {
+            try {
+                val root = DocumentFile.fromTreeUri(reactContext, Uri.parse(directoryUri))
+                require(root != null && root.exists() && root.isDirectory) {
+                    "Directory is unavailable"
+                }
+
+                val pending = ArrayDeque<DocumentFile>()
+                val visited = mutableSetOf<String>()
+                val result = Arguments.createArray()
+                pending.add(root)
+                while (pending.isNotEmpty()) {
+                    val directory = pending.removeFirst()
+                    if (!visited.add(directory.uri.toString())) {
+                        continue
+                    }
+                    directory.listFiles().forEach { entry ->
+                        if (entry.isDirectory) {
+                            pending.add(entry)
+                        } else if (entry.isFile && isSupportedAudioFile(entry)) {
+                            result.pushMap(Arguments.createMap().apply {
+                                putString("uri", entry.uri.toString())
+                                putString("name", entry.name ?: entry.uri.lastPathSegment ?: "audio")
+                                putString(
+                                    "documentId",
+                                    runCatching {
+                                        DocumentsContract.getDocumentId(entry.uri)
+                                    }.getOrNull(),
+                                )
+                            })
+                        }
+                    }
+                }
+                promise.resolve(result)
+            } catch (error: Exception) {
+                promise.reject("ScanSafDirectoryFailed", error.message, error)
             }
         }
-        reactContext.currentActivity?.startActivity(intent)
+    }
+
+    private fun isSupportedAudioFile(file: DocumentFile): Boolean {
+        val extension = file.name
+            ?.substringAfterLast('.', "")
+            ?.lowercase()
+        return extension in supportedAudioExtensions || file.type?.startsWith("audio/") == true
+    }
+
+    @ReactMethod
+    fun safUriExists(uriString: String, promise: Promise) {
+        try {
+            val uri = Uri.parse(uriString)
+            val exists = DocumentFile.fromSingleUri(reactContext, uri)?.let {
+                it.exists() && it.isFile
+            } ?: false
+            promise.resolve(exists)
+        } catch (_: Exception) {
+            promise.resolve(false)
+        }
+    }
+
+    @ReactMethod
+    fun copyFileToSafDirectory(
+        sourcePath: String,
+        directoryUri: String,
+        displayName: String,
+        mimeType: String,
+        promise: Promise,
+    ) {
+        fileExecutor.execute {
+            try {
+                val normalizedSourcePath = if (sourcePath.startsWith("file://")) {
+                    Uri.parse(sourcePath).path ?: sourcePath
+                } else {
+                    sourcePath
+                }
+                val source = File(normalizedSourcePath)
+                require(source.isFile) { "Source file does not exist" }
+
+                val directory = DocumentFile.fromTreeUri(
+                    reactContext,
+                    Uri.parse(directoryUri),
+                )
+                require(directory != null && directory.exists() && directory.isDirectory) {
+                    "Directory is unavailable"
+                }
+                val target = directory.createFile(mimeType, displayName)
+                    ?: error("Unable to create destination file")
+                try {
+                    reactContext.contentResolver.openOutputStream(target.uri, "w")?.use { output ->
+                        source.inputStream().use { input -> input.copyTo(output) }
+                    } ?: error("Unable to open destination file")
+                } catch (error: Exception) {
+                    target.delete()
+                    throw error
+                }
+                promise.resolve(target.uri.toString())
+            } catch (error: Exception) {
+                promise.reject("CopyFileToSafDirectoryFailed", error.message, error)
+            }
+        }
+    }
+
+    @ReactMethod
+    fun deleteSafUri(uriString: String, promise: Promise) {
+        try {
+            val file = DocumentFile.fromSingleUri(reactContext, Uri.parse(uriString))
+            promise.resolve(file == null || !file.exists() || file.delete())
+        } catch (error: Exception) {
+            promise.reject("DeleteSafUriFailed", error.message, error)
+        }
     }
 
     @ReactMethod(isBlockingSynchronousMethod = true)

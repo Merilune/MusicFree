@@ -8,8 +8,33 @@ export const basePath =
 
 const defaultDownloadMusicPath =
     Platform.OS === "android"
-        ? "/storage/emulated/0/Music/Audiora"
+        ? `${basePath}/download/`
         : `${basePath}/download`;
+
+/**
+ * Android public directories are represented by a persisted SAF URI. Legacy
+ * raw public paths fall back to app storage until the user authorizes a folder.
+ */
+export function getDownloadMusicPath(configuredPath?: string | null) {
+    if (!configuredPath) {
+        return defaultDownloadMusicPath;
+    }
+
+    if (Platform.OS !== "android") {
+        return configuredPath;
+    }
+
+    if (configuredPath.startsWith("content://")) {
+        return configuredPath;
+    }
+
+    const normalizedPath = configuredPath.startsWith("file://")
+        ? configuredPath.slice(7)
+        : configuredPath;
+    return normalizedPath === basePath || normalizedPath.startsWith(`${basePath}/`)
+        ? normalizedPath
+        : defaultDownloadMusicPath;
+}
 
 export default {
     basePath,

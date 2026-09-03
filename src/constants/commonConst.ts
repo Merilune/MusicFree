@@ -47,18 +47,7 @@ export const CacheControl = {
     NoStore: "no-store",
 };
 
-export const supportLocalMediaType = [
-    ".mp3",
-    ".flac",
-    ".wma",
-    ".wav",
-    ".m4a",
-    ".ogg",
-    ".acc",
-    ".aac",
-    ".ape",
-    ".opus",
-];
+export { supportLocalMediaType } from "./mediaConst";
 
 const ANIMATION_EASING: EasingFunction = Easing.out(Easing.exp);
 const ANIMATION_DURATION = 150;

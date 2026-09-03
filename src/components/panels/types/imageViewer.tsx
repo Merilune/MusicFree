@@ -3,7 +3,7 @@ import { Image, StyleSheet, View } from "react-native";
 import rpx, { vh, vw } from "@/utils/rpx";
 import Toast from "@/utils/toast";
 import useOrientation from "@/hooks/useOrientation.ts";
-import { saveToGallery } from "@/utils/fileUtils.ts";
+import { saveImageToStorage } from "@/utils/fileUtils.ts";
 import { errorLog } from "@/utils/log.ts";
 import PanelFullscreen from "@/components/panels/base/panelFullscreen.tsx";
 import { Button } from "@/components/base/button.tsx";
@@ -42,7 +42,7 @@ export default function ImageViewer(props: IImageViewerProps) {
                 type="primary"
                 style={styles.button}
                 onPress={() => {
-                    saveToGallery(url)
+                    saveImageToStorage(url)
                         .then((resultPath) => {
                             Toast.success(t("panel.imageViewer.saveImageSuccess", {
                                 path: resultPath,

@@ -13,7 +13,7 @@ import useHardwareBack from "@/hooks/useHardwareBack";
 import rpx from "@/utils/rpx";
 import { useNavigation } from "@react-navigation/native";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Pressable, StyleSheet, View } from "react-native";
+import { Platform, Pressable, StyleSheet, View } from "react-native";
 import {
     ExternalStorageDirectoryPath,
     exists,
@@ -21,7 +21,11 @@ import {
     readDir,
 } from "react-native-fs";
 import { FlatList } from "react-native-gesture-handler";
+import { getDocumentAsync } from "expo-document-picker";
 import FileItem from "./fileItem";
+import { errorLog } from "@/utils/log";
+import Toast from "@/utils/toast";
+import { requestAndroidDirectoryAccess } from "@/utils/androidSaf";
 
 interface IPathItem {
     path: string;
@@ -59,8 +63,58 @@ export default function FileSelector() {
     const navigation = useNavigation();
     const colors = useColors();
     const [loading, setLoading] = useState(false);
+    const systemPickerStarted = useRef(false);
 
     useEffect(() => {
+        if (Platform.OS === "android") {
+            if (systemPickerStarted.current) {
+                return;
+            }
+            systemPickerStarted.current = true;
+            setLoading(true);
+            void (async () => {
+                try {
+                    if (fileType === "folder") {
+                        const directoryUri = await requestAndroidDirectoryAccess();
+                        if (!directoryUri) {
+                            navigation.goBack();
+                            return;
+                        }
+                        await onAction?.([{
+                            path: directoryUri,
+                            type: "folder",
+                        }]);
+                        navigation.goBack();
+                        return;
+                    }
+
+                    const result = await getDocumentAsync({
+                        copyToCacheDirectory: false,
+                        multiple: multi,
+                        type: fileType === "file" ? "audio/*" : "*/*",
+                    });
+                    if (result.canceled) {
+                        navigation.goBack();
+                        return;
+                    }
+
+                    const selectedFiles = result.assets.map(asset => ({
+                        path: asset.uri,
+                        type: "file" as const,
+                    }));
+                    await onAction?.(selectedFiles);
+                    navigation.goBack();
+                } catch (error) {
+                    errorLog("Android 文件选择失败", error);
+                    Toast.warn(i18n.t("toast.folderNotExistOrNoPermission"));
+                    navigation.goBack();
+                } finally {
+                    setLoading(false);
+                }
+            })();
+            return;
+        }
+
         (async () => {
             // 路径变化时，重新读取
             setLoading(true);
@@ -137,7 +191,7 @@ export default function FileSelector() {
             setLoading(false);
             currentPathRef.current = currentPath;
         })();
-    }, [currentPath, fileType, matchExtension]);
+    }, [currentPath, fileType, matchExtension, multi, navigation, onAction]);
 
     useHardwareBack(() => {
         // 注意闭包

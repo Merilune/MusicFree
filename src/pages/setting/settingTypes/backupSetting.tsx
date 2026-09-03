@@ -3,7 +3,7 @@ import Backup from "@/core/backup";
 import { ROUTE_PATH, useNavigate } from "@/core/router";
 import Toast from "@/utils/toast";
 import React from "react";
-import { ScrollView, StyleSheet } from "react-native";
+import { Platform, ScrollView, StyleSheet } from "react-native";
 
 import { showDialog } from "@/components/dialogs/useDialog";
 import { showPanel } from "@/components/panels/usePanel";
@@ -18,6 +18,7 @@ import { errorLog, devLog } from "@/utils/log.ts";
 import { getDocumentAsync } from "expo-document-picker";
 import { readAsStringAsync } from "expo-file-system/legacy";
 import { AuthType, createClient } from "webdav";
+import { saveJsonToSelectedAndroidDirectory } from "@/utils/androidSaf";
 
 const AUDIORA_WEBDAV_BACKUP_DIR = "/Audiora";
 const AUDIORA_WEBDAV_BACKUP_FILE = `${AUDIORA_WEBDAV_BACKUP_DIR}/AudioraBackup.json`;
@@ -35,6 +36,24 @@ export default function BackupSetting() {
 
 
     const onBackupToLocal = async () => {
+        if (Platform.OS === "android") {
+            try {
+                const result = await saveJsonToSelectedAndroidDirectory(
+                    Backup.createBackupFileName(),
+                    Backup.backup(),
+                );
+                if (result) {
+                    Toast.success(t("toast.backupSuccess"));
+                }
+            } catch (reason: any) {
+                devLog("warn", "💾[备份设置] Android 本地备份失败", reason);
+                Toast.warn(t("toast.backupFail", {
+                    reason: reason?.message ?? reason,
+                }));
+            }
+            return;
+        }
+
         navigate(ROUTE_PATH.FILE_SELECTOR, {
             fileType: "folder",
             multi: false,
@@ -155,9 +174,9 @@ export default function BackupSetting() {
             ? AUDIORA_WEBDAV_BACKUP_FILE
             : await client.exists(LEGACY_MUSICFREE_WEBDAV_BACKUP_FILE)
                 ? LEGACY_MUSICFREE_WEBDAV_BACKUP_FILE
-            : await client.exists(BAKAMUSIC_WEBDAV_BACKUP_FILE)
-                ? BAKAMUSIC_WEBDAV_BACKUP_FILE
-                : null;
+                : await client.exists(BAKAMUSIC_WEBDAV_BACKUP_FILE)
+                    ? BAKAMUSIC_WEBDAV_BACKUP_FILE
+                    : null;
         if (!restoreSource) {
             Toast.warn(t("toast.backupFileNotFound"));
             return;

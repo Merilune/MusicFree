@@ -14,15 +14,13 @@ import MusicSheet from "@/core/musicSheet";
 import PluginManager from "@/core/pluginManager";
 import Theme from "@/core/theme";
 import TrackPlayer from "@/core/trackPlayer";
-import NativeUtils from "@/native/utils";
 import { checkAndCreateDir } from "@/utils/fileUtils";
 import { appendStartupBreadcrumb, crashLog, flushStartupBreadcrumbs, markStartupSession, trace, devLog } from "@/utils/log";
 import { IPerfLogger, perfLogger } from "@/utils/perfLogger";
 import PersistStatus from "@/utils/persistStatus";
 import Toast from "@/utils/toast";
 import * as SplashScreen from "expo-splash-screen";
-import {  Linking, Platform } from "react-native";
-import { PERMISSIONS, check, request } from "react-native-permissions";
+import { Linking, Platform } from "react-native";
 import RNTrackPlayer, { AppKilledPlaybackBehavior, Capability } from "react-native-track-player";
 import i18n from "@/core/i18n";
 import bootstrapAtom from "./bootstrap.atom";
@@ -82,33 +80,6 @@ async function bootstrapImpl() {
     await splashScreenPreventPromise;
     void appendStartupBreadcrumb("splashscreen-prevented");
     const logger = perfLogger();
-    // 1. 检查权限
-    if (Platform.OS === "android") {
-        if (Platform.Version >= 30) {
-            const hasPermission = await NativeUtils.checkStoragePermission();
-            if (
-                !hasPermission &&
-                !PersistStatus.get("app.skipBootstrapStorageDialog")
-            ) {
-                showDialog("CheckStorage");
-            }
-        } else {
-            const [readStoragePermission, writeStoragePermission] =
-                await Promise.all([
-                    check(PERMISSIONS.ANDROID.READ_EXTERNAL_STORAGE),
-                    check(PERMISSIONS.ANDROID.WRITE_EXTERNAL_STORAGE),
-                ]);
-            if (
-                !(
-                    readStoragePermission === "granted" &&
-                    writeStoragePermission === "granted"
-                )
-            ) {
-                await request(PERMISSIONS.ANDROID.READ_EXTERNAL_STORAGE);
-                await request(PERMISSIONS.ANDROID.WRITE_EXTERNAL_STORAGE);
-            }
-        }
-    }
     void appendStartupBreadcrumb("permissions-checked", { platform: Platform.OS });
     logger.mark("权限检查完成");
 
@@ -121,6 +92,12 @@ async function bootstrapImpl() {
             logger.mark("文件夹初始化完成");
         }),
         Config.setup().then(() => {
+            // Desktop lyrics used a permission that is no longer part of the app.
+            // Clear the old flag so an upgrade never tries to recreate that window.
+            if (Platform.OS === "android") {
+                Config.setConfig("lyric.showStatusBarLyric", false);
+                Config.setConfig("lyric.isLocked", false);
+            }
             logger.mark("Config");
         }),
         MusicSheet.setup().then(() => {

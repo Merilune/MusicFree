@@ -8,7 +8,7 @@ import Toast from "@/utils/toast";
 import { devLog } from "@/utils/log";
 import Clipboard from "@react-native-clipboard/clipboard";
 import React from "react";
-import { StyleSheet, View } from "react-native";
+import { Platform, StyleSheet, View } from "react-native";
 
 import Divider from "@/components/base/divider";
 import { IIconName } from "@/components/base/icon.tsx";
@@ -31,8 +31,13 @@ import PluginManager from "@/core/pluginManager";
 import { autoDecryptLyric } from "@/utils/musicDecrypter";
 import { writeFile } from "react-native-fs";
 import { escapeCharacter } from "@/utils/fileUtils";
-import pathConst from "@/constants/pathConst";
+import { getDownloadMusicPath } from "@/constants/pathConst";
 import { formatLyricsByTimestamp } from "@/utils/lrcParser";
+import {
+    isAndroidSafUri,
+    requestAndroidDirectoryAccess,
+    writeTextToAndroidDirectory,
+} from "@/utils/androidSaf";
 
 interface IMusicItemLyricOptionsProps {
     /** 歌曲信息 */
@@ -175,6 +180,7 @@ export default function MusicItemLyricOptions(
                     ? t("panel.musicItemLyricOptions.disableDesktopLyric")
                     : t("panel.musicItemLyricOptions.enableDesktopLyric"),
             }),
+            show: Platform.OS !== "android",
             async onPress() {
                 const showStatusBarLyric = Config.getConfig("lyric.showStatusBarLyric");
                 if (!showStatusBarLyric) {
@@ -216,7 +222,7 @@ export default function MusicItemLyricOptions(
             title: Config.getConfig("lyric.isLocked")
                 ? t("basicSettings.lyric.unlock")
                 : t("basicSettings.lyric.lock"),
-            show: !!Config.getConfig("lyric.showStatusBarLyric"),
+            show: Platform.OS !== "android" && !!Config.getConfig("lyric.showStatusBarLyric"),
             onPress() {
                 const isLocked = Config.getConfig("lyric.isLocked");
                 if (isLocked) {
@@ -285,7 +291,8 @@ export default function MusicItemLyricOptions(
                     const lyricFileFormat = Config.getConfig("basic.lyricFileFormat") ?? "lrc";
                     const lyricOrder = Config.getConfig("basic.lyricOrder") ?? ["romanization", "original", "translation"];
                     const enableWordByWord = Config.getConfig("lyric.enableWordByWord") ?? false;
-                    const downloadPath = Config.getConfig("basic.downloadPath") ?? pathConst.downloadMusicPath;
+                    const configuredDownloadPath = Config.getConfig("basic.downloadPath");
+                    const downloadPath = getDownloadMusicPath(configuredDownloadPath);
 
                     devLog("info", "[歌词下载] 配置信息", {
                         format: lyricFileFormat,
@@ -322,11 +329,27 @@ export default function MusicItemLyricOptions(
                     const safeTitle = escapeCharacter(musicItem.title || "unknown");
                     const safeArtist = escapeCharacter(musicItem.artist || "unknown");
                     const filename = `${safeTitle} - ${safeArtist}.${lyricFileFormat}`;
-                    const basePath = downloadPath.endsWith("/") ? downloadPath : `${downloadPath}/`;
-                    const filePath = `${basePath}${filename}`;
-
-                    // Write file
-                    await writeFile(filePath, lyricContent, "utf8");
+                    let filePath: string;
+                    if (Platform.OS === "android") {
+                        const directoryUri = isAndroidSafUri(configuredDownloadPath)
+                            ? configuredDownloadPath
+                            : await requestAndroidDirectoryAccess();
+                        if (!directoryUri) {
+                            return;
+                        }
+                        Config.setConfig("basic.downloadPath", directoryUri);
+                        filePath = await writeTextToAndroidDirectory(
+                            directoryUri,
+                            filename,
+                            lyricContent,
+                        );
+                    } else {
+                        const basePath = downloadPath.endsWith("/")
+                            ? downloadPath
+                            : `${downloadPath}/`;
+                        filePath = `${basePath}${filename}`;
+                        await writeFile(filePath, lyricContent, "utf8");
+                    }
 
                     devLog("info", "[歌词下载] 保存成功", {
                         path: filePath,
