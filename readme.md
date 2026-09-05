@@ -71,6 +71,7 @@ Audiora 是一个用于管理、播放和同步音乐的通用客户端，面向
 - 📚 **插件开发**：[开发文档](https://musicfree.catcat.work/plugin/introduction.html)
 - ❓ **常见问题**：[Q&A 文档](https://musicfree.catcat.work/qa/common.html)
 - 🔧 **使用指南**：[详细教程](https://musicfree.catcat.work/usage/mobile/install-plugin.html)
+- 📦 **本地 Android 测试包**：[构建与验证步骤](./BUILDING.md)
 
 音质键值、原版插件兼容说明与上游一致，详见上游 README。
 
