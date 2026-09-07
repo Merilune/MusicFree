@@ -2,7 +2,7 @@ import type { ResumeMode, SortType } from "@/constants/commonConst.ts";
 import type { CustomizedColors } from "@/hooks/useColors";
 
 export interface IAppConfigProperties {
-    $schema: "4";
+    $schema: "6";
     // Common
     "common.isAgreePact": boolean;
     // Basic
@@ -15,6 +15,7 @@ export interface IAppConfigProperties {
     "basic.clickMusicInAlbum": "playAlbum" | "playMusic";
     "basic.downloadPath": string;
     "basic.notInterrupt": boolean;
+    "basic.yieldToExternalMusic": boolean;
     "basic.tempRemoteDuck": "pause" | "lowerVolume";
     "basic.tempRemoteDuckVolume": 0.3 | 0.5 | 0.8;
     "basic.autoStopWhenError": boolean;

@@ -458,9 +458,8 @@ function writeCompactNotificationRes() {
     console.log("[patch-track-player] wrote compact notification res files");
 }
 
-function patchCompactNotification() {
+function patchLegacyCompactNotification() {
     if (!fs.existsSync(servicePath)) {
-        console.log("[patch-track-player] MusicService.kt not found, skipping compact notification");
         return;
     }
     let source = fs.readFileSync(servicePath, "utf8");
@@ -644,5 +643,5 @@ patchReactContextEmit();
 patchBundleNullability();
 patchTurboModuleVoidReturn();
 writeCompactNotificationRes();
-patchCompactNotification();
+require("./patch-compact-notification").patchCompactNotificationV2();
 cleanTrackPlayerAndroidBuild();

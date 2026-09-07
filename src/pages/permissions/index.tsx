@@ -8,13 +8,14 @@ import globalStyle from "@/constants/globalStyle";
 import { useI18N } from "@/core/i18n";
 import LyricUtil from "@/native/lyricUtil";
 import NativeUtils from "@/native/utils";
+import ExternalMedia from "@/native/externalMedia";
 import downloadNotificationManager from "@/core/downloadNotificationManager";
 import rpx from "@/utils/rpx";
 import { devLog } from "@/utils/log";
 import React, { useEffect, useRef, useState } from "react";
 import { AppState, StyleSheet } from "react-native";
 
-type IPermissionTypes = "floatingWindow" | "fileStorage" | "notification";
+type IPermissionTypes = "floatingWindow" | "fileStorage" | "notification" | "notificationListener";
 
 export default function Permissions() {
     const appState = useRef(AppState.currentState);
@@ -24,6 +25,7 @@ export default function Permissions() {
         floatingWindow: false,
         fileStorage: false,
         notification: false,
+        notificationListener: false,
         // background: false,
     });
     const { t } = useI18N();
@@ -43,6 +45,11 @@ export default function Permissions() {
         if (!type || type === "notification") {
             const hasPermission = await downloadNotificationManager.checkNotificationPermission();
             newPermissions.notification = hasPermission;
+        }
+        if (!type || type === "notificationListener") {
+            const hasPermission = await ExternalMedia.isNotificationListenerEnabled();
+            newPermissions.notificationListener = hasPermission;
+            ExternalMedia.reconcile();
         }
         // if (!type || type === 'background') {
 
@@ -145,6 +152,22 @@ export default function Permissions() {
                             }, 500);
                         }
                         // 如果是关闭，Android 系统不支持应用直接关闭权限
+                    }}
+                />
+            </ListItem>
+            <ListItem
+                withHorizontalPadding
+                heightType="big">
+                <ListItem.Content
+                    title={t("permissionSetting.notificationListenerPermission")}
+                    description={t("permissionSetting.notificationListenerPermissionDescription")}
+                />
+                <ThemeSwitch
+                    value={permissions.notificationListener}
+                    onValueChange={newValue => {
+                        if (newValue) {
+                            ExternalMedia.openNotificationListenerSettings();
+                        }
                     }}
                 />
             </ListItem>

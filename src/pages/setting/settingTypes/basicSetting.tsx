@@ -11,6 +11,7 @@ import { useI18N } from "@/core/i18n";
 import { ROUTE_PATH, useNavigate } from "@/core/router";
 import useColors from "@/hooks/useColors";
 import LyricUtil, { LYRIC_COLOR_PRESETS } from "@/native/lyricUtil";
+import ExternalMedia from "@/native/externalMedia";
 import { resolveLyricPresets } from "@/utils/lyricPreset";
 import { AppConfigPropertyKey } from "@/types/core/config";
 import { clearCache, getCacheSize, sizeFormatter } from "@/utils/fileUtils";
@@ -120,6 +121,7 @@ export default function BasicSetting() {
     const clickMusicInAlbum = useAppConfig("basic.clickMusicInAlbum");
     const downloadPath = useAppConfig("basic.downloadPath");
     const notInterrupt = useAppConfig("basic.notInterrupt");
+    const yieldToExternalMusic = useAppConfig("basic.yieldToExternalMusic");
     const tempRemoteDuck = useAppConfig("basic.tempRemoteDuck");
     const tempRemoteDuckVolume = useAppConfig("basic.tempRemoteDuckVolume");
     const autoStopWhenError = useAppConfig("basic.autoStopWhenError");
@@ -174,6 +176,22 @@ export default function BasicSetting() {
                     t("basicSettings.notInterrupt"),
                     "basic.notInterrupt",
                     notInterrupt ?? false,
+                ),
+                createSwitch(
+                    t("basicSettings.yieldToExternalMusic"),
+                    "basic.yieldToExternalMusic",
+                    yieldToExternalMusic ?? false,
+                    async newValue => {
+                        if (newValue) {
+                            const granted = await ExternalMedia.isNotificationListenerEnabled();
+                            if (!granted) {
+                                ExternalMedia.openNotificationListenerSettings();
+                                return;
+                            }
+                        }
+                        Config.setConfig("basic.yieldToExternalMusic", newValue);
+                        ExternalMedia.setEnabled(newValue);
+                    },
                 ),
                 createSwitch(
                     t("basicSettings.autoPlayWhenAppStart"),

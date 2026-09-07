@@ -5,6 +5,7 @@ import getOrCreateMMKV from "@/utils/getOrCreateMMKV.ts";
 
 import type { AppConfigPropertyKey, IAppConfig, IAppConfigProperties } from "@/types/core/config";
 import { safeStringify } from "@/utils/jsonUtil";
+import ExternalMedia from "@/native/externalMedia";
 
 const configStore = getOrCreateMMKV("App.config");
 
@@ -225,10 +226,20 @@ class AppConfig implements IAppConfig {
             configStore.set("$schema", "5");
         }
 
+        if (schemaVersion < 6) {
+            if (this.getConfig("basic.yieldToExternalMusic") === undefined) {
+                this.setConfig("basic.yieldToExternalMusic", false);
+            }
+            configStore.set("$schema", "6");
+        }
+
     }
 
     async setup(): Promise<void> {
         await this.migrateConfig();
+        ExternalMedia.setEnabled(
+            this.getConfig("basic.yieldToExternalMusic") ?? false,
+        );
     }
 
     setConfig<K extends keyof IAppConfigProperties>(
