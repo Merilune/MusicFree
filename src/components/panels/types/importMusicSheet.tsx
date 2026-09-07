@@ -37,6 +37,23 @@ export default function ImportMusicSheet() {
                                 style={{
                                     marginBottom: safeAreaInsets.bottom,
                                 }}
+                                ListHeaderComponent={
+                                    <ListItem
+                                        withHorizontalPadding
+                                        heightType="small"
+                                        onPress={() => {
+                                            showPanel("MergeImportMusicSheet");
+                                        }}>
+                                        <ListItem.Content
+                                            title={t(
+                                                "panel.mergeImportMusicSheet.entry",
+                                            )}
+                                            description={t(
+                                                "panel.mergeImportMusicSheet.entryDescription",
+                                            )}
+                                        />
+                                    </ListItem>
+                                }
                                 renderItem={({ item: plugin }) => (
                                     <ListItem
                                         withHorizontalPadding

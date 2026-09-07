@@ -3,6 +3,7 @@ import ArtistSelectPanel from "./artistSelectPanel";
 import AssociateLrc from "./associateLrc";
 import ColorPicker from "./colorPicker";
 import ImportMusicSheet from "./importMusicSheet";
+import MergeImportMusicSheet from "./mergeImportMusicSheet";
 import MusicItemOptions from "./musicItemOptions";
 import MusicQuality from "./musicQuality";
 import CreateMusicSheet from "./createMusicSheet";
@@ -38,6 +39,8 @@ export default {
     CreateMusicSheet,
     /** 导入歌单 */
     ImportMusicSheet,
+    /** 合并导入多个歌单 */
+    MergeImportMusicSheet,
     /** 通过ID播放 */
     PlayById,
     /** 当前播放列表 */
