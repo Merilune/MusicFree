@@ -423,22 +423,16 @@ class LyricUtilModule(private val reactContext: ReactApplicationContext): ReactC
     @ReactMethod
     fun setCompactNotificationFavorite(favorite: Boolean, promise: Promise) {
         try {
-            // 用 action intent 转发给 MusicService（补丁里处理），
-            // 避免编译期依赖 node_modules 里的类
-            val intent = Intent("mf.compact.favstate").apply {
-                setClassName(
-                    reactContext.packageName,
-                    "com.doublesymmetry.trackplayer.service.MusicService",
-                )
+            // 用动态注册广播转发给 MusicService（补丁里处理）。
+            // 不能用 startService：应用在后台时（用户正看通知栏）会抛
+            // IllegalStateException 被吞掉，红心状态推不过去。
+            // RECEIVER_REGISTERED_ONLY 只投递给动态接收器，不会拉起组件。
+            val intent = Intent("fun.xwj.musicfree.compact.FAVSTATE").apply {
+                setPackage(reactContext.packageName)
                 putExtra("favorite", favorite)
+                addFlags(Intent.FLAG_RECEIVER_REGISTERED_ONLY)
             }
-            try {
-                reactContext.startService(intent)
-            } catch (_: IllegalStateException) {
-                // 服务不在前台（通知也不存在），状态无需更新；
-                // 不能走 startForegroundService：补丁对 mf.compact.* 提前
-                // return，不会调 startForeground，5 秒超时会崩
-            }
+            reactContext.sendBroadcast(intent)
             promise.resolve(true)
         } catch (e: Exception) {
             promise.reject("Exception", e.message)

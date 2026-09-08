@@ -168,12 +168,17 @@ const kotlinImplementation = `    // ${MARKER}
                 when (intent?.action) {
                     "fun.xwj.musicfree.externalmedia.SUPPRESS" -> suppressForExternalMedia()
                     "fun.xwj.musicfree.externalmedia.RESTORE" -> restoreFromExternalMedia()
+                    "fun.xwj.musicfree.compact.FAVSTATE" -> {
+                        compactFavorite = intent.getBooleanExtra("favorite", false)
+                        refreshCompactNotification()
+                    }
                 }
             }
         }
         val filter = android.content.IntentFilter().apply {
             addAction("fun.xwj.musicfree.externalmedia.SUPPRESS")
             addAction("fun.xwj.musicfree.externalmedia.RESTORE")
+            addAction("fun.xwj.musicfree.compact.FAVSTATE")
         }
         if (android.os.Build.VERSION.SDK_INT >= 33) {
             registerReceiver(externalMediaReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
