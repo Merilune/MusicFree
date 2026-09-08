@@ -1,19 +1,20 @@
 import React, { useState } from "react";
-import { ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
+import { ScrollView, StyleSheet, TextInput, View } from "react-native";
 import rpx, { vmax } from "@/utils/rpx";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import ListItem from "@/components/base/listItem";
 import ThemeText from "@/components/base/themeText";
 import IconButton from "@/components/base/iconButton";
+import useColors from "@/hooks/useColors";
 import Toast from "@/utils/toast";
 import { showDialog } from "@/components/dialogs/useDialog";
-import { showPanel } from "../usePanel";
 import PanelBase from "../base/panelBase";
 import PanelHeader from "../base/panelHeader";
 import PluginManager, { Plugin } from "@/core/pluginManager";
 import { normalizeImportedMusicSheet } from "@/utils/mediaUtils";
 import { mergeMusicSheetsByPriority } from "@/utils/sheetMerge";
+import { showPanel } from "../usePanel";
 import { useI18N } from "@/core/i18n";
 
 interface ISourceRow {
@@ -21,24 +22,17 @@ interface ISourceRow {
     url: string;
 }
 
-interface IMergeImportMusicSheetProps {
-    /** 预置的音源行（由单歌单导入入口进入时传入） */
-    initialRows?: ISourceRow[];
-}
-
-export default function MergeImportMusicSheet(
-    props: IMergeImportMusicSheetProps,
-) {
+export default function MergeImportMusicSheet() {
     const validPlugins =
         PluginManager.getSortedPluginsWithAbility("importMusicSheet");
     const { t } = useI18N();
+    const colors = useColors();
     const safeAreaInsets = useSafeAreaInsets();
 
-    const [rows, setRows] = useState<ISourceRow[]>(
-        props?.initialRows?.length
-            ? props.initialRows
-            : [{ plugin: validPlugins[0] ?? null, url: "" }, { plugin: null, url: "" }],
-    );
+    const [rows, setRows] = useState<ISourceRow[]>([
+        { plugin: validPlugins[0] ?? null, url: "" },
+        { plugin: null, url: "" },
+    ]);
     const [merging, setMerging] = useState(false);
 
     const updateRow = (index: number, patch: Partial<ISourceRow>) => {
@@ -144,7 +138,9 @@ export default function MergeImportMusicSheet(
                 },
             });
         } catch (e: any) {
-            Toast.warn(e?.message ?? t("panel.mergeImportMusicSheet.mergeFailed"));
+            Toast.warn(
+                e?.message ?? t("panel.mergeImportMusicSheet.mergeFailed"),
+            );
         } finally {
             setMerging(false);
         }
@@ -158,6 +154,7 @@ export default function MergeImportMusicSheet(
                     <PanelHeader
                         title={t("panel.mergeImportMusicSheet.title")}
                         okText={t("panel.mergeImportMusicSheet.merge")}
+                        loading={merging}
                         onOk={startMerge}
                         onCancel={() => showPanel("ImportMusicSheet")}
                     />
@@ -171,122 +168,127 @@ export default function MergeImportMusicSheet(
                             {t("panel.mergeImportMusicSheet.priorityHint")}
                         </ThemeText>
                         {rows.map((row, index) => (
-                            <ListItem
+                            <View
                                 key={`${index}`}
-                                withHorizontalPadding
-                                heightType="small"
-                                onPress={() => {
-                                    showPanel("SimpleSelect", {
-                                        header: t(
-                                            "panel.mergeImportMusicSheet.selectPlugin",
-                                        ),
-                                        candidates: validPlugins.map(plugin => ({
-                                            title: plugin.name,
-                                            value: plugin.hash,
-                                        })),
-                                        onPress(candidate) {
-                                            updateRow(index, {
-                                                plugin:
-                                                    validPlugins.find(
-                                                        it =>
-                                                            it.hash ===
-                                                            candidate.value,
-                                                    ) ?? null,
-                                            });
-                                        },
-                                    });
-                                }}>
-                                <ListItem.Content
-                                    title={
-                                        row.plugin?.name ??
-                                        t(
-                                            "panel.mergeImportMusicSheet.selectPlugin",
-                                        )
-                                    }
-                                    description={
-                                        row.url ||
-                                        t(
-                                            "panel.mergeImportMusicSheet.linkPlaceholder",
-                                        )
-                                    }
-                                />
-                                <View style={style.rowActions}>
-                                    <IconButton
-                                        name="pencil-square"
-                                        sizeType="light"
-                                        onPress={() => {
-                                            if (!row.plugin) {
-                                                Toast.warn(
-                                                    t(
-                                                        "panel.mergeImportMusicSheet.selectPluginFirst",
+                                style={style.rowWrapper}>
+                                <View style={style.rowHeader}>
+                                    <ThemeText
+                                        fontWeight="bold"
+                                        fontSize="subTitle">
+                                        {`${index + 1}. ${
+                                            row.plugin?.name ??
+                                            t(
+                                                "panel.mergeImportMusicSheet.selectPlugin",
+                                            )
+                                        }`}
+                                    </ThemeText>
+                                    <View style={style.rowActions}>
+                                        <IconButton
+                                            name="trash-outline"
+                                            sizeType="light"
+                                            onPress={() => {
+                                                setRows(prev =>
+                                                    prev.filter(
+                                                        (_, i) =>
+                                                            i !== index,
                                                     ),
                                                 );
-                                                return;
+                                            }}
+                                        />
+                                        <IconButton
+                                            name="skip-left"
+                                            sizeType="light"
+                                            onPress={() =>
+                                                moveRow(index, -1)
                                             }
-                                            showPanel("SimpleInput", {
-                                                title: row.plugin.name,
-                                                placeholder: t(
-                                                    "panel.mergeImportMusicSheet.linkPlaceholder",
-                                                ),
-                                                hints: row.plugin.instance
-                                                    .hints?.importMusicSheet,
-                                                maxLength: 1000,
-                                                onOk(text) {
-                                                    updateRow(index, {
-                                                        url: text,
-                                                    });
-                                                },
-                                            });
-                                        }}
-                                    />
-                                    <IconButton
-                                        name="trash-outline"
-                                        sizeType="light"
-                                        onPress={() => {
-                                            setRows(prev =>
-                                                prev.filter(
-                                                    (_, i) => i !== index,
-                                                ),
-                                            );
-                                        }}
-                                    />
-                                    <TouchableOpacity
-                                        style={style.moveButton}
-                                        disabled={index === 0}
-                                        onPress={() => moveRow(index, -1)}>
-                                        <ThemeText
-                                            fontColor={
-                                                index === 0
-                                                    ? "textSecondary"
-                                                    : "primary"
-                                            }>
-                                            ↑
-                                        </ThemeText>
-                                    </TouchableOpacity>
-                                    <TouchableOpacity
-                                        style={style.moveButton}
-                                        disabled={index === rows.length - 1}
-                                        onPress={() => moveRow(index, 1)}>
-                                        <ThemeText
-                                            fontColor={
-                                                index === rows.length - 1
-                                                    ? "textSecondary"
-                                                    : "primary"
-                                            }>
-                                            ↓
-                                        </ThemeText>
-                                    </TouchableOpacity>
+                                        />
+                                        <IconButton
+                                            name="skip-right"
+                                            sizeType="light"
+                                            onPress={() => moveRow(index, 1)}
+                                        />
+                                    </View>
                                 </View>
-                            </ListItem>
+                                <ScrollView
+                                    horizontal
+                                    showsHorizontalScrollIndicator={false}
+                                    style={style.pluginScroll}>
+                                    <View style={style.pluginChips}>
+                                        {validPlugins.map(plugin => {
+                                            const isSelected =
+                                                row.plugin?.hash ===
+                                                plugin.hash;
+                                            return (
+                                                <View
+                                                    key={plugin.hash}
+                                                    style={[
+                                                        style.pluginChip,
+                                                        {
+                                                            backgroundColor:
+                                                                isSelected
+                                                                    ? colors.primary
+                                                                    : colors.placeholder,
+                                                        },
+                                                    ]}>
+                                                    <ThemeText
+                                                        fontSize="subTitle"
+                                                        numberOfLines={1}
+                                                        style={{
+                                                            color: isSelected
+                                                                ? "#fff"
+                                                                : colors.text,
+                                                        }}
+                                                        onPress={() => {
+                                                            updateRow(index, {
+                                                                plugin:
+                                                                    isSelected
+                                                                        ? row.plugin
+                                                                        : plugin,
+                                                            });
+                                                        }}>
+                                                        {plugin.name}
+                                                    </ThemeText>
+                                                </View>
+                                            );
+                                        })}
+                                    </View>
+                                </ScrollView>
+                                <TextInput
+                                    value={row.url}
+                                    onChangeText={text => {
+                                        updateRow(index, { url: text });
+                                    }}
+                                    style={[
+                                        style.input,
+                                        {
+                                            color: colors.text,
+                                            backgroundColor:
+                                                colors.placeholder,
+                                        },
+                                    ]}
+                                    placeholderTextColor={colors.textSecondary}
+                                    placeholder={t(
+                                        "panel.mergeImportMusicSheet.linkPlaceholder",
+                                    )}
+                                    maxLength={1000}
+                                    autoCapitalize="none"
+                                    autoCorrect={false}
+                                />
+                            </View>
                         ))}
                         <ListItem
                             withHorizontalPadding
                             heightType="small"
                             onPress={() => {
-                                setRows(prev => [...prev, { plugin: null, url: "" }]);
+                                setRows(prev => [
+                                    ...prev,
+                                    { plugin: null, url: "" },
+                                ]);
                             }}>
                             <ListItem.Content
-                                title={t("panel.mergeImportMusicSheet.addSource")}
+                                title={t(
+                                    "panel.mergeImportMusicSheet.addSource",
+                                )}
                             />
                         </ListItem>
                     </ScrollView>
@@ -304,15 +306,38 @@ const style = StyleSheet.create({
         paddingHorizontal: rpx(24),
         paddingVertical: rpx(16),
     },
+    rowWrapper: {
+        paddingHorizontal: rpx(24),
+        paddingVertical: rpx(12),
+    },
+    rowHeader: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+    },
     rowActions: {
         flexDirection: "row",
         alignItems: "center",
         gap: rpx(4),
     },
-    moveButton: {
-        width: rpx(52),
-        height: rpx(52),
-        alignItems: "center",
-        justifyContent: "center",
+    pluginScroll: {
+        marginTop: rpx(8),
+    },
+    pluginChips: {
+        flexDirection: "row",
+        flexWrap: "nowrap",
+        gap: rpx(12),
+        paddingVertical: rpx(6),
+    },
+    pluginChip: {
+        paddingHorizontal: rpx(20),
+        paddingVertical: rpx(10),
+        borderRadius: rpx(24),
+    },
+    input: {
+        marginTop: rpx(10),
+        borderRadius: rpx(14),
+        paddingHorizontal: rpx(20),
+        paddingVertical: rpx(14),
     },
 });
