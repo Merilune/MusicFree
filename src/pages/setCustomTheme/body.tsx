@@ -18,6 +18,7 @@ import {
     saveBackgroundImage,
 } from "@/utils/backgroundImage";
 import rpx from "@/utils/rpx";
+import { trimHash } from "@/utils/fileUtils";
 import { devLog } from "@/utils/log";
 import Toast from "@/utils/toast";
 import Color from "color";
@@ -47,8 +48,10 @@ export default function Body() {
 
         let themeColors: Partial<CustomizedColors> = {};
         try {
-            const colorsResult = await ImageColors.getColors(bgUrl, {
-                fallback: "#ffffff",
+            // 背景地址末尾的 #时间戳只用于击穿 RN 图片缓存；
+            // 原生取色器会把它当成本地文件名的一部分，导致读取失败并回退白色。
+            const colorsResult = await ImageColors.getColors(trimHash(bgUrl), {
+                fallback: customThemeDefaultPrimary,
             });
             const colors = {
                 primary:
