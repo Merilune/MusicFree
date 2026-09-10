@@ -754,19 +754,17 @@ export default function Lyric(props: IProps) {
                 // directly; the lyric atom may update one event later.
                 scrollPhaseRef.current = ScrollPhase.InitialPositioning;
                 let didSeek = false;
-                let didPlay = false;
                 let resolvedTargetIndex = targetIndex;
                 try {
                     await TrackPlayer.seekTo(time);
                     didSeek = true;
                     await TrackPlayer.play();
-                    didPlay = true;
                 } finally {
                     if (didSeek) {
-                        resolvedTargetIndex =
-                            lyricManager.syncAfterSeek(time, didPlay)?.index ??
-                            targetIndex;
-                        pendingSeekIndexRef.current = resolvedTargetIndex;
+                        // Keep the selected row as the interaction target. The
+                        // ProgressChanged listener updates lyric state immediately,
+                        // but React may not have committed that atom in this turn.
+                        pendingSeekIndexRef.current = targetIndex;
                     } else {
                         clearPendingSeek();
                     }

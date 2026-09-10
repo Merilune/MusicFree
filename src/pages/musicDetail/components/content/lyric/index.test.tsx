@@ -150,7 +150,7 @@ describe("Lyric progress seek", () => {
 
         expect(mockTrackPlayer.seekTo).toHaveBeenCalledWith(40);
         expect(mockTrackPlayer.play).toHaveBeenCalledTimes(1);
-        expect(mockLyricManager.syncAfterSeek).toHaveBeenCalledWith(40, true);
+        expect(mockLyricManager.syncAfterSeek).not.toHaveBeenCalled();
         expect(mockScrollToOffset).toHaveBeenCalledWith({
             animated: true,
             offset: 214,

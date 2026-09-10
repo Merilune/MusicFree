@@ -7,7 +7,6 @@ import globalStyle from "@/constants/globalStyle";
 import { useI18N } from "@/core/i18n";
 import Theme, {
     customBackgroundSurfaceColors,
-    customThemeDefaultPrimary,
     darkTheme,
     DEFAULT_BACKGROUND_BLUR,
     DEFAULT_BACKGROUND_OPACITY,
@@ -19,6 +18,10 @@ import {
 } from "@/utils/backgroundImage";
 import rpx from "@/utils/rpx";
 import { trimHash } from "@/utils/fileUtils";
+import {
+    IMAGE_COLOR_FALLBACK,
+    selectImageThemeColor,
+} from "@/utils/imageThemeColor";
 import { devLog } from "@/utils/log";
 import Toast from "@/utils/toast";
 import Color from "color";
@@ -34,11 +37,13 @@ export default function Body() {
 
     async function onImageClick() {
         let bgUrl: string;
+        let sourceUri: string;
         try {
             const uri = await pickBackgroundImage();
             if (!uri) {
                 return;
             }
+            sourceUri = uri;
             bgUrl = await saveBackgroundImage(uri, "background");
         } catch (e) {
             devLog("warn", "🎨[自定义主题] 背景图落盘失败", e);
@@ -46,111 +51,50 @@ export default function Body() {
             return;
         }
 
-        let themeColors: Partial<CustomizedColors> = {};
-        try {
-            // 背景地址末尾的 #时间戳只用于击穿 RN 图片缓存；
-            // 原生取色器会把它当成本地文件名的一部分，导致读取失败并回退白色。
-            const colorsResult = await ImageColors.getColors(trimHash(bgUrl), {
-                fallback: customThemeDefaultPrimary,
-            });
-            const colors = {
-                primary:
-                    colorsResult.platform === "android"
-                        ? colorsResult.dominant
-                        : colorsResult.platform === "ios"
-                            ? colorsResult.primary
-                            : colorsResult.vibrant,
-                average:
-                    colorsResult.platform === "android"
-                        ? colorsResult.average
-                        : colorsResult.platform === "ios"
-                            ? colorsResult.detail
-                            : colorsResult.dominant,
-                vibrant:
-                    colorsResult.platform === "android"
-                        ? colorsResult.vibrant
-                        : colorsResult.platform === "ios"
-                            ? colorsResult.secondary
-                            : colorsResult.vibrant,
-            };
-
-            // 候选色全部收集，以 dominant（主导色）为基准挑：
-            // Palette 对深色图的量化可能抠出只占极小面积的暖色 vibrant
-            // （蓝黑图出橙色就是它），色相偏离主导色太多的候选强降权
-            const candidates = [colors.primary, colors.vibrant, colors.average]
-                .filter(Boolean)
-                .map(cl => Color(cl));
-            const dom = candidates[0];
-            let base: Color;
-            if (
-                dom &&
-                dom.saturation() >= 0.15 &&
-                dom.lightness() >= 0.05 &&
-                dom.lightness() <= 0.85
-            ) {
-                const domHue = dom.hue();
-                base = candidates
-                    .map(c => {
-                        let score = c.saturation();
-                        const l = c.lightness();
-                        if (l > 0.85 || l < 0.05) {
-                            score *= 0.3;
-                        }
-                        const dh = Math.min(
-                            Math.abs(c.hue() - domHue),
-                            360 - Math.abs(c.hue() - domHue),
-                        );
-                        if (dh > 40) {
-                            score *= 0.4;
-                        }
-                        return { c, score };
-                    })
-                    .sort((a, b) => b.score - a.score)[0].c;
-            } else {
-                // dominant 本身接近黑/白/灰（色相不可信），用中性白保持黑白调
-                base =
-                    candidates.find(
-                        c => c.saturation() >= 0.2 && c.lightness() > 0.15,
-                    ) ?? Color(customThemeDefaultPrimary);
-            }
-
-            // 归一化：饱和度太低（灰白）提饱和，亮度太亮（白）/太黑收进
-            // 中间区间，保证主色在深浅底色上都看得清，不会出现纯白主色
-            let normalizedPrimary: string;
+        let autoPrimary: string | null = null;
+        const paletteUris = [sourceUri, trimHash(bgUrl)].filter(
+            (uri, index, all) => all.indexOf(uri) === index,
+        );
+        for (const [index, paletteUri] of paletteUris.entries()) {
             try {
-                let c = base;
-                if (c.saturation() < 0.2) {
-                    // 灰白图保持黑白调，只把亮度收进可读区间，不提饱和
-                    // （提饱和会借 hue=0 变成粉色）
-                    c = Color(customThemeDefaultPrimary).lightness(
-                        Math.min(Math.max(c.lightness(), 0.4), 0.6),
-                    );
+                const colorsResult = await ImageColors.getColors(paletteUri, {
+                    fallback: IMAGE_COLOR_FALLBACK,
+                    cache: false,
+                });
+                autoPrimary = selectImageThemeColor(colorsResult);
+                devLog("info", "🎨[自定义主题] 自动取色结果", {
+                    attempt: index + 1,
+                    uriType: paletteUri.split(":", 1)[0] || "path",
+                    platform: colorsResult.platform,
+                    success: !!autoPrimary,
+                });
+                if (autoPrimary) {
+                    break;
                 }
-                const lightness = c.lightness();
-                if (lightness > 0.72) {
-                    c = c.lightness(0.62);
-                } else if (lightness < 0.32) {
-                    c = c.lightness(0.42);
-                }
-                normalizedPrimary = c.toString();
-            } catch {
-                normalizedPrimary = customThemeDefaultPrimary;
+            } catch (e) {
+                devLog("warn", "🎨[自定义主题] 自动取色尝试失败", {
+                    attempt: index + 1,
+                    uriType: paletteUri.split(":", 1)[0] || "path",
+                    error: e,
+                });
             }
+        }
 
-            const neutralMusicBar = Color(darkTheme.colors.musicBar)
-                .alpha(0.92)
-                .toString();
-
-            themeColors = {
-                ...customBackgroundSurfaceColors,
-                primary: normalizedPrimary,
-                musicBar: neutralMusicBar,
-                tabBar: Color(normalizedPrimary).alpha(0.2).toString(),
-            };
-        } catch (e) {
-            // 取色失败不挡换背景：背景照设，配色退回黑白默认
-            devLog("warn", "🎨[自定义主题] 取色失败，退回默认配色", e);
-            themeColors = { ...customBackgroundSurfaceColors };
+        const neutralMusicBar = Color(darkTheme.colors.musicBar)
+            .alpha(0.92)
+            .toString();
+        const themeColors: Partial<CustomizedColors> = {
+            ...customBackgroundSurfaceColors,
+            musicBar: neutralMusicBar,
+            ...(autoPrimary
+                ? {
+                    primary: autoPrimary,
+                    tabBar: Color(autoPrimary).alpha(0.2).toString(),
+                }
+                : {}),
+        };
+        if (!autoPrimary) {
+            Toast.warn("背景已更换，但自动取色失败，已保留原主题色");
         }
 
         try {

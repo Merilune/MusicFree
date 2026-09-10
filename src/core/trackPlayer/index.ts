@@ -1045,7 +1045,11 @@ class TrackPlayer extends EventEmitter<{
 
     async seekTo(progress: number) {
         PersistStatus.set("music.progress", progress);
-        return ReactNativeTrackPlayer.seekTo(progress);
+        await ReactNativeTrackPlayer.seekTo(progress);
+        this.emit(TrackPlayerEvents.ProgressChanged, {
+            position: progress,
+            duration: 0,
+        });
     }
 
     getProgress = ReactNativeTrackPlayer.getProgress;

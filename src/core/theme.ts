@@ -398,8 +398,10 @@ function setup() {
 
         // 表面色迁移：setColors 历史版本会把深色主题的表面色（弹窗/卡片底）
         // 一并写进配置；深色主题改色后自定义主题会渗进它的紫灰。
-        // 逐键判定：值缺失、等于深色主题预设、或等于壁纸模式的黑叠加，
-        // 都算"从没单独调过"，换成中性黑灰（sameColor 比较容忍格式差异）
+        // 逐键判定：值缺失、等于深色主题预设，或在当前没有壁纸时仍残留
+        // 壁纸模式的黑叠加，都算“从没单独调过”，换成中性黑灰。
+        // 有壁纸时必须保留 rgba 黑叠加，否则每次启动都会把半透明卡片迁成纯黑。
+        // sameColor 比较容忍格式差异。
         const surfaceKeys: (keyof CustomizedColors)[] = [
             "pageBackground",
             "appBar",
@@ -415,7 +417,8 @@ function setup() {
         const surfaceUntouched = (key: keyof CustomizedColors, val: any) =>
             !val ||
             sameColor(val, darkTheme.colors[key]) ||
-            (customBackgroundSurfaceColors[key] !== undefined &&
+            (!bgUrl &&
+                customBackgroundSurfaceColors[key] !== undefined &&
                 sameColor(val, customBackgroundSurfaceColors[key]));
 
         let surfacesMigrated = false;
@@ -528,14 +531,21 @@ function setTheme(
             backgroundStore.getValue()?.url ??
             Config.getConfig("theme.background")
         );
+        const currentTheme = themeStore.getValue();
+        const startingColors =
+            currentTheme.id === themeName
+                ? baseColors
+                : {
+                    ...darkTheme.colors,
+                    ...customThemeDefaultColors,
+                };
         commitTheme({
             ...darkTheme,
             id: themeName,
             dark: true,
             colors: normalizeCustomBackgroundColors(
                 {
-                    ...darkTheme.colors,
-                    ...customThemeDefaultColors,
+                    ...startingColors,
                     ...(extra?.colors ?? {}),
                 },
                 hasBackground,
@@ -590,8 +600,7 @@ function setColors(colors: Partial<CustomizedColors>) {
         currentTheme.id !== "p-light" && currentTheme.id !== "p-dark";
     const mergedColors = {
         ...(isCustomTheme
-            ? // 自定义主题：以当前主题色为基底，别让深色主题预设渗进来
-              baseColors
+            ? baseColors
             : darkTheme.colors),
         ...(persistedColors ?? {}),
         ...colorsWithListActive,
