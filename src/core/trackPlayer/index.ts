@@ -965,6 +965,62 @@ class TrackPlayer extends EventEmitter<{
         );
     }
 
+    async refreshCurrentMusicSource(
+        musicItem: IMusic.IMusicItem,
+    ): Promise<boolean> {
+        if (!this.isCurrentMusic(musicItem)) {
+            return true;
+        }
+
+        try {
+            const progress = await ReactNativeTrackPlayer.getProgress();
+            const playingState = (
+                await ReactNativeTrackPlayer.getPlaybackState()
+            ).state;
+            const plugin = this.pluginManagerService.getByMedia(musicItem);
+            const newSource = await plugin?.methods?.getMediaSource(
+                musicItem,
+                this.quality,
+                1,
+                false,
+                true,
+            );
+            if (!newSource?.url || !this.isCurrentMusic(musicItem)) {
+                return false;
+            }
+
+            let adaptedSource = newSource;
+            try {
+                const { getLocalStreamUrlIfNeeded } = require("@/service/mflac/proxy");
+                const localUrl = await getLocalStreamUrlIfNeeded(
+                    newSource.url,
+                    (newSource as any)?.ekey,
+                    newSource.headers,
+                    (newSource as any)?.cek,
+                );
+                if (localUrl) {
+                    adaptedSource = {
+                        ...newSource,
+                        url: localUrl,
+                        headers: undefined,
+                    };
+                }
+            } catch {}
+
+            await this.setTrackSource(
+                this.mergeTrackSource(
+                    musicItem,
+                    adaptedSource,
+                ) as unknown as Track,
+                !musicIsPaused(playingState),
+            );
+            await this.seekTo(progress.position ?? 0);
+            return true;
+        } catch {
+            return false;
+        }
+    }
+
     async changeQuality(newQuality: IMusic.IQualityKey): Promise<boolean> {
         // 获取当前的音乐和进度
         if (newQuality === this.quality) {

@@ -496,9 +496,16 @@ export default function MusicItemOptions(props: IMusicItemOptionsProps) {
         {
             icon: "archive-box-x-mark",
             title: t("panel.musicItemOptions.clearPluginCache"),
-            onPress: () => {
+            onPress: async () => {
                 mediaCache.removeMediaCache(musicItem);
-                Toast.success(t("panel.musicItemOptions.cacheCleared"));
+                const refreshed =
+                    await TrackPlayer.refreshCurrentMusicSource(musicItem);
+                if (refreshed) {
+                    Toast.success(t("panel.musicItemOptions.cacheCleared"));
+                    hidePanel();
+                } else {
+                    Toast.error(t("common.failToLoad"));
+                }
             },
         },
     ];
