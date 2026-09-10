@@ -54,16 +54,16 @@ export function selectImageThemeColor(
     let base: Color;
     if (
         dominant &&
-        dominant.saturationl() >= 0.15 &&
-        dominant.lightness() >= 0.05 &&
-        dominant.lightness() <= 0.85
+        dominant.saturationl() >= 15 &&
+        dominant.lightness() >= 5 &&
+        dominant.lightness() <= 85
     ) {
         const dominantHue = dominant.hue();
         base = candidates
             .map(color => {
                 let score = color.saturationl();
                 const lightness = color.lightness();
-                if (lightness > 0.85 || lightness < 0.05) {
+                if (lightness > 85 || lightness < 5) {
                     score *= 0.3;
                 }
                 const hueDistance = Math.min(
@@ -80,19 +80,19 @@ export function selectImageThemeColor(
         base =
             candidates.find(
                 color =>
-                    color.saturationl() >= 0.2 && color.lightness() > 0.15,
+                    color.saturationl() >= 20 && color.lightness() > 15,
             ) ?? candidates[0];
     }
 
-    if (base.saturationl() < 0.2) {
+    if (base.saturationl() < 20) {
         base = Color("#F2F2F2").lightness(
-            Math.min(Math.max(base.lightness(), 0.4), 0.6),
+            Math.min(Math.max(base.lightness(), 40), 60),
         );
     }
-    if (base.lightness() > 0.72) {
-        base = base.lightness(0.62);
-    } else if (base.lightness() < 0.32) {
-        base = base.lightness(0.42);
+    if (base.lightness() > 72) {
+        base = base.lightness(62);
+    } else if (base.lightness() < 32) {
+        base = base.lightness(42);
     }
 
     return base.toString();

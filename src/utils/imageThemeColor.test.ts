@@ -61,6 +61,31 @@ describe("selectImageThemeColor", () => {
         ).toBeNull();
     });
 
+    it("lifts a near-black blue palette without losing its hue", () => {
+        const result = selectImageThemeColor({
+            dominant: "#05080E",
+            vibrant: "#102744",
+            average: "#091525",
+            darkVibrant: "#163A66",
+        });
+
+        expect(result).not.toBeNull();
+        expect(hueOf(result!)).toBeGreaterThan(190);
+        expect(hueOf(result!)).toBeLessThan(230);
+        expect(Color(result!).saturationl()).toBeGreaterThan(20);
+        expect(Color(result!).lightness()).toBeGreaterThanOrEqual(40);
+    });
+
+    it("caps very light accent colors", () => {
+        const result = selectImageThemeColor({
+            dominant: "#DDEEFF",
+            vibrant: "#A8D8FF",
+        });
+
+        expect(result).not.toBeNull();
+        expect(Color(result!).lightness()).toBeLessThanOrEqual(62);
+    });
+
     it("keeps monochrome images neutral and readable", () => {
         const result = selectImageThemeColor({
             dominant: "#E8E8E8",
@@ -69,7 +94,7 @@ describe("selectImageThemeColor", () => {
         });
         expect(result).not.toBeNull();
         expect(Color(result!).saturationl()).toBeLessThan(5);
-        expect(Color(result!).lightness()).toBeGreaterThanOrEqual(0.4);
-        expect(Color(result!).lightness()).toBeLessThanOrEqual(0.62);
+        expect(Color(result!).lightness()).toBeGreaterThanOrEqual(40);
+        expect(Color(result!).lightness()).toBeLessThanOrEqual(62);
     });
 });
