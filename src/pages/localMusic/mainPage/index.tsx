@@ -1,4 +1,5 @@
 import React from "react";
+import { View } from "react-native";
 import LocalMusicSheet from "@/core/localMusicSheet";
 import { ROUTE_PATH, useNavigate } from "@/core/router";
 import LocalMusicList from "./localMusicList";
@@ -8,10 +9,13 @@ import Toast from "@/utils/toast";
 import { showDialog } from "@/components/dialogs/useDialog";
 import AppBar from "@/components/base/appBar";
 import { useI18N } from "@/core/i18n";
+import globalStyle from "@/constants/globalStyle";
+import useEnterTransitionEnd from "@/hooks/useEnterTransitionEnd";
 
 export default function MainPage() {
     const navigate = useNavigate();
     const { t } = useI18N();
+    const listReady = useEnterTransitionEnd();
 
     return (
         <>
@@ -78,7 +82,11 @@ export default function MainPage() {
                 ]}>
                 {t("home.localMusic")}
             </AppBar>
-            <LocalMusicList />
+            {listReady ? (
+                <LocalMusicList />
+            ) : (
+                <View style={globalStyle.flex1} />
+            )}
             <MusicBar />
         </>
     );
