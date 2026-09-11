@@ -44,6 +44,11 @@ import { IPluginManager } from "@/types/core/pluginManager";
 import { ImgAsset } from "@/constants/assetsConst";
 import { resolveImportedAssetOrPath } from "@/utils/fileUtils";
 import { resolveArtwork } from "@/utils/artwork";
+import {
+    fakeAudioUrl,
+    proposedAudioUrl,
+    shouldHandlePlaybackError,
+} from "./playbackError";
 
 
 
@@ -101,8 +106,8 @@ class TrackPlayer extends EventEmitter<{
         [MusicRepeatMode.SINGLE]: MusicRepeatMode.QUEUE,
         [MusicRepeatMode.QUEUE]: MusicRepeatMode.SHUFFLE,
     };
-    private static fakeAudioUrl = "musicfree://fake-audio";
-    private static proposedAudioUrl = "musicfree://proposed-audio";
+    private static fakeAudioUrl = fakeAudioUrl;
+    private static proposedAudioUrl = proposedAudioUrl;
 
     constructor() {
         super();
@@ -338,7 +343,7 @@ class TrackPlayer extends EventEmitter<{
                     }
 
                     if (
-                        currentTrack?.url !== TrackPlayer.fakeAudioUrl && currentTrack?.url !== TrackPlayer.proposedAudioUrl &&
+                        shouldHandlePlaybackError(currentTrack?.url) &&
                         (await ReactNativeTrackPlayer.getActiveTrackIndex()) === 0 &&
                         e.message &&
                         e.message !== "android-io-file-not-found"
